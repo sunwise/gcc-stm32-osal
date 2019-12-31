@@ -1,0 +1,10 @@
+22:18:13 **** Incremental Build of configuration Debug for project STM32F042_CAR_Debug ****
+Info: Internal Builder is used for build
+arm-atollic-eabi-gcc -c ..\..\..\STM32_CUBEMX\Core\Src\system_stm32f0xx.c -mthumb -mcpu=cortex-m0 -std=gnu11 -DSTM32F042x6 -DHSI48_VALUE=((uint32_t)48000000) -I../src -I../Drivers/CMSIS/Include -I../Drivers/CMSIS/Device/ST/STM32F0xx/Include -I../Drivers/STM32F0xx_HAL_Driver/Inc -O0 -ffunction-sections -fdata-sections -g -fstack-usage -Wall -o Src\Core\Src\system_stm32f0xx.o 
+..\..\..\STM32_CUBEMX\Core\Src\system_stm32f0xx.c:82:23: fatal error: stm32f0xx.h: No such file or directory
+ #include "stm32f0xx.h"
+                       ^
+compilation terminated.
+
+22:18:13 Build Finished (took 676ms)
+
