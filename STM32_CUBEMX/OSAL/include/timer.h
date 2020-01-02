@@ -6,5 +6,6 @@
 extern void OSAL_TIMER_TICKINIT(void);
 extern void OSAL_TIMER_TICKSTART(void);
 extern void OSAL_TIMER_TICKSTOP(void);
+extern void SysTick_CallBack(void);
 
 #endif

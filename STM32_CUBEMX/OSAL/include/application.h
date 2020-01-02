@@ -32,6 +32,12 @@ extern uint16 Serial_Task_EventProcess(uint8 task_id,uint16 task_event);
 
 extern void osal_printf(char *format, ...);		//打印通用串口数据
 
+extern uint8 Period10ms_TaskID;
+//任务初始化函数声明
+extern void Period10ms_Task_Init(uint8 task_id);
+
+//任务事件处理函数声明
+extern uint16 Period10ms_Task_EventProcess(uint8 task_id,uint16 task_event);
 //任务事件定义
 //系统消息事件
 #define SYS_EVENT_MSG		0x8000
@@ -40,6 +46,14 @@ extern void osal_printf(char *format, ...);		//打印通用串口数据
 #define	PRINTF_STR			0X0001 		//打印字符串事件
 //串口通信任务系统消息事件定义
 #define OSAL_PRINTF			0X01		//系统打印
+
+#define LED_FLASH           0x0001
+
+#define ADC_HANDLE          0x0002
+
+#define COMMAND_HANDLE      0x0004
+
+#define MOTOR_HANDLE        0x0008
 
 /*****************************************************************************/
 

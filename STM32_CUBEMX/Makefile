@@ -66,7 +66,14 @@ Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_pwr_ex.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash.c \
 Drivers/STM32F0xx_HAL_Driver/Src/stm32f0xx_hal_flash_ex.c \
-Core/Src/system_stm32f0xx.c  
+Core/Src/system_stm32f0xx.c \
+OSAL/osal/osal_event.c \
+OSAL/osal/osal_memory.c \
+OSAL/osal/osal_msg.c \
+OSAL/osal/osal_timer.c \
+OSAL/osal/osal.c \
+OSAL/hal/timer.c \
+OSAL/application/app_task.c 
 
 # ASM sources
 ASM_SOURCES =  \
@@ -128,8 +135,8 @@ C_INCLUDES =  \
 -IDrivers/STM32F0xx_HAL_Driver/Inc/Legacy \
 -IDrivers/CMSIS/Device/ST/STM32F0xx/Include \
 -IDrivers/CMSIS/Include \
--IDrivers/CMSIS/Include
-
+-IDrivers/CMSIS/Include \
+-IOSAL/include
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections

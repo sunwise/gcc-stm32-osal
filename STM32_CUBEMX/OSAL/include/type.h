@@ -2,7 +2,8 @@
 #define TYPE_H
 
 //此处添加实际使用芯片的对应头文件
-#include "stm32f10x.h"
+//#include "stm32f10x.h"
+#include "stm32f0xx_hal.h"
 
 #define ZSUCCESS                  1
 #define INVALID_TASK              2
