@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="删除资源“STM32F042_CAR_Debug/Src/OSAL/application/osal_main.c”" deleteContents="false" description="删除资源“STM32F042_CAR_Debug/Src/OSAL/application/osal_main.c”" element1="/STM32F042_CAR_Debug/Src/OSAL/application/osal_main.c" flags="7" id="org.eclipse.ltk.core.refactoring.delete.resources" resources="1" stamp="1577838242941"/>
+</session>

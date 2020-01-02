@@ -3,9 +3,9 @@
 
 #include "type.h"
 
-#define MAXMEMHEAP            	1024*6   	//内存池大小，单位字节
+#define MAXMEMHEAP            	1024*3   	//内存池大小，单位字节
 
-#define OSALMEM_METRICS 		1			//定义有效则开启内存统计
+#define OSALMEM_METRICS 		0			//定义有效则开启内存统计
 
 void osal_mem_init( void );
 void osal_mem_kick( void );
