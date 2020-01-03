@@ -23,6 +23,7 @@
 		<item value="false" key="caseSensitive"/>
 		<item value="227191" key="searchFlags"/>
 		<list key="previousPatterns">
+			<item value="General_SerialData_t"/>
 			<item value="PRINTF_STR"/>
 			<item value="Usart_Printf"/>
 			<item value="halDataAlign_t"/>
