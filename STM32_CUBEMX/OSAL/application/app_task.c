@@ -28,6 +28,22 @@ uint8 Period10ms_TaskID;
 /*********************************************************************
  * FUNCTIONS
  *********************************************************************/
+#define PRINT_MAX   30
+void DPrint ( const char * format, ... )
+{
+  uint32_t length;
+  static uint8 num = 0;
+  static char buffer[4][PRINT_MAX];
+
+  va_list args;
+  va_start (args, format);
+  length = vsnprintf (&buffer[num][0],PRINT_MAX,format, args);
+  va_end (args);
+  num ++;
+  num = num & 0x03;
+  HAL_UART_Transmit_DMA(&huart2, &buffer[num][0], length);
+}
+
 //串口通信任务初始化
 void Serial_Task_Init(uint8 task_id)
 {
@@ -71,8 +87,9 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
     {
 
 //		Usart_Printf(COM1,"Linux GCC STM32F103 printf !\r\n");
-      static uint8 prints[12] = "Task10ms!\r\n";
-      HAL_UART_Transmit_DMA(&huart2, prints, 12);
+//      static uint8 prints[12] = "Task10ms!\r\n";
+//      HAL_UART_Transmit_DMA(&huart2, prints, 12);
+
 
       return task_event ^ PRINTF_STR;
     }
@@ -126,7 +143,7 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
         {
           dir = 1;
         }
-
+      DPrint("ledstatus = '%d' !\r\n",dir);
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
 
       return task_event ^ LED_FLASH;

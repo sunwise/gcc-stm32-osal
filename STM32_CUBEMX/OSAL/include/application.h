@@ -20,7 +20,7 @@ typedef struct
 
 //所有任务的任务ID、初始化函数、事件处理函数、任务事件都统一在此文件声明或定义
 /*****************************************************************************/
-
+extern void DPrint ( const char * format, ... );
 //任务ID声明
 extern uint8 Serial_TaskID;
 
