@@ -43,7 +43,7 @@ void DPrint ( const char * format, ... )
   va_end (args);
   num ++;
   num = num & 0x03;
-  HAL_UART_Transmit_DMA(&huart2, &buffer[num][0], length);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&buffer[num][0], length);
 }
 
 //串口通信任务初始化

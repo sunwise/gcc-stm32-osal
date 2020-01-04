@@ -106,6 +106,7 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
+	
   HAL_DISABLE_INTERRUPTS();
   osal_init_system();
   osal_add_Task(Serial_Task_Init,Serial_Task_EventProcess,1);
@@ -119,6 +120,7 @@ int main(void)
   osal_start_reload_timer( Period10ms_TaskID, COMMAND_HANDLE, 36);
   osal_start_reload_timer( Period10ms_TaskID, MOTOR_HANDLE, 59);
   osal_start_system();
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
