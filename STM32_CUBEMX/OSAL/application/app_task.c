@@ -20,8 +20,13 @@
 
 uint8 Serial_TaskID; //系统串口通信任务ID
 uint8 Period10ms_TaskID;
+union
+{
+  uint32_t adcvalue[4];
+  uint16_t adcvalue1[8];
+  uint8_t adcvalue2[16];
+}ADCVALUE_u;
 
-uint8 adcvalue[16]={1,2,3,4,5,6,7};
 
 /*********************************************************************
  * LOCAL FUNCTION PROTOTYPES
@@ -87,8 +92,8 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-//	  HAL_ADC_Start_DMA(&hadc, adcvalue, 8);
-	  DPrint("adcvaue = %d %d %d %d !\r\n",adcvalue[0],adcvalue[1],adcvalue[2],adcvalue[3]);
+	  HAL_ADC_Start_DMA(&hadc, ADCVALUE_u.adcvalue, 4);
+//	  DPrint("adcvaue = %d %d %d %d !\r\n",(uint8)(adcvalue[0]>>24),(uint8)adcvalue[1],(uint8)adcvalue[2],(uint8)adcvalue[3]);
 
       return task_event ^ PRINTF_STR;
     }

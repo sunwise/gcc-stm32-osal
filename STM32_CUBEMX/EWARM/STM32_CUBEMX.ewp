@@ -442,7 +442,7 @@
                 </option>
                 <option>
                     <name>CCEncSource</name>
-                    <state>0</state>
+                    <state>2</state>
                 </option>
                 <option>
                     <name>CCEncOutput</name>
@@ -454,7 +454,7 @@
                 </option>
                 <option>
                     <name>CCEncInput</name>
-                    <state>0</state>
+                    <state>1</state>
                 </option>
                 <option>
                     <name>IccExceptions2</name>
