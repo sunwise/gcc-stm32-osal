@@ -20,14 +20,25 @@
 
 uint8 Serial_TaskID; //系统串口通信任务ID
 uint8 Period10ms_TaskID;
-union
-{
-  uint32_t adcvalue[4];
-  uint16_t adcvalue1[8];
-  uint8_t adcvalue2[16];
-}ADCVALUE_u;
 
+enum{
+  BATTERY = 0,
+  DIR_MOTOR,
+  REAR_MOTOR,
+  FRONT_MOTOR,
+  ADC_CHANNEL_NUM,
+}ADC_CHANNEL_n;
 
+typedef enum{
+  INVALID = 0,
+  VALID,
+}ADCSTATUS_t;
+
+typedef  struct{
+  uint32_t adcvalue[ADC_CHANNEL_NUM];
+  ADCSTATUS_t ADC_status;
+}ADC_t;
+ADC_t ADCData;
 /*********************************************************************
  * LOCAL FUNCTION PROTOTYPES
  */
@@ -35,20 +46,17 @@ union
 /*********************************************************************
  * FUNCTIONS
  *********************************************************************/
-#define PRINT_MAX   30
+#define PRINT_MAX   50
 void DPrint ( const char * format, ... )
 {
   uint32_t length;
-  static uint8 num = 0;
-  static char buffer[4][PRINT_MAX];
+  static char buffer[PRINT_MAX];
 
   va_list args;
   va_start (args, format);
-  length = vsnprintf (&buffer[num][0],PRINT_MAX,format, args);
+  length = vsnprintf (&buffer[0],PRINT_MAX,format, args);
   va_end (args);
-  num ++;
-  num = num & 0x03;
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&buffer[num][0], length);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&buffer[0], length);
 }
 
 //串口通信任务初始化
@@ -92,8 +100,6 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-	  HAL_ADC_Start_DMA(&hadc, ADCVALUE_u.adcvalue, 4);
-//	  DPrint("adcvaue = %d %d %d %d !\r\n",(uint8)(adcvalue[0]>>24),(uint8)adcvalue[1],(uint8)adcvalue[2],(uint8)adcvalue[3]);
 
       return task_event ^ PRINTF_STR;
     }
@@ -103,7 +109,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 void Period10ms_Task_Init(uint8 task_id)
 {
   Period10ms_TaskID = task_id;
-
+  HAL_ADC_Start_DMA(&hadc, ADCData.adcvalue, ADC_CHANNEL_NUM);
 }
 
 uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -150,11 +156,12 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
         }
 
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
-
+      DPrint("adcvaue = %d %d %d %d !\r\n",ADCData.adcvalue[0],ADCData.adcvalue[1],ADCData.adcvalue[2],ADCData.adcvalue[3]);
       return task_event ^ LED_FLASH;
     }
   if ( task_event & ADC_HANDLE )
     {
+      HAL_ADC_Start_DMA(&hadc, ADCData.adcvalue, ADC_CHANNEL_NUM);
       return task_event ^ ADC_HANDLE;
     }
   if ( task_event & COMMAND_HANDLE )
