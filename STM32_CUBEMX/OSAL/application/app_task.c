@@ -21,6 +21,8 @@
 uint8 Serial_TaskID; //系统串口通信任务ID
 uint8 Period10ms_TaskID;
 
+uint8 adcvalue[16]={1,2,3,4,5,6,7};
+
 /*********************************************************************
  * LOCAL FUNCTION PROTOTYPES
  */
@@ -85,11 +87,8 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-
-//		Usart_Printf(COM1,"Linux GCC STM32F103 printf !\r\n");
-//      static uint8 prints[12] = "Task10ms!\r\n";
-//      HAL_UART_Transmit_DMA(&huart2, prints, 12);
-
+//	  HAL_ADC_Start_DMA(&hadc, adcvalue, 8);
+	  DPrint("adcvaue = %d %d %d %d !\r\n",adcvalue[0],adcvalue[1],adcvalue[2],adcvalue[3]);
 
       return task_event ^ PRINTF_STR;
     }
@@ -99,6 +98,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 void Period10ms_Task_Init(uint8 task_id)
 {
   Period10ms_TaskID = task_id;
+
 }
 
 uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -143,7 +143,7 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
         {
           dir = 1;
         }
-      DPrint("ledstatus = '%d' !\r\n",dir);
+
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
 
       return task_event ^ LED_FLASH;

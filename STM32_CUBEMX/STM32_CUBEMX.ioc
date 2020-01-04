@@ -1,15 +1,17 @@
 #MicroXplorer Configuration settings - do not modify
-ADC.ClockPrescaler=ADC_CLOCK_ASYNC_DIV1
-ADC.ContinuousConvMode=ENABLE
-ADC.DMAContinuousRequests=ENABLE
+ADC.ClockPrescaler=ADC_CLOCK_SYNC_PCLK_DIV4
+ADC.ContinuousConvMode=DISABLE
+ADC.DMAContinuousRequests=DISABLE
+ADC.DiscontinuousConvMode=DISABLE
 ADC.EOCSelection=ADC_EOC_SEQ_CONV
-ADC.IPParameters=ClockPrescaler,ContinuousConvMode,DMAContinuousRequests,EOCSelection,SamplingTime
+ADC.IPParameters=ClockPrescaler,ContinuousConvMode,DMAContinuousRequests,EOCSelection,SamplingTime,DiscontinuousConvMode,ScanConvMode
 ADC.SamplingTime=ADC_SAMPLETIME_28CYCLES_5
+ADC.ScanConvMode=ADC_SCAN_DIRECTION_BACKWARD
 Dma.ADC.0.Direction=DMA_PERIPH_TO_MEMORY
 Dma.ADC.0.Instance=DMA1_Channel1
 Dma.ADC.0.MemDataAlignment=DMA_MDATAALIGN_HALFWORD
 Dma.ADC.0.MemInc=DMA_MINC_ENABLE
-Dma.ADC.0.Mode=DMA_NORMAL
+Dma.ADC.0.Mode=DMA_CIRCULAR
 Dma.ADC.0.PeriphDataAlignment=DMA_PDATAALIGN_HALFWORD
 Dma.ADC.0.PeriphInc=DMA_PINC_DISABLE
 Dma.ADC.0.Priority=DMA_PRIORITY_MEDIUM
