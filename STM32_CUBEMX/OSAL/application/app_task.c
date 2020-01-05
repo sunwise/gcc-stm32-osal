@@ -1,25 +1,19 @@
 /****************************************************************************************
- * 文件名  ：serial_task.c
- * 描述    ：系统串口通信任务
+ * 文件名  ：
+ * 描述    
  * 开发平台：
  * 库版本  ：
  ***************************************************************************************/
 #include "application.h"
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "adc.h"
-#include "crc.h"
-#include "dma.h"
-#include "i2c.h"
-#include "tim.h"
-#include "usart.h"
-#include "gpio.h"
-
 uint8 Serial_TaskID; //系统串口通信任务ID
-uint8 Period10ms_TaskID;
+uint8 AppPeriod_TaskID;
+
+void Serial_Task_Init(uint8 task_id);
+uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event);
+void AppPeriod_Task_Init(uint8 task_id);
+uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event);
+void System_Startup(void);
 
 /*********************************************************************
  * LOCAL FUNCTION PROTOTYPES
@@ -28,20 +22,40 @@ uint8 Period10ms_TaskID;
 /*********************************************************************
  * FUNCTIONS
  *********************************************************************/
-#define PRINT_MAX   30
+#define ADC_EVENT_PRIEOD     117
+#define LED_EVENT_PRIEOD     503
+#define COMMAND_EVENT_PRIEOD 36
+#define MOTOR_EVENT_PRIEOD   59
+
+void System_Startup(void)
+{
+  HAL_DISABLE_INTERRUPTS();
+  osal_init_system();
+  osal_add_Task(Serial_Task_Init,Serial_Task_EventProcess,1);
+  osal_add_Task(AppPeriod_Task_Init,AppPeriod_Task_EventProcess,2);
+  osal_Task_init();
+  osal_mem_kick();
+  HAL_ENABLE_INTERRUPTS();
+//  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
+  osal_start_reload_timer( AppPeriod_TaskID, LED_FLASH, LED_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, ADC_HANDLE, ADC_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, COMMAND_HANDLE, COMMAND_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, MOTOR_HANDLE, MOTOR_EVENT_PRIEOD);
+  
+  osal_start_system();
+}
+
+#define PRINT_MAX   50
 void DPrint ( const char * format, ... )
 {
   uint32_t length;
-  static uint8 num = 0;
-  static char buffer[4][PRINT_MAX];
+  static char buffer[PRINT_MAX];
 
   va_list args;
   va_start (args, format);
-  length = vsnprintf (&buffer[num][0],PRINT_MAX,format, args);
+  length = vsnprintf (&buffer[0],PRINT_MAX,format, args);
   va_end (args);
-  num ++;
-  num = num & 0x03;
-  HAL_UART_Transmit_DMA(&huart2, &buffer[num][0], length);
+  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&buffer[0], length);
 }
 
 //串口通信任务初始化
@@ -86,22 +100,19 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
   if ( task_event & PRINTF_STR )
     {
 
-//		Usart_Printf(COM1,"Linux GCC STM32F103 printf !\r\n");
-//      static uint8 prints[12] = "Task10ms!\r\n";
-//      HAL_UART_Transmit_DMA(&huart2, prints, 12);
-
-
       return task_event ^ PRINTF_STR;
     }
   return 0;
 }
 
-void Period10ms_Task_Init(uint8 task_id)
+void AppPeriod_Task_Init(uint8 task_id)
 {
-  Period10ms_TaskID = task_id;
+  AppPeriod_TaskID = task_id;
+  Start_ADC_Scan();
+  Motor_Control_Init();
 }
 
-uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
+uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
 {
   if ( task_event & SYS_EVENT_MSG )   	//判断系统消息事件
     {
@@ -143,13 +154,16 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
         {
           dir = 1;
         }
-      DPrint("ledstatus = '%d' !\r\n",dir);
-      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
 
+      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
+      
       return task_event ^ LED_FLASH;
     }
   if ( task_event & ADC_HANDLE )
     {
+      Start_ADC_Scan();
+      ADC2Voltage_Handle(&ADCData);
+      
       return task_event ^ ADC_HANDLE;
     }
   if ( task_event & COMMAND_HANDLE )
@@ -158,6 +172,8 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & MOTOR_HANDLE )
     {
+      Motor_Control_mainfunction();
+      
       return task_event ^ MOTOR_HANDLE;
     }
 

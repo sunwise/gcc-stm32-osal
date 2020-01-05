@@ -106,19 +106,9 @@ int main(void)
   /* Initialize interrupts */
   MX_NVIC_Init();
   /* USER CODE BEGIN 2 */
-  HAL_DISABLE_INTERRUPTS();
-  osal_init_system();
-  osal_add_Task(Serial_Task_Init,Serial_Task_EventProcess,1);
-  osal_add_Task(Period10ms_Task_Init,Period10ms_Task_EventProcess,2);
-  osal_Task_init();
-  osal_mem_kick();
-  HAL_ENABLE_INTERRUPTS();
-  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
-  osal_start_reload_timer( Period10ms_TaskID, LED_FLASH, 503);
-  osal_start_reload_timer( Period10ms_TaskID, ADC_HANDLE, 117);
-  osal_start_reload_timer( Period10ms_TaskID, COMMAND_HANDLE, 36);
-  osal_start_reload_timer( Period10ms_TaskID, MOTOR_HANDLE, 59);
-  osal_start_system();
+	
+  System_Startup();
+	
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -144,11 +134,9 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSI14;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.HSI14State = RCC_HSI14_ON;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
-  RCC_OscInitStruct.HSI14CalibrationValue = 16;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL6;
