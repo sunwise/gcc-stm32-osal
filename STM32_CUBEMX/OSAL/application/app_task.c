@@ -1,44 +1,20 @@
 /****************************************************************************************
- * 文件名  ：serial_task.c
- * 描述    ：系统串口通信任务
+ * 文件名  ：
+ * 描述    
  * 开发平台：
  * 库版本  ：
  ***************************************************************************************/
 #include "application.h"
 
-#include <string.h>
-#include <stdarg.h>
-#include <stdio.h>
-
-#include "adc.h"
-#include "crc.h"
-#include "dma.h"
-#include "i2c.h"
-#include "tim.h"
-#include "usart.h"
-#include "gpio.h"
-
 uint8 Serial_TaskID; //系统串口通信任务ID
-uint8 Period10ms_TaskID;
+uint8 AppPeriod_TaskID;
 
-enum{
-  BATTERY = 0,
-  DIR_MOTOR,
-  REAR_MOTOR,
-  FRONT_MOTOR,
-  ADC_CHANNEL_NUM,
-}ADC_CHANNEL_n;
+void Serial_Task_Init(uint8 task_id);
+uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event);
+void AppPeriod_Task_Init(uint8 task_id);
+uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event);
+void System_Startup(void);
 
-typedef enum{
-  INVALID = 0,
-  VALID,
-}ADCSTATUS_t;
-
-typedef  struct{
-  uint32_t adcvalue[ADC_CHANNEL_NUM];
-  ADCSTATUS_t ADC_status;
-}ADC_t;
-ADC_t ADCData;
 /*********************************************************************
  * LOCAL FUNCTION PROTOTYPES
  */
@@ -46,6 +22,29 @@ ADC_t ADCData;
 /*********************************************************************
  * FUNCTIONS
  *********************************************************************/
+#define ADC_EVENT_PRIEOD     117
+#define LED_EVENT_PRIEOD     503
+#define COMMAND_EVENT_PRIEOD 36
+#define MOTOR_EVENT_PRIEOD   59
+
+void System_Startup(void)
+{
+  HAL_DISABLE_INTERRUPTS();
+  osal_init_system();
+  osal_add_Task(Serial_Task_Init,Serial_Task_EventProcess,1);
+  osal_add_Task(AppPeriod_Task_Init,AppPeriod_Task_EventProcess,2);
+  osal_Task_init();
+  osal_mem_kick();
+  HAL_ENABLE_INTERRUPTS();
+//  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
+  osal_start_reload_timer( AppPeriod_TaskID, LED_FLASH, LED_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, ADC_HANDLE, ADC_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, COMMAND_HANDLE, COMMAND_EVENT_PRIEOD);
+  osal_start_reload_timer( AppPeriod_TaskID, MOTOR_HANDLE, MOTOR_EVENT_PRIEOD);
+  
+  osal_start_system();
+}
+
 #define PRINT_MAX   50
 void DPrint ( const char * format, ... )
 {
@@ -106,13 +105,14 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
   return 0;
 }
 
-void Period10ms_Task_Init(uint8 task_id)
+void AppPeriod_Task_Init(uint8 task_id)
 {
-  Period10ms_TaskID = task_id;
-  HAL_ADC_Start_DMA(&hadc, ADCData.adcvalue, ADC_CHANNEL_NUM);
+  AppPeriod_TaskID = task_id;
+  Start_ADC_Scan();
+  Motor_Control_Init();
 }
 
-uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
+uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
 {
   if ( task_event & SYS_EVENT_MSG )   	//判断系统消息事件
     {
@@ -156,12 +156,14 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
         }
 
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
-      DPrint("adcvaue = %d %d %d %d !\r\n",ADCData.adcvalue[0],ADCData.adcvalue[1],ADCData.adcvalue[2],ADCData.adcvalue[3]);
+      
       return task_event ^ LED_FLASH;
     }
   if ( task_event & ADC_HANDLE )
     {
-      HAL_ADC_Start_DMA(&hadc, ADCData.adcvalue, ADC_CHANNEL_NUM);
+      Start_ADC_Scan();
+      ADC2Voltage_Handle(&ADCData);
+      
       return task_event ^ ADC_HANDLE;
     }
   if ( task_event & COMMAND_HANDLE )
@@ -170,6 +172,8 @@ uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & MOTOR_HANDLE )
     {
+      Motor_Control_mainfunction();
+      
       return task_event ^ MOTOR_HANDLE;
     }
 

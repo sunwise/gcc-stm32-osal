@@ -1309,6 +1309,15 @@
             <file>
                 <name>$PROJ_DIR$\..\OSAL\application\app_task.c</name>
             </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_adc.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_motor.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_wireless.c</name>
+            </file>
         </group>
         <group>
             <name>hal</name>
