@@ -59,13 +59,14 @@ typedef enum{
   OVERLOAD ,
   LOCK,
   MERROR,
+  MSTATUS_NUM,
 }MOTOR_STATUS_n;
 
 typedef enum{
   INIT = 0,
   POSITIVE ,
   NAGETIVE ,
-  
+  MDIR_NUM,
 }MOTOR_DIR_n;
 
 typedef enum{
@@ -73,6 +74,7 @@ typedef enum{
   CENTER ,
   RIGHT ,
   LEFT ,
+  DMDIR_NUM,
 }DMOTOR_DIR_n;
 
 typedef struct{
@@ -96,6 +98,7 @@ extern void Motor_Control_Init(void);
 extern uint8_t Motor_Control_mainfunction(void);
 extern uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed);
 extern uint8_t Set_Dir_M(DMOTOR_DIR_n direction);
+extern void Test_Motor_Driver(void);
 /**********************MOTOR CDD field end*************************************/
 
 /*****************************************************************************/

@@ -157,6 +157,8 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
 
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
       
+      Test_Motor_Driver();
+      
       return task_event ^ LED_FLASH;
     }
   if ( task_event & ADC_HANDLE )
