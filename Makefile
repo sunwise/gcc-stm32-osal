@@ -34,6 +34,7 @@ INC_FLAGS 		+= -I $(TOP)/OSAL/include
 INC_FLAGS 		+= -I $(TOP)/STM32F10x_FWLib/inc
 
 #编译选项
+CFLAGS           = -D$(FLAG)
 CFLAGS 			+= -W -Wall -g -mcpu=cortex-m3 -mthumb -O2 -std=gnu11
 CFLAGS 			+= -D STM32F10X_HD -D USE_STDPERIPH_DRIVER
 
