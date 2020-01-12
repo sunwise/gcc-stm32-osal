@@ -36,7 +36,7 @@ void System_Startup(void)
   osal_Task_init();
   osal_mem_kick();
   HAL_ENABLE_INTERRUPTS();
-//  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
+  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
   osal_start_reload_timer( AppPeriod_TaskID, LED_FLASH, LED_EVENT_PRIEOD);
   osal_start_reload_timer( AppPeriod_TaskID, ADC_HANDLE, ADC_EVENT_PRIEOD);
   osal_start_reload_timer( AppPeriod_TaskID, COMMAND_HANDLE, COMMAND_EVENT_PRIEOD);
@@ -99,7 +99,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-
+     
       return task_event ^ PRINTF_STR;
     }
   return 0;
@@ -110,6 +110,7 @@ void AppPeriod_Task_Init(uint8 task_id)
   AppPeriod_TaskID = task_id;
   Start_ADC_Scan();
   Motor_Control_Init();
+  Wireless_Init();
 }
 
 uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -170,6 +171,8 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & COMMAND_HANDLE )
     {
+      Wireless_MainFunction();
+      
       return task_event ^ COMMAND_HANDLE;
     }
   if ( task_event & MOTOR_HANDLE )

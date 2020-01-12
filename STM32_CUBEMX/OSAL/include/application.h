@@ -101,6 +101,47 @@ extern uint8_t Set_Dir_M(DMOTOR_DIR_n direction);
 extern void Test_Motor_Driver(void);
 /**********************MOTOR CDD field end*************************************/
 
+/**********************WIRELESS CDD field start*************************************/
+#define MESLENGTH   13
+#define RXBUFSIZE   (MESLENGTH)
+#define HEADMASK1   0xAA
+#define HEADMASK2   0xBB
+#define TAILMASK1   0xCC
+#define TAILMASK2   0xDD
+#define ROCKERMES   0x01
+#define KEYMES      0x02
+//HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
+//HB HB KEYMES R_UP_UP R_UP_DOWN L_UP_UP L_UP_DOWN C_R_UP C_R_DOWN C_L_UP C_L_DOWN TB TB
+
+typedef struct{
+  uint16_t R_rocker_X;
+  uint16_t R_rocker_Y;
+  uint16_t L_rocker_X;
+  uint16_t L_rocker_Y;
+}command_rocker_t;
+
+typedef struct{
+  uint8_t R_UP_UP;
+  uint8_t R_UP_DOWN;
+  uint8_t L_UP_UP;
+  uint8_t L_UP_DOWN;
+  uint8_t C_R_UP;
+  uint8_t C_R_DOWN;
+  uint8_t C_L_UP;
+  uint8_t C_L_DOWN;
+}command_key_t;
+
+typedef struct{
+  uint8_t rxdata[RXBUFSIZE];
+  uint8_t commanddata[MESLENGTH-4];
+}Wirless_Data_t;
+
+extern Wirless_Data_t Wireless_data;
+extern uint8 Wireless_MainFunction();
+extern void Wireless_Init(void);
+
+/**********************WIRELESS CDD field end*************************************/
+
 /*****************************************************************************/
 
 //所有任务的任务ID、初始化函数、事件处理函数、任务事件都统一在此文件声明或定义
