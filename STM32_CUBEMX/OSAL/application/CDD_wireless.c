@@ -44,12 +44,12 @@ uint8 Check_CommandData(void)
 
 void Handle_Rocker_Command(void)
 {
-  Set_Driver_M((MOTOR_DIR_n)Wireless_data.rxdata[C_RIGHT_X_DIR],C_LEFT_Y_VAL);
+  Set_Driver_M((MOTOR_DIR_n)Wireless_data.rxdata[C_LEFT_Y_DIR],Wireless_data.rxdata[C_LEFT_Y_VAL]);
+  Set_Dir_M((DMOTOR_DIR_n)Wireless_data.rxdata[C_RIGHT_X_DIR]);
 }
 
 uint8 Analysis_Command(void)
 {
-  uint8 res = 1;
   
   if(Wireless_data.rxdata[C_MESSAGE_TYPE] == ROCKERMES)
   {
