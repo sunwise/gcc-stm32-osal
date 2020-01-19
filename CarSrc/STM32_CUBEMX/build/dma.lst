@@ -1,0 +1,122 @@
+ARM GAS  E:\cygwin64\tmp\ccvLnn1j.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"dma.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.MX_DMA_Init,"ax",%progbits
+  16              		.align	1
+  17              		.global	MX_DMA_Init
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	MX_DMA_Init:
+  24              	.LFB37:
+  25              		.file 1 "Core/Src/dma.c"
+   1:Core/Src/dma.c **** /**
+   2:Core/Src/dma.c ****   ******************************************************************************
+   3:Core/Src/dma.c ****   * File Name          : dma.c
+   4:Core/Src/dma.c ****   * Description        : This file provides code for the configuration
+   5:Core/Src/dma.c ****   *                      of all the requested memory to memory DMA transfers.
+   6:Core/Src/dma.c ****   ******************************************************************************
+   7:Core/Src/dma.c ****   * @attention
+   8:Core/Src/dma.c ****   *
+   9:Core/Src/dma.c ****   * <h2><center>&copy; Copyright (c) 2020 STMicroelectronics.
+  10:Core/Src/dma.c ****   * All rights reserved.</center></h2>
+  11:Core/Src/dma.c ****   *
+  12:Core/Src/dma.c ****   * This software component is licensed by ST under BSD 3-Clause license,
+  13:Core/Src/dma.c ****   * the "License"; You may not use this file except in compliance with the
+  14:Core/Src/dma.c ****   * License. You may obtain a copy of the License at:
+  15:Core/Src/dma.c ****   *                        opensource.org/licenses/BSD-3-Clause
+  16:Core/Src/dma.c ****   *
+  17:Core/Src/dma.c ****   ******************************************************************************
+  18:Core/Src/dma.c ****   */
+  19:Core/Src/dma.c **** /* Includes ------------------------------------------------------------------*/
+  20:Core/Src/dma.c **** #include "dma.h"
+  21:Core/Src/dma.c **** 
+  22:Core/Src/dma.c **** /* USER CODE BEGIN 0 */
+  23:Core/Src/dma.c **** 
+  24:Core/Src/dma.c **** /* USER CODE END 0 */
+  25:Core/Src/dma.c **** 
+  26:Core/Src/dma.c **** /*----------------------------------------------------------------------------*/
+  27:Core/Src/dma.c **** /* Configure DMA                                                              */
+  28:Core/Src/dma.c **** /*----------------------------------------------------------------------------*/
+  29:Core/Src/dma.c **** 
+  30:Core/Src/dma.c **** /* USER CODE BEGIN 1 */
+  31:Core/Src/dma.c **** 
+  32:Core/Src/dma.c **** /* USER CODE END 1 */
+  33:Core/Src/dma.c **** 
+ARM GAS  E:\cygwin64\tmp\ccvLnn1j.s 			page 2
+
+
+  34:Core/Src/dma.c **** /** 
+  35:Core/Src/dma.c ****   * Enable DMA controller clock
+  36:Core/Src/dma.c ****   */
+  37:Core/Src/dma.c **** void MX_DMA_Init(void) 
+  38:Core/Src/dma.c **** {
+  26              		.loc 1 38 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31 0000 82B0     		sub	sp, sp, #8
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  34              	.LBB2:
+  39:Core/Src/dma.c ****   /* DMA controller clock enable */
+  40:Core/Src/dma.c ****   __HAL_RCC_DMA1_CLK_ENABLE();
+  35              		.loc 1 40 0
+  36 0002 054A     		ldr	r2, .L2
+  37 0004 5169     		ldr	r1, [r2, #20]
+  38 0006 0123     		movs	r3, #1
+  39 0008 1943     		orrs	r1, r3
+  40 000a 5161     		str	r1, [r2, #20]
+  41 000c 5269     		ldr	r2, [r2, #20]
+  42 000e 1340     		ands	r3, r2
+  43 0010 0193     		str	r3, [sp, #4]
+  44 0012 019B     		ldr	r3, [sp, #4]
+  45              	.LBE2:
+  41:Core/Src/dma.c **** 
+  42:Core/Src/dma.c **** }
+  46              		.loc 1 42 0
+  47 0014 02B0     		add	sp, sp, #8
+  48              		@ sp needed
+  49 0016 7047     		bx	lr
+  50              	.L3:
+  51              		.align	2
+  52              	.L2:
+  53 0018 00100240 		.word	1073876992
+  54              		.cfi_endproc
+  55              	.LFE37:
+  57              		.text
+  58              	.Letext0:
+  59              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+  60              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+  61              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+  62              		.file 5 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f042x6.h"
+  63              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+  64              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+  65              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+  66              		.file 9 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ARM GAS  E:\cygwin64\tmp\ccvLnn1j.s 			page 3
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 dma.c
+E:\cygwin64\tmp\ccvLnn1j.s:16     .text.MX_DMA_Init:00000000 $t
+E:\cygwin64\tmp\ccvLnn1j.s:23     .text.MX_DMA_Init:00000000 MX_DMA_Init
+E:\cygwin64\tmp\ccvLnn1j.s:53     .text.MX_DMA_Init:00000018 $d
+
+NO UNDEFINED SYMBOLS

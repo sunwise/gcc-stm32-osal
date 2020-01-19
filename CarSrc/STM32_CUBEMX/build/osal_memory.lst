@@ -1,0 +1,855 @@
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"osal_memory.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.osal_mem_kick,"ax",%progbits
+  16              		.align	1
+  17              		.global	osal_mem_kick
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	osal_mem_kick:
+  24              	.LFB38:
+  25              		.file 1 "OSAL/osal/osal_memory.c"
+   1:OSAL/osal/osal_memory.c **** #include "osal_memory.h"
+   2:OSAL/osal/osal_memory.c **** #include "type.h"
+   3:OSAL/osal/osal_memory.c **** 
+   4:OSAL/osal/osal_memory.c **** #if ( MAXMEMHEAP >= 32768 )             //内存管理默认使用15位数据标识，最大能管�
+   5:OSAL/osal/osal_memory.c ****   #error MAXMEMHEAP is too big to manage!
+   6:OSAL/osal/osal_memory.c **** #endif
+   7:OSAL/osal/osal_memory.c **** 
+   8:OSAL/osal/osal_memory.c **** //查找到合适的内存块之后，就要决定是否对此内存块进行分割。
+   9:OSAL/osal/osal_memory.c **** //如果内存块过大的话必然会造成内存的浪费。
+  10:OSAL/osal/osal_memory.c **** //如果内存块的大小减去要申请的内存块的值大于OSALMEM_MIN_BLKSZ(4byte)， 
+  11:OSAL/osal/osal_memory.c **** //则分割此内存块。并初使化分割出来的内存分配控制块头。
+  12:OSAL/osal/osal_memory.c **** #if !defined ( OSALMEM_MIN_BLKSZ )
+  13:OSAL/osal/osal_memory.c ****   #define OSALMEM_MIN_BLKSZ    4
+  14:OSAL/osal/osal_memory.c **** #endif
+  15:OSAL/osal/osal_memory.c **** 
+  16:OSAL/osal/osal_memory.c **** #if !defined ( OSALMEM_SMALL_BLKSZ )
+  17:OSAL/osal/osal_memory.c ****   #define OSALMEM_SMALL_BLKSZ  16     //固定内存分配区域的固定长度，16字节
+  18:OSAL/osal/osal_memory.c **** #endif
+  19:OSAL/osal/osal_memory.c **** 
+  20:OSAL/osal/osal_memory.c **** #if !defined ( OSALMEM_GUARD )
+  21:OSAL/osal/osal_memory.c ****   #define OSALMEM_GUARD  TRUE         // TBD - Hacky workaround til Bugzilla 1252 is fixed!
+  22:OSAL/osal/osal_memory.c ****   #define OSALMEM_READY  0xE2
+  23:OSAL/osal/osal_memory.c **** #endif
+  24:OSAL/osal/osal_memory.c **** 
+  25:OSAL/osal/osal_memory.c **** //内存分配返回的是一个指向分配区域的指针，指针的长度是内存控制头和�
+  26:OSAL/osal/osal_memory.c **** //并且这个长度也是最小分配单元的长度。在OSAL中它的长度是16bit。
+  27:OSAL/osal/osal_memory.c **** //此处需要根据实际编译环境修改，确保osalMemHdr_t长度为16bit或以上
+  28:OSAL/osal/osal_memory.c **** typedef halDataAlign_t  osalMemHdr_t;
+  29:OSAL/osal/osal_memory.c **** 
+  30:OSAL/osal/osal_memory.c **** /*********************************************************************
+  31:OSAL/osal/osal_memory.c ****  * CONSTANTS
+  32:OSAL/osal/osal_memory.c ****  */
+  33:OSAL/osal/osal_memory.c **** 
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 2
+
+
+  34:OSAL/osal/osal_memory.c **** #define OSALMEM_IN_USE  0x8000        //内存控制头（16位）最高位标识该内存块是否
+  35:OSAL/osal/osal_memory.c **** 
+  36:OSAL/osal/osal_memory.c **** /* This number sets the size of the small-block bucket. Although profiling
+  37:OSAL/osal/osal_memory.c ****  * shows max simultaneous alloc of 16x18, timing without profiling overhead
+  38:OSAL/osal/osal_memory.c ****  * shows that the best worst case is achieved with the following.
+  39:OSAL/osal/osal_memory.c ****    根据程序的概要分析，最大的同时分配的大小是16x18, 如果不进行程序概�
+  40:OSAL/osal/osal_memory.c ****    在定时分析系统的开销时，最坏情况里面的最好情况的内存分配大小是232
+  41:OSAL/osal/osal_memory.c ****    所以把固定分配区域的长度定义为232（byte）。
+  42:OSAL/osal/osal_memory.c ****  */
+  43:OSAL/osal/osal_memory.c **** #define SMALLBLKHEAP    232
+  44:OSAL/osal/osal_memory.c **** 
+  45:OSAL/osal/osal_memory.c **** //内存分配返回的是一个指向分配区域的指针，指针的长度是内存控制头和�
+  46:OSAL/osal/osal_memory.c **** //并且这个长度也是最小分配单元的长度。在些OSAL中它的长度是16bit。
+  47:OSAL/osal/osal_memory.c **** //此处需要根据实际编译环境修改，确保osalMemHdr_t长度为16bit或以上
+  48:OSAL/osal/osal_memory.c **** // To maintainalignment of the pointer returned, reserve the greater
+  49:OSAL/osal/osal_memory.c **** // space for the memory block header.
+  50:OSAL/osal/osal_memory.c **** #define HDRSZ  ( (sizeof ( halDataAlign_t ) > sizeof( osalMemHdr_t )) ? \
+  51:OSAL/osal/osal_memory.c ****                   sizeof ( halDataAlign_t ) : sizeof( osalMemHdr_t ) )
+  52:OSAL/osal/osal_memory.c **** 
+  53:OSAL/osal/osal_memory.c **** /*********************************************************************
+  54:OSAL/osal/osal_memory.c ****  * GLOBAL VARIABLES
+  55:OSAL/osal/osal_memory.c ****  */
+  56:OSAL/osal/osal_memory.c **** 
+  57:OSAL/osal/osal_memory.c **** /*********************************************************************
+  58:OSAL/osal/osal_memory.c ****  * EXTERNAL VARIABLES
+  59:OSAL/osal/osal_memory.c ****  */
+  60:OSAL/osal/osal_memory.c **** 
+  61:OSAL/osal/osal_memory.c **** /*********************************************************************
+  62:OSAL/osal/osal_memory.c ****  * EXTERNAL FUNCTIONS
+  63:OSAL/osal/osal_memory.c ****  */
+  64:OSAL/osal/osal_memory.c **** 
+  65:OSAL/osal/osal_memory.c **** /*********************************************************************
+  66:OSAL/osal/osal_memory.c ****  * LOCAL VARIABLES
+  67:OSAL/osal/osal_memory.c ****  */
+  68:OSAL/osal/osal_memory.c **** 
+  69:OSAL/osal/osal_memory.c **** #if ( OSALMEM_GUARD )
+  70:OSAL/osal/osal_memory.c ****   static byte ready = 0;
+  71:OSAL/osal/osal_memory.c **** #endif
+  72:OSAL/osal/osal_memory.c **** 
+  73:OSAL/osal/osal_memory.c **** static osalMemHdr_t *ff1;  // First free block in the small-block bucket.
+  74:OSAL/osal/osal_memory.c **** static osalMemHdr_t *ff2;  // First free block after the small-block bucket.
+  75:OSAL/osal/osal_memory.c **** 
+  76:OSAL/osal/osal_memory.c **** #if defined( EXTERNAL_RAM )
+  77:OSAL/osal/osal_memory.c ****   static byte  *theHeap = (byte *)EXT_RAM_BEG;
+  78:OSAL/osal/osal_memory.c **** #else
+  79:OSAL/osal/osal_memory.c ****   // static halDataAlign_t  _theHeap[ MAXMEMHEAP / sizeof( halDataAlign_t ) ];
+  80:OSAL/osal/osal_memory.c ****   // static __align(4) halDataAlign_t  _theHeap[ MAXMEMHEAP / sizeof( halDataAlign_t ) ];
+  81:OSAL/osal/osal_memory.c ****   static __attribute__ ((aligned (32))) halDataAlign_t  _theHeap[ MAXMEMHEAP / sizeof( halDataAlign
+  82:OSAL/osal/osal_memory.c ****   //根据实际使用的芯片设定内存对齐，__align(32)，非常重要！！！
+  83:OSAL/osal/osal_memory.c ****   static byte  *theHeap = (byte *)_theHeap;
+  84:OSAL/osal/osal_memory.c **** #endif
+  85:OSAL/osal/osal_memory.c **** 
+  86:OSAL/osal/osal_memory.c **** #if OSALMEM_METRICS
+  87:OSAL/osal/osal_memory.c **** static uint16 blkMax;  // Max cnt of all blocks ever seen at once.
+  88:OSAL/osal/osal_memory.c **** static uint16 blkCnt;  // Current cnt of all blocks.
+  89:OSAL/osal/osal_memory.c **** static uint16 blkFree; // Current cnt of free blocks.
+  90:OSAL/osal/osal_memory.c **** static uint16 memAlo;  // Current total memory allocated.
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 3
+
+
+  91:OSAL/osal/osal_memory.c **** static uint16 memMax;  // Max total memory ever allocated at once.
+  92:OSAL/osal/osal_memory.c **** #endif
+  93:OSAL/osal/osal_memory.c **** /*********************************************************************
+  94:OSAL/osal/osal_memory.c ****  * LOCAL FUNCTIONS
+  95:OSAL/osal/osal_memory.c ****  */
+  96:OSAL/osal/osal_memory.c **** 
+  97:OSAL/osal/osal_memory.c **** /*********************************************************************
+  98:OSAL/osal/osal_memory.c ****  * @fn      osal_mem_init
+  99:OSAL/osal/osal_memory.c ****  *
+ 100:OSAL/osal/osal_memory.c ****  * @brief   Initialize the heap memory management system.
+ 101:OSAL/osal/osal_memory.c ****  *
+ 102:OSAL/osal/osal_memory.c ****  * @param   void
+ 103:OSAL/osal/osal_memory.c ****  *
+ 104:OSAL/osal/osal_memory.c ****  * @return  void
+ 105:OSAL/osal/osal_memory.c ****  */
+ 106:OSAL/osal/osal_memory.c **** void osal_mem_init( void )
+ 107:OSAL/osal/osal_memory.c **** {
+ 108:OSAL/osal/osal_memory.c ****   osalMemHdr_t *tmp;
+ 109:OSAL/osal/osal_memory.c ****   // Setup a NULL block at the end of the heap for fast comparisons with zero.
+ 110:OSAL/osal/osal_memory.c ****   //整个内存池最后的两个字节清零，避免分配内存产生溢出
+ 111:OSAL/osal/osal_memory.c ****   tmp = (osalMemHdr_t *)theHeap + (MAXMEMHEAP / HDRSZ) - 1;
+ 112:OSAL/osal/osal_memory.c ****   *tmp = 0;
+ 113:OSAL/osal/osal_memory.c **** 
+ 114:OSAL/osal/osal_memory.c ****   // Setup a small-block bucket.
+ 115:OSAL/osal/osal_memory.c ****   //设置固定长度内存区长度，232字节，内存区第一个字保存该区长度
+ 116:OSAL/osal/osal_memory.c ****   tmp = (osalMemHdr_t *)theHeap;
+ 117:OSAL/osal/osal_memory.c ****   *tmp = SMALLBLKHEAP;
+ 118:OSAL/osal/osal_memory.c **** 
+ 119:OSAL/osal/osal_memory.c ****   // Setup the wilderness.
+ 120:OSAL/osal/osal_memory.c ****   //设置可变产地内存区长度，内存区第一个字保存该区长度
+ 121:OSAL/osal/osal_memory.c ****   tmp = (osalMemHdr_t *)theHeap + (SMALLBLKHEAP / HDRSZ);
+ 122:OSAL/osal/osal_memory.c ****   *tmp = ((MAXMEMHEAP / HDRSZ) * HDRSZ) - SMALLBLKHEAP - HDRSZ;
+ 123:OSAL/osal/osal_memory.c **** 
+ 124:OSAL/osal/osal_memory.c **** #if ( OSALMEM_GUARD )
+ 125:OSAL/osal/osal_memory.c ****   ready = OSALMEM_READY;
+ 126:OSAL/osal/osal_memory.c **** #endif
+ 127:OSAL/osal/osal_memory.c **** 
+ 128:OSAL/osal/osal_memory.c ****   // Setup a NULL block that is never freed so that the small-block bucket
+ 129:OSAL/osal/osal_memory.c ****   // is never coalesced with the wilderness.
+ 130:OSAL/osal/osal_memory.c ****   ff1 = tmp;
+ 131:OSAL/osal/osal_memory.c ****   ff2 = osal_mem_alloc( 0 );
+ 132:OSAL/osal/osal_memory.c ****   ff1 = (osalMemHdr_t *)theHeap;
+ 133:OSAL/osal/osal_memory.c ****   /*
+ 134:OSAL/osal/osal_memory.c ****   上述语句将在固定长度分配区域和可变分配区域之间申请一个0大小的内存
+ 135:OSAL/osal/osal_memory.c ****   相当于在固定分配区域和可变分配区域之间保留了一个一直处于使用状态�
+ 136:OSAL/osal/osal_memory.c ****   但是指向长度为0的一个内存分配控制块。
+ 137:OSAL/osal/osal_memory.c ****   这个内存块的是将两个分配区域隔离开，以免和可变长度分配区域合并。
+ 138:OSAL/osal/osal_memory.c ****   */
+ 139:OSAL/osal/osal_memory.c **** 
+ 140:OSAL/osal/osal_memory.c **** #if ( OSALMEM_METRICS )
+ 141:OSAL/osal/osal_memory.c ****   /* Start with the small-block bucket and the wilderness - don't count the
+ 142:OSAL/osal/osal_memory.c ****    * end-of-heap NULL block nor the end-of-small-block NULL block.
+ 143:OSAL/osal/osal_memory.c ****    */
+ 144:OSAL/osal/osal_memory.c ****   blkCnt = blkFree = 2;
+ 145:OSAL/osal/osal_memory.c ****   memAlo = 0;
+ 146:OSAL/osal/osal_memory.c **** #endif
+ 147:OSAL/osal/osal_memory.c **** }
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 4
+
+
+ 148:OSAL/osal/osal_memory.c **** 
+ 149:OSAL/osal/osal_memory.c **** /*********************************************************************
+ 150:OSAL/osal/osal_memory.c ****  * @fn      osal_mem_kick
+ 151:OSAL/osal/osal_memory.c ****  *
+ 152:OSAL/osal/osal_memory.c ****  * @brief   Kick the ff1 pointer out past the long-lived OSAL Task blocks.
+ 153:OSAL/osal/osal_memory.c ****  *          Invoke this once after all long-lived blocks have been allocated -
+ 154:OSAL/osal/osal_memory.c ****  *          presently at the end of osal_init_system().
+ 155:OSAL/osal/osal_memory.c ****  *          使FF1跳过固定长度区域，指向FF2(可变长度区域)，也就是这个意思�
+ 156:OSAL/osal/osal_memory.c ****  *          如果在固定分配区域中没有申请内存成功，
+ 157:OSAL/osal/osal_memory.c ****  *          调用此函数后它将修改指向固定分配区域的指针使指针指向可变分
+ 158:OSAL/osal/osal_memory.c ****  *          然后再调用osal_mem_alloc 它将在可变长度分配区域中进行内存分配。
+ 159:OSAL/osal/osal_memory.c ****  *
+ 160:OSAL/osal/osal_memory.c ****  * @param   void
+ 161:OSAL/osal/osal_memory.c ****  *
+ 162:OSAL/osal/osal_memory.c ****  * @return  void
+ 163:OSAL/osal/osal_memory.c ****  */
+ 164:OSAL/osal/osal_memory.c **** void osal_mem_kick( void )
+ 165:OSAL/osal/osal_memory.c **** {
+  26              		.loc 1 165 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+ 166:OSAL/osal/osal_memory.c ****   //halIntState_t  intState;
+ 167:OSAL/osal/osal_memory.c ****   HAL_ENTER_CRITICAL_SECTION();  // Hold off interrupts.
+ 168:OSAL/osal/osal_memory.c **** 
+ 169:OSAL/osal/osal_memory.c ****   /* Logic in osal_mem_free() will ratchet ff1 back down to the first free
+ 170:OSAL/osal/osal_memory.c ****    * block in the small-block bucket.
+ 171:OSAL/osal/osal_memory.c ****    */
+ 172:OSAL/osal/osal_memory.c ****   ff1 = ff2;
+  31              		.loc 1 172 0
+  32 0000 024B     		ldr	r3, .L2
+  33 0002 1A68     		ldr	r2, [r3]
+  34 0004 024B     		ldr	r3, .L2+4
+  35 0006 1A60     		str	r2, [r3]
+ 173:OSAL/osal/osal_memory.c **** 
+ 174:OSAL/osal/osal_memory.c ****   HAL_EXIT_CRITICAL_SECTION();  // Re-enable interrupts.
+ 175:OSAL/osal/osal_memory.c **** }
+  36              		.loc 1 175 0
+  37              		@ sp needed
+  38 0008 7047     		bx	lr
+  39              	.L3:
+  40 000a C046     		.align	2
+  41              	.L2:
+  42 000c 00000000 		.word	.LANCHOR1
+  43 0010 00000000 		.word	.LANCHOR0
+  44              		.cfi_endproc
+  45              	.LFE38:
+  47              		.section	.text.osal_mem_alloc,"ax",%progbits
+  48              		.align	1
+  49              		.global	osal_mem_alloc
+  50              		.syntax unified
+  51              		.code	16
+  52              		.thumb_func
+  53              		.fpu softvfp
+  55              	osal_mem_alloc:
+  56              	.LFB39:
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 5
+
+
+ 176:OSAL/osal/osal_memory.c **** 
+ 177:OSAL/osal/osal_memory.c **** /*********************************************************************
+ 178:OSAL/osal/osal_memory.c ****  * @fn      osal_mem_alloc
+ 179:OSAL/osal/osal_memory.c ****  *
+ 180:OSAL/osal/osal_memory.c ****  * @brief   Implementation of the allocator functionality.
+ 181:OSAL/osal/osal_memory.c ****  *
+ 182:OSAL/osal/osal_memory.c ****  * @param   size - number of bytes to allocate from the heap.
+ 183:OSAL/osal/osal_memory.c ****  *
+ 184:OSAL/osal/osal_memory.c ****  * @return  void * - pointer to the heap allocation; NULL if error or failure.
+ 185:OSAL/osal/osal_memory.c ****  */
+ 186:OSAL/osal/osal_memory.c **** void *osal_mem_alloc(uint16 size )
+ 187:OSAL/osal/osal_memory.c **** {
+  57              		.loc 1 187 0
+  58              		.cfi_startproc
+  59              		@ args = 0, pretend = 0, frame = 0
+  60              		@ frame_needed = 0, uses_anonymous_args = 0
+  61              	.LVL0:
+  62 0000 70B5     		push	{r4, r5, r6, lr}
+  63              	.LCFI0:
+  64              		.cfi_def_cfa_offset 16
+  65              		.cfi_offset 4, -16
+  66              		.cfi_offset 5, -12
+  67              		.cfi_offset 6, -8
+  68              		.cfi_offset 14, -4
+  69 0002 0400     		movs	r4, r0
+  70              	.LVL1:
+ 188:OSAL/osal/osal_memory.c ****   osalMemHdr_t  *prev;
+ 189:OSAL/osal/osal_memory.c ****   osalMemHdr_t  *hdr;
+ 190:OSAL/osal/osal_memory.c ****   uint16  tmp;
+ 191:OSAL/osal/osal_memory.c ****   byte coal = 0;
+ 192:OSAL/osal/osal_memory.c **** 
+ 193:OSAL/osal/osal_memory.c ****   #if ( OSALMEM_GUARD )
+ 194:OSAL/osal/osal_memory.c ****   // Try to protect against premature use by HAL / OSAL.
+ 195:OSAL/osal/osal_memory.c ****   if ( ready != OSALMEM_READY )
+  71              		.loc 1 195 0
+  72 0004 244B     		ldr	r3, .L20
+  73 0006 1B78     		ldrb	r3, [r3]
+  74 0008 E22B     		cmp	r3, #226
+  75 000a 0FD1     		bne	.L17
+  76              	.LVL2:
+  77              	.L5:
+ 196:OSAL/osal/osal_memory.c ****   {
+ 197:OSAL/osal/osal_memory.c ****     osal_mem_init();
+ 198:OSAL/osal/osal_memory.c ****   }
+ 199:OSAL/osal/osal_memory.c ****   #endif 
+ 200:OSAL/osal/osal_memory.c **** 
+ 201:OSAL/osal/osal_memory.c ****   size += HDRSZ;
+  78              		.loc 1 201 0
+  79 000c 211D     		adds	r1, r4, #4
+  80 000e 89B2     		uxth	r1, r1
+  81              	.LVL3:
+  82              	.LBB2:
+ 202:OSAL/osal/osal_memory.c **** 
+ 203:OSAL/osal/osal_memory.c ****   // Calculate required bytes to add to 'size' to align to halDataAlign_t.
+ 204:OSAL/osal/osal_memory.c ****   //根据实际的芯片的字长halDataAlign_t进行字节对齐
+ 205:OSAL/osal/osal_memory.c ****   if ( sizeof( halDataAlign_t ) == 2 )
+ 206:OSAL/osal/osal_memory.c ****   {
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 6
+
+
+ 207:OSAL/osal/osal_memory.c ****     size += (size & 0x01);
+ 208:OSAL/osal/osal_memory.c ****   }
+ 209:OSAL/osal/osal_memory.c ****   else if ( sizeof( halDataAlign_t ) != 1 )
+ 210:OSAL/osal/osal_memory.c ****   {
+ 211:OSAL/osal/osal_memory.c ****     const byte mod = size % sizeof( halDataAlign_t );
+  83              		.loc 1 211 0
+  84 0010 0323     		movs	r3, #3
+  85 0012 0B40     		ands	r3, r1
+  86              	.LVL4:
+ 212:OSAL/osal/osal_memory.c **** 
+ 213:OSAL/osal/osal_memory.c ****     if ( mod != 0 )
+  87              		.loc 1 213 0
+  88 0014 03D0     		beq	.L6
+ 214:OSAL/osal/osal_memory.c ****     {
+ 215:OSAL/osal/osal_memory.c ****       size += (sizeof( halDataAlign_t ) - mod);
+  89              		.loc 1 215 0
+  90 0016 C91A     		subs	r1, r1, r3
+  91              	.LVL5:
+  92 0018 89B2     		uxth	r1, r1
+  93 001a 0431     		adds	r1, r1, #4
+  94 001c 89B2     		uxth	r1, r1
+  95              	.LVL6:
+  96              	.L6:
+  97              	.LBE2:
+ 216:OSAL/osal/osal_memory.c ****     }
+ 217:OSAL/osal/osal_memory.c ****   }
+ 218:OSAL/osal/osal_memory.c **** 
+ 219:OSAL/osal/osal_memory.c ****   HAL_ENTER_CRITICAL_SECTION();  // Hold off interrupts.
+ 220:OSAL/osal/osal_memory.c **** 
+ 221:OSAL/osal/osal_memory.c ****   // Smaller allocations are first attempted in the small-block bucket.
+ 222:OSAL/osal/osal_memory.c ****   if ( size <= OSALMEM_SMALL_BLKSZ )
+  98              		.loc 1 222 0
+  99 001e 1029     		cmp	r1, #16
+ 100 0020 07D8     		bhi	.L7
+ 223:OSAL/osal/osal_memory.c ****   {
+ 224:OSAL/osal/osal_memory.c ****     hdr = ff1;
+ 101              		.loc 1 224 0
+ 102 0022 1E4B     		ldr	r3, .L20+4
+ 103              	.LVL7:
+ 104 0024 1868     		ldr	r0, [r3]
+ 105              	.LVL8:
+ 106              	.L8:
+ 225:OSAL/osal/osal_memory.c ****   }
+ 226:OSAL/osal/osal_memory.c ****   else
+ 227:OSAL/osal/osal_memory.c ****   {
+ 228:OSAL/osal/osal_memory.c ****     hdr = ff2;
+ 229:OSAL/osal/osal_memory.c ****   }
+ 230:OSAL/osal/osal_memory.c ****   tmp = *hdr;
+ 107              		.loc 1 230 0
+ 108 0026 0388     		ldrh	r3, [r0]
+ 109              	.LVL9:
+ 191:OSAL/osal/osal_memory.c **** 
+ 110              		.loc 1 191 0
+ 111 0028 0024     		movs	r4, #0
+ 112              	.LVL10:
+ 113 002a 0DE0     		b	.L13
+ 114              	.LVL11:
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 7
+
+
+ 115              	.L17:
+ 197:OSAL/osal/osal_memory.c ****   }
+ 116              		.loc 1 197 0
+ 117 002c FFF7FEFF 		bl	osal_mem_init
+ 118              	.LVL12:
+ 119 0030 ECE7     		b	.L5
+ 120              	.LVL13:
+ 121              	.L7:
+ 228:OSAL/osal/osal_memory.c ****   }
+ 122              		.loc 1 228 0
+ 123 0032 1B4B     		ldr	r3, .L20+8
+ 124              	.LVL14:
+ 125 0034 1868     		ldr	r0, [r3]
+ 126              	.LVL15:
+ 127 0036 F6E7     		b	.L8
+ 128              	.LVL16:
+ 129              	.L19:
+ 231:OSAL/osal/osal_memory.c **** 
+ 232:OSAL/osal/osal_memory.c ****   do
+ 233:OSAL/osal/osal_memory.c ****   {
+ 234:OSAL/osal/osal_memory.c ****     if ( tmp & OSALMEM_IN_USE )
+ 235:OSAL/osal/osal_memory.c ****     {
+ 236:OSAL/osal/osal_memory.c ****       tmp ^= OSALMEM_IN_USE;    //该片已被使用，得出长度
+ 130              		.loc 1 236 0
+ 131 0038 1A4A     		ldr	r2, .L20+12
+ 132 003a 5340     		eors	r3, r2
+ 133              	.LVL17:
+ 134 003c 9BB2     		uxth	r3, r3
+ 135              	.LVL18:
+ 237:OSAL/osal/osal_memory.c ****       coal = 0;                 //找到空内存标志清零，因为遇到了一片已使用的�
+ 136              		.loc 1 237 0
+ 137 003e 0024     		movs	r4, #0
+ 138              	.LVL19:
+ 139              	.L10:
+ 238:OSAL/osal/osal_memory.c ****     }
+ 239:OSAL/osal/osal_memory.c ****     else                        //该片未被使用
+ 240:OSAL/osal/osal_memory.c ****     {
+ 241:OSAL/osal/osal_memory.c ****       if ( coal != 0 )          //上轮查找有找到空内存，但空间不够
+ 242:OSAL/osal/osal_memory.c ****       {
+ 243:OSAL/osal/osal_memory.c **** #if ( OSALMEM_METRICS )
+ 244:OSAL/osal/osal_memory.c ****         blkCnt--;               //内存合并，总内存块计数减一
+ 245:OSAL/osal/osal_memory.c ****         blkFree--;              //内存合并，空闲内存块计数减一
+ 246:OSAL/osal/osal_memory.c **** #endif
+ 247:OSAL/osal/osal_memory.c ****         *prev += *hdr;          //加上本次找到的空内存大小
+ 248:OSAL/osal/osal_memory.c **** 
+ 249:OSAL/osal/osal_memory.c ****         if ( *prev >= size )    //加上后内存大小符合申请需要
+ 250:OSAL/osal/osal_memory.c ****         {
+ 251:OSAL/osal/osal_memory.c ****           hdr = prev;           //返回该内存块
+ 252:OSAL/osal/osal_memory.c ****           tmp = *hdr;           //得出长度
+ 253:OSAL/osal/osal_memory.c ****           break;
+ 254:OSAL/osal/osal_memory.c ****         }
+ 255:OSAL/osal/osal_memory.c ****       }
+ 256:OSAL/osal/osal_memory.c ****       else                      //上轮查找未找到空内存
+ 257:OSAL/osal/osal_memory.c ****       {
+ 258:OSAL/osal/osal_memory.c ****         if ( tmp >= size )      //该片内存大小符合需求，跳出查找循环
+ 259:OSAL/osal/osal_memory.c ****         {
+ 260:OSAL/osal/osal_memory.c ****           break;
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 8
+
+
+ 261:OSAL/osal/osal_memory.c ****         }
+ 262:OSAL/osal/osal_memory.c **** 
+ 263:OSAL/osal/osal_memory.c ****         coal = 1;               //该片内存大小不符合需求，标记找到一块空内存
+ 264:OSAL/osal/osal_memory.c ****         prev = hdr;             //记录该内存
+ 265:OSAL/osal/osal_memory.c ****       }
+ 266:OSAL/osal/osal_memory.c ****     }
+ 267:OSAL/osal/osal_memory.c **** 
+ 268:OSAL/osal/osal_memory.c ****     hdr = (osalMemHdr_t *)((byte *)hdr + tmp);  //偏移至下一片内存区域
+ 140              		.loc 1 268 0
+ 141 0040 C018     		adds	r0, r0, r3
+ 142              	.LVL20:
+ 269:OSAL/osal/osal_memory.c **** 
+ 270:OSAL/osal/osal_memory.c ****     tmp = *hdr;                 //读取该区域长度
+ 143              		.loc 1 270 0
+ 144 0042 0388     		ldrh	r3, [r0]
+ 145              	.LVL21:
+ 271:OSAL/osal/osal_memory.c ****     if ( tmp == 0 )
+ 146              		.loc 1 271 0
+ 147 0044 002B     		cmp	r3, #0
+ 148 0046 13D0     		beq	.L18
+ 149              	.LVL22:
+ 150              	.L13:
+ 234:OSAL/osal/osal_memory.c ****     {
+ 151              		.loc 1 234 0
+ 152 0048 1AB2     		sxth	r2, r3
+ 153 004a 002A     		cmp	r2, #0
+ 154 004c F4DB     		blt	.L19
+ 241:OSAL/osal/osal_memory.c ****       {
+ 155              		.loc 1 241 0
+ 156 004e 002C     		cmp	r4, #0
+ 157 0050 09D0     		beq	.L11
+ 247:OSAL/osal/osal_memory.c **** 
+ 158              		.loc 1 247 0
+ 159 0052 0268     		ldr	r2, [r0]
+ 160 0054 2E68     		ldr	r6, [r5]
+ 161 0056 B446     		mov	ip, r6
+ 162 0058 6244     		add	r2, r2, ip
+ 163 005a 2A60     		str	r2, [r5]
+ 249:OSAL/osal/osal_memory.c ****         {
+ 164              		.loc 1 249 0
+ 165 005c 8A42     		cmp	r2, r1
+ 166 005e EFD3     		bcc	.L10
+ 167              	.LVL23:
+ 252:OSAL/osal/osal_memory.c ****           break;
+ 168              		.loc 1 252 0
+ 169 0060 93B2     		uxth	r3, r2
+ 170              	.LVL24:
+ 251:OSAL/osal/osal_memory.c ****           tmp = *hdr;           //得出长度
+ 171              		.loc 1 251 0
+ 172 0062 2800     		movs	r0, r5
+ 253:OSAL/osal/osal_memory.c ****         }
+ 173              		.loc 1 253 0
+ 174 0064 05E0     		b	.L12
+ 175              	.LVL25:
+ 176              	.L11:
+ 258:OSAL/osal/osal_memory.c ****         {
+ 177              		.loc 1 258 0
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 9
+
+
+ 178 0066 9942     		cmp	r1, r3
+ 179 0068 03D9     		bls	.L12
+ 264:OSAL/osal/osal_memory.c ****       }
+ 180              		.loc 1 264 0
+ 181 006a 0500     		movs	r5, r0
+ 182              	.LVL26:
+ 263:OSAL/osal/osal_memory.c ****         prev = hdr;             //记录该内存
+ 183              		.loc 1 263 0
+ 184 006c 0124     		movs	r4, #1
+ 185              	.LVL27:
+ 186 006e E7E7     		b	.L10
+ 187              	.LVL28:
+ 188              	.L18:
+ 272:OSAL/osal/osal_memory.c ****     {
+ 273:OSAL/osal/osal_memory.c ****       hdr = ((void *)NULL);
+ 189              		.loc 1 273 0
+ 190 0070 0020     		movs	r0, #0
+ 191              	.LVL29:
+ 192              	.L12:
+ 274:OSAL/osal/osal_memory.c ****       break;
+ 275:OSAL/osal/osal_memory.c ****     }
+ 276:OSAL/osal/osal_memory.c ****   }while ( 1 );
+ 277:OSAL/osal/osal_memory.c **** 
+ 278:OSAL/osal/osal_memory.c ****   if ( hdr != ((void *)NULL))
+ 193              		.loc 1 278 0
+ 194 0072 0028     		cmp	r0, #0
+ 195 0074 09D0     		beq	.L4
+ 279:OSAL/osal/osal_memory.c ****   {
+ 280:OSAL/osal/osal_memory.c ****     tmp -= size;                //本次申请后剩余长度
+ 196              		.loc 1 280 0
+ 197 0076 5B1A     		subs	r3, r3, r1
+ 198              	.LVL30:
+ 199 0078 9BB2     		uxth	r3, r3
+ 200              	.LVL31:
+ 281:OSAL/osal/osal_memory.c ****     // Determine whether the threshold for splitting is met.
+ 282:OSAL/osal/osal_memory.c ****     if ( tmp >= OSALMEM_MIN_BLKSZ )   //剩余空间大于最小需求空间，分割内存供下�
+ 201              		.loc 1 282 0
+ 202 007a 032B     		cmp	r3, #3
+ 203 007c 06D9     		bls	.L15
+ 204              	.LVL32:
+ 205              	.LBB3:
+ 283:OSAL/osal/osal_memory.c ****     {
+ 284:OSAL/osal/osal_memory.c ****       // Split the block before allocating it.
+ 285:OSAL/osal/osal_memory.c ****       osalMemHdr_t *next = (osalMemHdr_t *)((byte *)hdr + size);  //偏移
+ 286:OSAL/osal/osal_memory.c ****       *next = tmp;                    //记录未使用区域剩余长度
+ 206              		.loc 1 286 0
+ 207 007e 4350     		str	r3, [r0, r1]
+ 287:OSAL/osal/osal_memory.c ****       *hdr = (size | OSALMEM_IN_USE); //标志本次申请区域已被使用，并记录本次使�
+ 208              		.loc 1 287 0
+ 209 0080 084B     		ldr	r3, .L20+12
+ 210              	.LVL33:
+ 211 0082 1943     		orrs	r1, r3
+ 212              	.LVL34:
+ 213 0084 89B2     		uxth	r1, r1
+ 214 0086 0160     		str	r1, [r0]
+ 215              	.L16:
+ 216              	.LBE3:
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 10
+
+
+ 288:OSAL/osal/osal_memory.c **** 
+ 289:OSAL/osal/osal_memory.c **** #if ( OSALMEM_METRICS )
+ 290:OSAL/osal/osal_memory.c ****       blkCnt++;                       //内存分割，总内存块计数加一
+ 291:OSAL/osal/osal_memory.c ****       if ( blkMax < blkCnt )
+ 292:OSAL/osal/osal_memory.c ****       {
+ 293:OSAL/osal/osal_memory.c ****         blkMax = blkCnt;              //调整内存块数量最大值
+ 294:OSAL/osal/osal_memory.c ****       }
+ 295:OSAL/osal/osal_memory.c ****       memAlo += size;                 //调整已用内存大小
+ 296:OSAL/osal/osal_memory.c **** #endif
+ 297:OSAL/osal/osal_memory.c ****     }
+ 298:OSAL/osal/osal_memory.c ****     else
+ 299:OSAL/osal/osal_memory.c ****     {
+ 300:OSAL/osal/osal_memory.c **** #if ( OSALMEM_METRICS )
+ 301:OSAL/osal/osal_memory.c ****       memAlo += *hdr;
+ 302:OSAL/osal/osal_memory.c ****       blkFree--;                      //内存不分割，空闲内存块计数减一
+ 303:OSAL/osal/osal_memory.c **** #endif
+ 304:OSAL/osal/osal_memory.c **** 
+ 305:OSAL/osal/osal_memory.c ****       *hdr |= OSALMEM_IN_USE;
+ 306:OSAL/osal/osal_memory.c ****     }
+ 307:OSAL/osal/osal_memory.c **** 
+ 308:OSAL/osal/osal_memory.c **** #if ( OSALMEM_METRICS )
+ 309:OSAL/osal/osal_memory.c ****     if ( memMax < memAlo )
+ 310:OSAL/osal/osal_memory.c ****     {
+ 311:OSAL/osal/osal_memory.c ****       memMax = memAlo;
+ 312:OSAL/osal/osal_memory.c ****     }
+ 313:OSAL/osal/osal_memory.c **** #endif
+ 314:OSAL/osal/osal_memory.c **** 
+ 315:OSAL/osal/osal_memory.c ****     hdr++;    //偏移，返回实际申请的内存地址
+ 217              		.loc 1 315 0
+ 218 0088 0430     		adds	r0, r0, #4
+ 219              	.LVL35:
+ 220              	.L4:
+ 316:OSAL/osal/osal_memory.c ****   }
+ 317:OSAL/osal/osal_memory.c **** 
+ 318:OSAL/osal/osal_memory.c ****   HAL_EXIT_CRITICAL_SECTION();  // Re-enable interrupts.
+ 319:OSAL/osal/osal_memory.c **** 
+ 320:OSAL/osal/osal_memory.c ****   return (void *)hdr;
+ 321:OSAL/osal/osal_memory.c **** }
+ 221              		.loc 1 321 0
+ 222              		@ sp needed
+ 223              	.LVL36:
+ 224              	.LVL37:
+ 225 008a 70BD     		pop	{r4, r5, r6, pc}
+ 226              	.LVL38:
+ 227              	.L15:
+ 305:OSAL/osal/osal_memory.c ****     }
+ 228              		.loc 1 305 0
+ 229 008c 8023     		movs	r3, #128
+ 230              	.LVL39:
+ 231 008e 1B02     		lsls	r3, r3, #8
+ 232 0090 0268     		ldr	r2, [r0]
+ 233 0092 1343     		orrs	r3, r2
+ 234 0094 0360     		str	r3, [r0]
+ 235 0096 F7E7     		b	.L16
+ 236              	.L21:
+ 237              		.align	2
+ 238              	.L20:
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 11
+
+
+ 239 0098 00000000 		.word	.LANCHOR2
+ 240 009c 00000000 		.word	.LANCHOR0
+ 241 00a0 00000000 		.word	.LANCHOR1
+ 242 00a4 0080FFFF 		.word	-32768
+ 243              		.cfi_endproc
+ 244              	.LFE39:
+ 246              		.section	.text.osal_mem_init,"ax",%progbits
+ 247              		.align	1
+ 248              		.global	osal_mem_init
+ 249              		.syntax unified
+ 250              		.code	16
+ 251              		.thumb_func
+ 252              		.fpu softvfp
+ 254              	osal_mem_init:
+ 255              	.LFB37:
+ 107:OSAL/osal/osal_memory.c ****   osalMemHdr_t *tmp;
+ 256              		.loc 1 107 0
+ 257              		.cfi_startproc
+ 258              		@ args = 0, pretend = 0, frame = 0
+ 259              		@ frame_needed = 0, uses_anonymous_args = 0
+ 260 0000 70B5     		push	{r4, r5, r6, lr}
+ 261              	.LCFI1:
+ 262              		.cfi_def_cfa_offset 16
+ 263              		.cfi_offset 4, -16
+ 264              		.cfi_offset 5, -12
+ 265              		.cfi_offset 6, -8
+ 266              		.cfi_offset 14, -4
+ 267              	.LVL40:
+ 112:OSAL/osal/osal_memory.c **** 
+ 268              		.loc 1 112 0
+ 269 0002 0B4C     		ldr	r4, .L23
+ 270 0004 0B4B     		ldr	r3, .L23+4
+ 271 0006 0022     		movs	r2, #0
+ 272 0008 E250     		str	r2, [r4, r3]
+ 273              	.LVL41:
+ 117:OSAL/osal/osal_memory.c **** 
+ 274              		.loc 1 117 0
+ 275 000a E823     		movs	r3, #232
+ 276 000c 2360     		str	r3, [r4]
+ 277              	.LVL42:
+ 122:OSAL/osal/osal_memory.c **** 
+ 278              		.loc 1 122 0
+ 279 000e 0A4A     		ldr	r2, .L23+8
+ 280 0010 E250     		str	r2, [r4, r3]
+ 125:OSAL/osal/osal_memory.c **** #endif
+ 281              		.loc 1 125 0
+ 282 0012 0A4B     		ldr	r3, .L23+12
+ 283 0014 E222     		movs	r2, #226
+ 284 0016 1A70     		strb	r2, [r3]
+ 130:OSAL/osal/osal_memory.c ****   ff2 = osal_mem_alloc( 0 );
+ 285              		.loc 1 130 0
+ 286 0018 094D     		ldr	r5, .L23+16
+ 287 001a 2300     		movs	r3, r4
+ 288 001c E833     		adds	r3, r3, #232
+ 289 001e 2B60     		str	r3, [r5]
+ 131:OSAL/osal/osal_memory.c ****   ff1 = (osalMemHdr_t *)theHeap;
+ 290              		.loc 1 131 0
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 12
+
+
+ 291 0020 0020     		movs	r0, #0
+ 292 0022 FFF7FEFF 		bl	osal_mem_alloc
+ 293              	.LVL43:
+ 294 0026 074B     		ldr	r3, .L23+20
+ 295 0028 1860     		str	r0, [r3]
+ 132:OSAL/osal/osal_memory.c ****   /*
+ 296              		.loc 1 132 0
+ 297 002a 2C60     		str	r4, [r5]
+ 147:OSAL/osal/osal_memory.c **** 
+ 298              		.loc 1 147 0
+ 299              		@ sp needed
+ 300 002c 70BD     		pop	{r4, r5, r6, pc}
+ 301              	.L24:
+ 302 002e C046     		.align	2
+ 303              	.L23:
+ 304 0030 00000000 		.word	_theHeap
+ 305 0034 FC0B0000 		.word	3068
+ 306 0038 140B0000 		.word	2836
+ 307 003c 00000000 		.word	.LANCHOR2
+ 308 0040 00000000 		.word	.LANCHOR0
+ 309 0044 00000000 		.word	.LANCHOR1
+ 310              		.cfi_endproc
+ 311              	.LFE37:
+ 313              		.section	.text.osal_mem_free,"ax",%progbits
+ 314              		.align	1
+ 315              		.global	osal_mem_free
+ 316              		.syntax unified
+ 317              		.code	16
+ 318              		.thumb_func
+ 319              		.fpu softvfp
+ 321              	osal_mem_free:
+ 322              	.LFB40:
+ 322:OSAL/osal/osal_memory.c **** 
+ 323:OSAL/osal/osal_memory.c **** /*********************************************************************
+ 324:OSAL/osal/osal_memory.c ****  * @fn      osal_mem_free
+ 325:OSAL/osal/osal_memory.c ****  *
+ 326:OSAL/osal/osal_memory.c ****  * @brief   Implementation of the de-allocator functionality.
+ 327:OSAL/osal/osal_memory.c ****  *
+ 328:OSAL/osal/osal_memory.c ****  * @param   ptr - pointer to the memory to free.
+ 329:OSAL/osal/osal_memory.c ****  *
+ 330:OSAL/osal/osal_memory.c ****  * @return  void
+ 331:OSAL/osal/osal_memory.c ****  */
+ 332:OSAL/osal/osal_memory.c **** void osal_mem_free( void *ptr )
+ 333:OSAL/osal/osal_memory.c **** {
+ 323              		.loc 1 333 0
+ 324              		.cfi_startproc
+ 325              		@ args = 0, pretend = 0, frame = 0
+ 326              		@ frame_needed = 0, uses_anonymous_args = 0
+ 327              	.LVL44:
+ 328 0000 10B5     		push	{r4, lr}
+ 329              	.LCFI2:
+ 330              		.cfi_def_cfa_offset 8
+ 331              		.cfi_offset 4, -8
+ 332              		.cfi_offset 14, -4
+ 333 0002 0400     		movs	r4, r0
+ 334:OSAL/osal/osal_memory.c ****   osalMemHdr_t  *currHdr;
+ 335:OSAL/osal/osal_memory.c ****   //halIntState_t   intState;
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 13
+
+
+ 336:OSAL/osal/osal_memory.c **** 
+ 337:OSAL/osal/osal_memory.c **** #if ( OSALMEM_GUARD )
+ 338:OSAL/osal/osal_memory.c ****   // Try to protect against premature use by HAL / OSAL.
+ 339:OSAL/osal/osal_memory.c ****   if ( ready != OSALMEM_READY )
+ 334              		.loc 1 339 0
+ 335 0004 094B     		ldr	r3, .L29
+ 336 0006 1B78     		ldrb	r3, [r3]
+ 337 0008 E22B     		cmp	r3, #226
+ 338 000a 0BD1     		bne	.L28
+ 339              	.LVL45:
+ 340              	.L26:
+ 340:OSAL/osal/osal_memory.c ****   {
+ 341:OSAL/osal/osal_memory.c ****     osal_mem_init();
+ 342:OSAL/osal/osal_memory.c ****   }
+ 343:OSAL/osal/osal_memory.c **** #endif
+ 344:OSAL/osal/osal_memory.c **** 
+ 345:OSAL/osal/osal_memory.c ****   HAL_ENTER_CRITICAL_SECTION();  // Hold off interrupts.
+ 346:OSAL/osal/osal_memory.c **** 
+ 347:OSAL/osal/osal_memory.c ****   currHdr = (osalMemHdr_t *)ptr - 1;
+ 341              		.loc 1 347 0
+ 342 000c 043C     		subs	r4, r4, #4
+ 343              	.LVL46:
+ 348:OSAL/osal/osal_memory.c **** 
+ 349:OSAL/osal/osal_memory.c ****   *currHdr &= ~OSALMEM_IN_USE;
+ 344              		.loc 1 349 0
+ 345 000e 084B     		ldr	r3, .L29+4
+ 346 0010 2268     		ldr	r2, [r4]
+ 347 0012 1340     		ands	r3, r2
+ 348 0014 2360     		str	r3, [r4]
+ 350:OSAL/osal/osal_memory.c **** 
+ 351:OSAL/osal/osal_memory.c ****   if ( ff1 > currHdr )
+ 349              		.loc 1 351 0
+ 350 0016 074B     		ldr	r3, .L29+8
+ 351 0018 1B68     		ldr	r3, [r3]
+ 352 001a A342     		cmp	r3, r4
+ 353 001c 01D9     		bls	.L25
+ 352:OSAL/osal/osal_memory.c ****   {
+ 353:OSAL/osal/osal_memory.c ****     ff1 = currHdr;
+ 354              		.loc 1 353 0
+ 355 001e 054B     		ldr	r3, .L29+8
+ 356 0020 1C60     		str	r4, [r3]
+ 357              	.L25:
+ 354:OSAL/osal/osal_memory.c ****   }
+ 355:OSAL/osal/osal_memory.c **** 
+ 356:OSAL/osal/osal_memory.c **** #if OSALMEM_METRICS
+ 357:OSAL/osal/osal_memory.c ****   memAlo -= *currHdr;
+ 358:OSAL/osal/osal_memory.c ****   blkFree++;
+ 359:OSAL/osal/osal_memory.c **** #endif
+ 360:OSAL/osal/osal_memory.c **** 
+ 361:OSAL/osal/osal_memory.c ****   HAL_EXIT_CRITICAL_SECTION();  // Re-enable interrupts.
+ 362:OSAL/osal/osal_memory.c **** }
+ 358              		.loc 1 362 0
+ 359              		@ sp needed
+ 360              	.LVL47:
+ 361 0022 10BD     		pop	{r4, pc}
+ 362              	.LVL48:
+ 363              	.L28:
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 14
+
+
+ 341:OSAL/osal/osal_memory.c ****   }
+ 364              		.loc 1 341 0
+ 365 0024 FFF7FEFF 		bl	osal_mem_init
+ 366              	.LVL49:
+ 367 0028 F0E7     		b	.L26
+ 368              	.L30:
+ 369 002a C046     		.align	2
+ 370              	.L29:
+ 371 002c 00000000 		.word	.LANCHOR2
+ 372 0030 FF7FFFFF 		.word	-32769
+ 373 0034 00000000 		.word	.LANCHOR0
+ 374              		.cfi_endproc
+ 375              	.LFE40:
+ 377              		.section	.bss._theHeap,"aw",%nobits
+ 378              		.align	5
+ 381              	_theHeap:
+ 382 0000 00000000 		.space	3072
+ 382      00000000 
+ 382      00000000 
+ 382      00000000 
+ 382      00000000 
+ 383              		.section	.bss.ff1,"aw",%nobits
+ 384              		.align	2
+ 385              		.set	.LANCHOR0,. + 0
+ 388              	ff1:
+ 389 0000 00000000 		.space	4
+ 390              		.section	.bss.ff2,"aw",%nobits
+ 391              		.align	2
+ 392              		.set	.LANCHOR1,. + 0
+ 395              	ff2:
+ 396 0000 00000000 		.space	4
+ 397              		.section	.bss.ready,"aw",%nobits
+ 398              		.set	.LANCHOR2,. + 0
+ 401              	ready:
+ 402 0000 00       		.space	1
+ 403              		.text
+ 404              	.Letext0:
+ 405              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 406              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 407              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 408              		.file 5 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 409              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 410              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 411              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 412              		.file 9 "OSAL/include/type.h"
+ARM GAS  E:\cygwin64\tmp\ccXqGJJJ.s 			page 15
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 osal_memory.c
+E:\cygwin64\tmp\ccXqGJJJ.s:16     .text.osal_mem_kick:00000000 $t
+E:\cygwin64\tmp\ccXqGJJJ.s:23     .text.osal_mem_kick:00000000 osal_mem_kick
+E:\cygwin64\tmp\ccXqGJJJ.s:42     .text.osal_mem_kick:0000000c $d
+E:\cygwin64\tmp\ccXqGJJJ.s:48     .text.osal_mem_alloc:00000000 $t
+E:\cygwin64\tmp\ccXqGJJJ.s:55     .text.osal_mem_alloc:00000000 osal_mem_alloc
+E:\cygwin64\tmp\ccXqGJJJ.s:254    .text.osal_mem_init:00000000 osal_mem_init
+E:\cygwin64\tmp\ccXqGJJJ.s:239    .text.osal_mem_alloc:00000098 $d
+E:\cygwin64\tmp\ccXqGJJJ.s:247    .text.osal_mem_init:00000000 $t
+E:\cygwin64\tmp\ccXqGJJJ.s:304    .text.osal_mem_init:00000030 $d
+E:\cygwin64\tmp\ccXqGJJJ.s:381    .bss._theHeap:00000000 _theHeap
+E:\cygwin64\tmp\ccXqGJJJ.s:314    .text.osal_mem_free:00000000 $t
+E:\cygwin64\tmp\ccXqGJJJ.s:321    .text.osal_mem_free:00000000 osal_mem_free
+E:\cygwin64\tmp\ccXqGJJJ.s:371    .text.osal_mem_free:0000002c $d
+E:\cygwin64\tmp\ccXqGJJJ.s:378    .bss._theHeap:00000000 $d
+E:\cygwin64\tmp\ccXqGJJJ.s:384    .bss.ff1:00000000 $d
+E:\cygwin64\tmp\ccXqGJJJ.s:388    .bss.ff1:00000000 ff1
+E:\cygwin64\tmp\ccXqGJJJ.s:391    .bss.ff2:00000000 $d
+E:\cygwin64\tmp\ccXqGJJJ.s:395    .bss.ff2:00000000 ff2
+E:\cygwin64\tmp\ccXqGJJJ.s:401    .bss.ready:00000000 ready
+E:\cygwin64\tmp\ccXqGJJJ.s:402    .bss.ready:00000000 $d
+
+NO UNDEFINED SYMBOLS

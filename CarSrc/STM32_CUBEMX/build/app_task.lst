@@ -1,0 +1,707 @@
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"app_task.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.DPrint,"ax",%progbits
+  16              		.align	1
+  17              		.global	DPrint
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	DPrint:
+  24              	.LFB37:
+  25              		.file 1 "OSAL/application/app_task.c"
+   1:OSAL/application/app_task.c **** /****************************************************************************************
+   2:OSAL/application/app_task.c ****  * 文件名  ：serial_task.c
+   3:OSAL/application/app_task.c ****  * 描述    ：系统串口通信任务
+   4:OSAL/application/app_task.c ****  * 开发平台：
+   5:OSAL/application/app_task.c ****  * 库版本  ：
+   6:OSAL/application/app_task.c ****  ***************************************************************************************/
+   7:OSAL/application/app_task.c **** #include "application.h"
+   8:OSAL/application/app_task.c **** 
+   9:OSAL/application/app_task.c **** #include <string.h>
+  10:OSAL/application/app_task.c **** #include <stdarg.h>
+  11:OSAL/application/app_task.c **** #include <stdio.h>
+  12:OSAL/application/app_task.c **** 
+  13:OSAL/application/app_task.c **** #include "adc.h"
+  14:OSAL/application/app_task.c **** #include "crc.h"
+  15:OSAL/application/app_task.c **** #include "dma.h"
+  16:OSAL/application/app_task.c **** #include "i2c.h"
+  17:OSAL/application/app_task.c **** #include "tim.h"
+  18:OSAL/application/app_task.c **** #include "usart.h"
+  19:OSAL/application/app_task.c **** #include "gpio.h"
+  20:OSAL/application/app_task.c **** 
+  21:OSAL/application/app_task.c **** uint8 Serial_TaskID; //系统串口通信任务ID
+  22:OSAL/application/app_task.c **** uint8 Period10ms_TaskID;
+  23:OSAL/application/app_task.c **** 
+  24:OSAL/application/app_task.c **** uint8 adcvalue[16]={1,2,3,4,5,6,7};
+  25:OSAL/application/app_task.c **** 
+  26:OSAL/application/app_task.c **** /*********************************************************************
+  27:OSAL/application/app_task.c ****  * LOCAL FUNCTION PROTOTYPES
+  28:OSAL/application/app_task.c ****  */
+  29:OSAL/application/app_task.c **** 
+  30:OSAL/application/app_task.c **** /*********************************************************************
+  31:OSAL/application/app_task.c ****  * FUNCTIONS
+  32:OSAL/application/app_task.c ****  *********************************************************************/
+  33:OSAL/application/app_task.c **** #define PRINT_MAX   30
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 2
+
+
+  34:OSAL/application/app_task.c **** void DPrint ( const char * format, ... )
+  35:OSAL/application/app_task.c **** {
+  26              		.loc 1 35 0
+  27              		.cfi_startproc
+  28              		@ args = 4, pretend = 16, frame = 8
+  29              		@ frame_needed = 0, uses_anonymous_args = 1
+  30              	.LVL0:
+  31 0000 0FB4     		push	{r0, r1, r2, r3}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 16
+  34 0002 30B5     		push	{r4, r5, lr}
+  35              	.LCFI1:
+  36              		.cfi_def_cfa_offset 28
+  37              		.cfi_offset 4, -28
+  38              		.cfi_offset 5, -24
+  39              		.cfi_offset 14, -20
+  40 0004 83B0     		sub	sp, sp, #12
+  41              	.LCFI2:
+  42              		.cfi_def_cfa_offset 40
+  43 0006 06AB     		add	r3, sp, #24
+  44 0008 04CB     		ldmia	r3!, {r2}
+  36:OSAL/application/app_task.c ****   uint32_t length;
+  37:OSAL/application/app_task.c ****   static uint8 num = 0;
+  38:OSAL/application/app_task.c ****   static char buffer[4][PRINT_MAX];
+  39:OSAL/application/app_task.c **** 
+  40:OSAL/application/app_task.c ****   va_list args;
+  41:OSAL/application/app_task.c ****   va_start (args, format);
+  45              		.loc 1 41 0
+  46 000a 0193     		str	r3, [sp, #4]
+  42:OSAL/application/app_task.c ****   length = vsnprintf (&buffer[num][0],PRINT_MAX,format, args);
+  47              		.loc 1 42 0
+  48 000c 0D4D     		ldr	r5, .L2
+  49 000e 2878     		ldrb	r0, [r5]
+  50 0010 0D4C     		ldr	r4, .L2+4
+  51 0012 0101     		lsls	r1, r0, #4
+  52 0014 091A     		subs	r1, r1, r0
+  53 0016 4800     		lsls	r0, r1, #1
+  54 0018 2018     		adds	r0, r4, r0
+  55 001a 1E21     		movs	r1, #30
+  56 001c FFF7FEFF 		bl	vsnprintf
+  57              	.LVL1:
+  43:OSAL/application/app_task.c ****   va_end (args);
+  44:OSAL/application/app_task.c ****   num ++;
+  58              		.loc 1 44 0
+  59 0020 2B78     		ldrb	r3, [r5]
+  60 0022 0133     		adds	r3, r3, #1
+  45:OSAL/application/app_task.c ****   num = num & 0x03;
+  61              		.loc 1 45 0
+  62 0024 0322     		movs	r2, #3
+  63 0026 1340     		ands	r3, r2
+  64 0028 2B70     		strb	r3, [r5]
+  46:OSAL/application/app_task.c ****   HAL_UART_Transmit_DMA(&huart2, &buffer[num][0], length);
+  65              		.loc 1 46 0
+  66 002a 1901     		lsls	r1, r3, #4
+  67 002c CB1A     		subs	r3, r1, r3
+  68 002e 5900     		lsls	r1, r3, #1
+  69 0030 6118     		adds	r1, r4, r1
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 3
+
+
+  70 0032 82B2     		uxth	r2, r0
+  71 0034 0548     		ldr	r0, .L2+8
+  72              	.LVL2:
+  73 0036 FFF7FEFF 		bl	HAL_UART_Transmit_DMA
+  74              	.LVL3:
+  47:OSAL/application/app_task.c **** }
+  75              		.loc 1 47 0
+  76 003a 03B0     		add	sp, sp, #12
+  77              		@ sp needed
+  78 003c 30BC     		pop	{r4, r5}
+  79 003e 08BC     		pop	{r3}
+  80 0040 04B0     		add	sp, sp, #16
+  81 0042 1847     		bx	r3
+  82              	.L3:
+  83              		.align	2
+  84              	.L2:
+  85 0044 00000000 		.word	.LANCHOR0
+  86 0048 00000000 		.word	.LANCHOR1
+  87 004c 00000000 		.word	huart2
+  88              		.cfi_endproc
+  89              	.LFE37:
+  91              		.section	.text.Serial_Task_Init,"ax",%progbits
+  92              		.align	1
+  93              		.global	Serial_Task_Init
+  94              		.syntax unified
+  95              		.code	16
+  96              		.thumb_func
+  97              		.fpu softvfp
+  99              	Serial_Task_Init:
+ 100              	.LFB38:
+  48:OSAL/application/app_task.c **** 
+  49:OSAL/application/app_task.c **** //串口通信任务初始化
+  50:OSAL/application/app_task.c **** void Serial_Task_Init(uint8 task_id)
+  51:OSAL/application/app_task.c **** {
+ 101              		.loc 1 51 0
+ 102              		.cfi_startproc
+ 103              		@ args = 0, pretend = 0, frame = 0
+ 104              		@ frame_needed = 0, uses_anonymous_args = 0
+ 105              		@ link register save eliminated.
+ 106              	.LVL4:
+  52:OSAL/application/app_task.c ****   Serial_TaskID = task_id;
+ 107              		.loc 1 52 0
+ 108 0000 014B     		ldr	r3, .L5
+ 109 0002 1870     		strb	r0, [r3]
+  53:OSAL/application/app_task.c **** 
+  54:OSAL/application/app_task.c **** }
+ 110              		.loc 1 54 0
+ 111              		@ sp needed
+ 112 0004 7047     		bx	lr
+ 113              	.L6:
+ 114 0006 C046     		.align	2
+ 115              	.L5:
+ 116 0008 00000000 		.word	Serial_TaskID
+ 117              		.cfi_endproc
+ 118              	.LFE38:
+ 120              		.section	.text.Serial_Task_EventProcess,"ax",%progbits
+ 121              		.align	1
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 4
+
+
+ 122              		.global	Serial_Task_EventProcess
+ 123              		.syntax unified
+ 124              		.code	16
+ 125              		.thumb_func
+ 126              		.fpu softvfp
+ 128              	Serial_Task_EventProcess:
+ 129              	.LFB39:
+  55:OSAL/application/app_task.c **** 
+  56:OSAL/application/app_task.c **** //串口通信任务事件处理
+  57:OSAL/application/app_task.c **** uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
+  58:OSAL/application/app_task.c **** {
+ 130              		.loc 1 58 0
+ 131              		.cfi_startproc
+ 132              		@ args = 0, pretend = 0, frame = 0
+ 133              		@ frame_needed = 0, uses_anonymous_args = 0
+ 134              	.LVL5:
+ 135 0000 30B5     		push	{r4, r5, lr}
+ 136              	.LCFI3:
+ 137              		.cfi_def_cfa_offset 12
+ 138              		.cfi_offset 4, -12
+ 139              		.cfi_offset 5, -8
+ 140              		.cfi_offset 14, -4
+ 141 0002 83B0     		sub	sp, sp, #12
+ 142              	.LCFI4:
+ 143              		.cfi_def_cfa_offset 24
+ 144 0004 0500     		movs	r5, r0
+ 145 0006 0C00     		movs	r4, r1
+  59:OSAL/application/app_task.c ****   if ( task_event & SYS_EVENT_MSG )   	//判断系统消息事件
+ 146              		.loc 1 59 0
+ 147 0008 0BB2     		sxth	r3, r1
+ 148 000a 002B     		cmp	r3, #0
+ 149 000c 04DB     		blt	.L13
+  60:OSAL/application/app_task.c ****     {
+  61:OSAL/application/app_task.c ****       osal_sys_msg_t *MSGpkt;    			//定义一个指向接受系统消息结构体的指针
+  62:OSAL/application/app_task.c ****       //从消息队列获取消息
+  63:OSAL/application/app_task.c ****       MSGpkt = (osal_sys_msg_t *) osal_msg_receive(task_id);
+  64:OSAL/application/app_task.c **** 
+  65:OSAL/application/app_task.c ****       while (MSGpkt)
+  66:OSAL/application/app_task.c ****         {
+  67:OSAL/application/app_task.c ****           switch (MSGpkt->hdr.event)
+  68:OSAL/application/app_task.c ****           //判断消息事件
+  69:OSAL/application/app_task.c ****           {
+  70:OSAL/application/app_task.c ****             case OSAL_PRINTF:
+  71:OSAL/application/app_task.c ****               break;
+  72:OSAL/application/app_task.c **** 
+  73:OSAL/application/app_task.c ****             default:
+  74:OSAL/application/app_task.c ****               break;
+  75:OSAL/application/app_task.c ****           }
+  76:OSAL/application/app_task.c **** 
+  77:OSAL/application/app_task.c **** // Release the memory
+  78:OSAL/application/app_task.c ****           osal_msg_deallocate((uint8 *) MSGpkt);
+  79:OSAL/application/app_task.c **** 
+  80:OSAL/application/app_task.c **** // Next  获取下一个消息
+  81:OSAL/application/app_task.c ****           MSGpkt = (osal_sys_msg_t *) osal_msg_receive(task_id);
+  82:OSAL/application/app_task.c ****         }
+  83:OSAL/application/app_task.c **** 
+  84:OSAL/application/app_task.c **** // return unprocessed events
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 5
+
+
+  85:OSAL/application/app_task.c ****       return (task_event ^ SYS_EVENT_MSG);
+  86:OSAL/application/app_task.c ****     }
+  87:OSAL/application/app_task.c **** 
+  88:OSAL/application/app_task.c ****   if ( task_event & PRINTF_STR )
+ 150              		.loc 1 88 0
+ 151 000e CB07     		lsls	r3, r1, #31
+ 152 0010 10D4     		bmi	.L14
+  89:OSAL/application/app_task.c ****     {
+  90:OSAL/application/app_task.c **** //	  HAL_ADC_Start_DMA(&hadc, adcvalue, 8);
+  91:OSAL/application/app_task.c **** 	  DPrint("adcvaue = %d %d %d %d !\r\n",adcvalue[0],adcvalue[1],adcvalue[2],adcvalue[3]);
+  92:OSAL/application/app_task.c **** 
+  93:OSAL/application/app_task.c ****       return task_event ^ PRINTF_STR;
+  94:OSAL/application/app_task.c ****     }
+  95:OSAL/application/app_task.c ****   return 0;
+ 153              		.loc 1 95 0
+ 154 0012 0020     		movs	r0, #0
+ 155              	.LVL6:
+ 156              	.L11:
+  96:OSAL/application/app_task.c **** }
+ 157              		.loc 1 96 0
+ 158 0014 03B0     		add	sp, sp, #12
+ 159              		@ sp needed
+ 160 0016 30BD     		pop	{r4, r5, pc}
+ 161              	.LVL7:
+ 162              	.L13:
+ 163              	.LBB2:
+  63:OSAL/application/app_task.c **** 
+ 164              		.loc 1 63 0
+ 165 0018 FFF7FEFF 		bl	osal_msg_receive
+ 166              	.LVL8:
+  65:OSAL/application/app_task.c ****         {
+ 167              		.loc 1 65 0
+ 168 001c 04E0     		b	.L9
+ 169              	.L10:
+  78:OSAL/application/app_task.c **** 
+ 170              		.loc 1 78 0
+ 171 001e FFF7FEFF 		bl	osal_msg_deallocate
+ 172              	.LVL9:
+  81:OSAL/application/app_task.c ****         }
+ 173              		.loc 1 81 0
+ 174 0022 2800     		movs	r0, r5
+ 175 0024 FFF7FEFF 		bl	osal_msg_receive
+ 176              	.LVL10:
+ 177              	.L9:
+  65:OSAL/application/app_task.c ****         {
+ 178              		.loc 1 65 0
+ 179 0028 0028     		cmp	r0, #0
+ 180 002a F8D1     		bne	.L10
+  85:OSAL/application/app_task.c ****     }
+ 181              		.loc 1 85 0
+ 182 002c 0748     		ldr	r0, .L15
+ 183              	.LVL11:
+ 184 002e 6040     		eors	r0, r4
+ 185 0030 80B2     		uxth	r0, r0
+ 186 0032 EFE7     		b	.L11
+ 187              	.LVL12:
+ 188              	.L14:
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 6
+
+
+ 189              	.LBE2:
+  91:OSAL/application/app_task.c **** 
+ 190              		.loc 1 91 0
+ 191 0034 0648     		ldr	r0, .L15+4
+ 192              	.LVL13:
+ 193 0036 0178     		ldrb	r1, [r0]
+ 194              	.LVL14:
+ 195 0038 4278     		ldrb	r2, [r0, #1]
+ 196 003a 8378     		ldrb	r3, [r0, #2]
+ 197 003c C078     		ldrb	r0, [r0, #3]
+ 198 003e 0090     		str	r0, [sp]
+ 199 0040 0448     		ldr	r0, .L15+8
+ 200 0042 FFF7FEFF 		bl	DPrint
+ 201              	.LVL15:
+  93:OSAL/application/app_task.c ****     }
+ 202              		.loc 1 93 0
+ 203 0046 0120     		movs	r0, #1
+ 204 0048 6040     		eors	r0, r4
+ 205 004a E3E7     		b	.L11
+ 206              	.L16:
+ 207              		.align	2
+ 208              	.L15:
+ 209 004c 0080FFFF 		.word	-32768
+ 210 0050 00000000 		.word	.LANCHOR2
+ 211 0054 00000000 		.word	.LC5
+ 212              		.cfi_endproc
+ 213              	.LFE39:
+ 215              		.section	.text.Period10ms_Task_Init,"ax",%progbits
+ 216              		.align	1
+ 217              		.global	Period10ms_Task_Init
+ 218              		.syntax unified
+ 219              		.code	16
+ 220              		.thumb_func
+ 221              		.fpu softvfp
+ 223              	Period10ms_Task_Init:
+ 224              	.LFB40:
+  97:OSAL/application/app_task.c **** 
+  98:OSAL/application/app_task.c **** void Period10ms_Task_Init(uint8 task_id)
+  99:OSAL/application/app_task.c **** {
+ 225              		.loc 1 99 0
+ 226              		.cfi_startproc
+ 227              		@ args = 0, pretend = 0, frame = 0
+ 228              		@ frame_needed = 0, uses_anonymous_args = 0
+ 229              		@ link register save eliminated.
+ 230              	.LVL16:
+ 100:OSAL/application/app_task.c ****   Period10ms_TaskID = task_id;
+ 231              		.loc 1 100 0
+ 232 0000 014B     		ldr	r3, .L18
+ 233 0002 1870     		strb	r0, [r3]
+ 101:OSAL/application/app_task.c **** 
+ 102:OSAL/application/app_task.c **** }
+ 234              		.loc 1 102 0
+ 235              		@ sp needed
+ 236 0004 7047     		bx	lr
+ 237              	.L19:
+ 238 0006 C046     		.align	2
+ 239              	.L18:
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 7
+
+
+ 240 0008 00000000 		.word	Period10ms_TaskID
+ 241              		.cfi_endproc
+ 242              	.LFE40:
+ 244              		.section	.text.Period10ms_Task_EventProcess,"ax",%progbits
+ 245              		.align	1
+ 246              		.global	Period10ms_Task_EventProcess
+ 247              		.syntax unified
+ 248              		.code	16
+ 249              		.thumb_func
+ 250              		.fpu softvfp
+ 252              	Period10ms_Task_EventProcess:
+ 253              	.LFB41:
+ 103:OSAL/application/app_task.c **** 
+ 104:OSAL/application/app_task.c **** uint16 Period10ms_Task_EventProcess(uint8 task_id, uint16 task_event)
+ 105:OSAL/application/app_task.c **** {
+ 254              		.loc 1 105 0
+ 255              		.cfi_startproc
+ 256              		@ args = 0, pretend = 0, frame = 0
+ 257              		@ frame_needed = 0, uses_anonymous_args = 0
+ 258              	.LVL17:
+ 259 0000 70B5     		push	{r4, r5, r6, lr}
+ 260              	.LCFI5:
+ 261              		.cfi_def_cfa_offset 16
+ 262              		.cfi_offset 4, -16
+ 263              		.cfi_offset 5, -12
+ 264              		.cfi_offset 6, -8
+ 265              		.cfi_offset 14, -4
+ 266 0002 0500     		movs	r5, r0
+ 267 0004 0C00     		movs	r4, r1
+ 106:OSAL/application/app_task.c ****   if ( task_event & SYS_EVENT_MSG )   	//判断系统消息事件
+ 268              		.loc 1 106 0
+ 269 0006 0BB2     		sxth	r3, r1
+ 270 0008 002B     		cmp	r3, #0
+ 271 000a 13DB     		blt	.L31
+ 107:OSAL/application/app_task.c ****     {
+ 108:OSAL/application/app_task.c ****       osal_sys_msg_t *MSGpkt;    			//定义一个指向接受系统消息结构体的指针
+ 109:OSAL/application/app_task.c **** //从消息队列获取消息
+ 110:OSAL/application/app_task.c ****       MSGpkt = (osal_sys_msg_t *) osal_msg_receive(task_id);
+ 111:OSAL/application/app_task.c **** 
+ 112:OSAL/application/app_task.c ****       while (MSGpkt)
+ 113:OSAL/application/app_task.c ****         {
+ 114:OSAL/application/app_task.c ****           switch (MSGpkt->hdr.event)
+ 115:OSAL/application/app_task.c **** //判断消息事件
+ 116:OSAL/application/app_task.c ****           {
+ 117:OSAL/application/app_task.c ****             case OSAL_PRINTF:
+ 118:OSAL/application/app_task.c ****               break;
+ 119:OSAL/application/app_task.c **** 
+ 120:OSAL/application/app_task.c ****             default:
+ 121:OSAL/application/app_task.c ****               break;
+ 122:OSAL/application/app_task.c ****           }
+ 123:OSAL/application/app_task.c **** 
+ 124:OSAL/application/app_task.c **** // Release the memory
+ 125:OSAL/application/app_task.c ****           osal_msg_deallocate((uint8 *) MSGpkt);
+ 126:OSAL/application/app_task.c **** 
+ 127:OSAL/application/app_task.c **** // Next  获取下一个消息
+ 128:OSAL/application/app_task.c ****           MSGpkt = (osal_sys_msg_t *) osal_msg_receive(task_id);
+ 129:OSAL/application/app_task.c ****         }
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 8
+
+
+ 130:OSAL/application/app_task.c **** 
+ 131:OSAL/application/app_task.c **** // return unprocessed events
+ 132:OSAL/application/app_task.c ****       return (task_event ^ SYS_EVENT_MSG);
+ 133:OSAL/application/app_task.c ****     }
+ 134:OSAL/application/app_task.c ****   if ( task_event & LED_FLASH )
+ 272              		.loc 1 134 0
+ 273 000c CB07     		lsls	r3, r1, #31
+ 274 000e 23D5     		bpl	.L25
+ 275              	.LBB3:
+ 135:OSAL/application/app_task.c ****     {
+ 136:OSAL/application/app_task.c ****       static uint8 dir = 1;
+ 137:OSAL/application/app_task.c **** 
+ 138:OSAL/application/app_task.c ****       if ( dir )
+ 276              		.loc 1 138 0
+ 277 0010 1A4B     		ldr	r3, .L34
+ 278 0012 1B78     		ldrb	r3, [r3]
+ 279 0014 002B     		cmp	r3, #0
+ 280 0016 1BD0     		beq	.L26
+ 139:OSAL/application/app_task.c ****         {
+ 140:OSAL/application/app_task.c ****           dir = 0;
+ 281              		.loc 1 140 0
+ 282 0018 184B     		ldr	r3, .L34
+ 283 001a 0022     		movs	r2, #0
+ 284 001c 1A70     		strb	r2, [r3]
+ 285              	.L27:
+ 141:OSAL/application/app_task.c ****         }
+ 142:OSAL/application/app_task.c ****       else
+ 143:OSAL/application/app_task.c ****         {
+ 144:OSAL/application/app_task.c ****           dir = 1;
+ 145:OSAL/application/app_task.c ****         }
+ 146:OSAL/application/app_task.c **** 
+ 147:OSAL/application/app_task.c ****       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
+ 286              		.loc 1 147 0
+ 287 001e 174B     		ldr	r3, .L34
+ 288 0020 1A78     		ldrb	r2, [r3]
+ 289 0022 8021     		movs	r1, #128
+ 290              	.LVL18:
+ 291 0024 9020     		movs	r0, #144
+ 292              	.LVL19:
+ 293 0026 0902     		lsls	r1, r1, #8
+ 294 0028 C005     		lsls	r0, r0, #23
+ 295 002a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 296              	.LVL20:
+ 148:OSAL/application/app_task.c **** 
+ 149:OSAL/application/app_task.c ****       return task_event ^ LED_FLASH;
+ 297              		.loc 1 149 0
+ 298 002e 0120     		movs	r0, #1
+ 299 0030 6040     		eors	r0, r4
+ 300              	.L24:
+ 301              	.LBE3:
+ 150:OSAL/application/app_task.c ****     }
+ 151:OSAL/application/app_task.c ****   if ( task_event & ADC_HANDLE )
+ 152:OSAL/application/app_task.c ****     {
+ 153:OSAL/application/app_task.c ****       return task_event ^ ADC_HANDLE;
+ 154:OSAL/application/app_task.c ****     }
+ 155:OSAL/application/app_task.c ****   if ( task_event & COMMAND_HANDLE )
+ 156:OSAL/application/app_task.c ****     {
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 9
+
+
+ 157:OSAL/application/app_task.c ****       return task_event ^ COMMAND_HANDLE;
+ 158:OSAL/application/app_task.c ****     }
+ 159:OSAL/application/app_task.c ****   if ( task_event & MOTOR_HANDLE )
+ 160:OSAL/application/app_task.c ****     {
+ 161:OSAL/application/app_task.c ****       return task_event ^ MOTOR_HANDLE;
+ 162:OSAL/application/app_task.c ****     }
+ 163:OSAL/application/app_task.c **** 
+ 164:OSAL/application/app_task.c ****   return 0;
+ 165:OSAL/application/app_task.c **** }
+ 302              		.loc 1 165 0
+ 303              		@ sp needed
+ 304 0032 70BD     		pop	{r4, r5, r6, pc}
+ 305              	.LVL21:
+ 306              	.L31:
+ 307              	.LBB4:
+ 110:OSAL/application/app_task.c **** 
+ 308              		.loc 1 110 0
+ 309 0034 FFF7FEFF 		bl	osal_msg_receive
+ 310              	.LVL22:
+ 112:OSAL/application/app_task.c ****         {
+ 311              		.loc 1 112 0
+ 312 0038 04E0     		b	.L22
+ 313              	.L23:
+ 125:OSAL/application/app_task.c **** 
+ 314              		.loc 1 125 0
+ 315 003a FFF7FEFF 		bl	osal_msg_deallocate
+ 316              	.LVL23:
+ 128:OSAL/application/app_task.c ****         }
+ 317              		.loc 1 128 0
+ 318 003e 2800     		movs	r0, r5
+ 319 0040 FFF7FEFF 		bl	osal_msg_receive
+ 320              	.LVL24:
+ 321              	.L22:
+ 112:OSAL/application/app_task.c ****         {
+ 322              		.loc 1 112 0
+ 323 0044 0028     		cmp	r0, #0
+ 324 0046 F8D1     		bne	.L23
+ 132:OSAL/application/app_task.c ****     }
+ 325              		.loc 1 132 0
+ 326 0048 0D48     		ldr	r0, .L34+4
+ 327              	.LVL25:
+ 328 004a 6040     		eors	r0, r4
+ 329 004c 80B2     		uxth	r0, r0
+ 330 004e F0E7     		b	.L24
+ 331              	.LVL26:
+ 332              	.L26:
+ 333              	.LBE4:
+ 334              	.LBB5:
+ 144:OSAL/application/app_task.c ****         }
+ 335              		.loc 1 144 0
+ 336 0050 0A4B     		ldr	r3, .L34
+ 337 0052 0122     		movs	r2, #1
+ 338 0054 1A70     		strb	r2, [r3]
+ 339 0056 E2E7     		b	.L27
+ 340              	.L25:
+ 341              	.LBE5:
+ 151:OSAL/application/app_task.c ****     {
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 10
+
+
+ 342              		.loc 1 151 0
+ 343 0058 8B07     		lsls	r3, r1, #30
+ 344 005a 06D4     		bmi	.L32
+ 155:OSAL/application/app_task.c ****     {
+ 345              		.loc 1 155 0
+ 346 005c 4B07     		lsls	r3, r1, #29
+ 347 005e 07D4     		bmi	.L33
+ 159:OSAL/application/app_task.c ****     {
+ 348              		.loc 1 159 0
+ 349 0060 0B07     		lsls	r3, r1, #28
+ 350 0062 08D5     		bpl	.L30
+ 161:OSAL/application/app_task.c ****     }
+ 351              		.loc 1 161 0
+ 352 0064 0820     		movs	r0, #8
+ 353              	.LVL27:
+ 354 0066 4840     		eors	r0, r1
+ 355 0068 E3E7     		b	.L24
+ 356              	.LVL28:
+ 357              	.L32:
+ 153:OSAL/application/app_task.c ****     }
+ 358              		.loc 1 153 0
+ 359 006a 0220     		movs	r0, #2
+ 360              	.LVL29:
+ 361 006c 4840     		eors	r0, r1
+ 362 006e E0E7     		b	.L24
+ 363              	.LVL30:
+ 364              	.L33:
+ 157:OSAL/application/app_task.c ****     }
+ 365              		.loc 1 157 0
+ 366 0070 0420     		movs	r0, #4
+ 367              	.LVL31:
+ 368 0072 4840     		eors	r0, r1
+ 369 0074 DDE7     		b	.L24
+ 370              	.LVL32:
+ 371              	.L30:
+ 164:OSAL/application/app_task.c **** }
+ 372              		.loc 1 164 0
+ 373 0076 0020     		movs	r0, #0
+ 374              	.LVL33:
+ 375 0078 DBE7     		b	.L24
+ 376              	.L35:
+ 377 007a C046     		.align	2
+ 378              	.L34:
+ 379 007c 00000000 		.word	.LANCHOR3
+ 380 0080 0080FFFF 		.word	-32768
+ 381              		.cfi_endproc
+ 382              	.LFE41:
+ 384              		.global	adcvalue
+ 385              		.comm	Period10ms_TaskID,1,1
+ 386              		.comm	Serial_TaskID,1,1
+ 387              		.section	.bss.buffer.7599,"aw",%nobits
+ 388              		.align	2
+ 389              		.set	.LANCHOR1,. + 0
+ 392              	buffer.7599:
+ 393 0000 00000000 		.space	120
+ 393      00000000 
+ 393      00000000 
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 11
+
+
+ 393      00000000 
+ 393      00000000 
+ 394              		.section	.bss.num.7598,"aw",%nobits
+ 395              		.set	.LANCHOR0,. + 0
+ 398              	num.7598:
+ 399 0000 00       		.space	1
+ 400              		.section	.data.adcvalue,"aw",%progbits
+ 401              		.align	2
+ 402              		.set	.LANCHOR2,. + 0
+ 405              	adcvalue:
+ 406 0000 01       		.byte	1
+ 407 0001 02       		.byte	2
+ 408 0002 03       		.byte	3
+ 409 0003 04       		.byte	4
+ 410 0004 05       		.byte	5
+ 411 0005 06       		.byte	6
+ 412 0006 07       		.byte	7
+ 413 0007 00000000 		.space	9
+ 413      00000000 
+ 413      00
+ 414              		.section	.data.dir.7629,"aw",%progbits
+ 415              		.set	.LANCHOR3,. + 0
+ 418              	dir.7629:
+ 419 0000 01       		.byte	1
+ 420              		.section	.rodata.Serial_Task_EventProcess.str1.4,"aMS",%progbits,1
+ 421              		.align	2
+ 422              	.LC5:
+ 423 0000 61646376 		.ascii	"adcvaue = %d %d %d %d !\015\012\000"
+ 423      61756520 
+ 423      3D202564 
+ 423      20256420 
+ 423      25642025 
+ 424              		.text
+ 425              	.Letext0:
+ 426              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 427              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 428              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 429              		.file 5 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/stm32f042x6.h"
+ 430              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 431              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 432              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 433              		.file 9 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 434              		.file 10 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-ea
+ 435              		.file 11 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\includ
+ 436              		.file 12 "<built-in>"
+ 437              		.file 13 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_def.h"
+ 438              		.file 14 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_gpio.h"
+ 439              		.file 15 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_dma.h"
+ 440              		.file 16 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_adc.h"
+ 441              		.file 17 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_crc.h"
+ 442              		.file 18 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_i2c.h"
+ 443              		.file 19 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_tim.h"
+ 444              		.file 20 "Drivers/STM32F0xx_HAL_Driver/Inc/stm32f0xx_hal_uart.h"
+ 445              		.file 21 "OSAL/include/type.h"
+ 446              		.file 22 "OSAL/include/osal.h"
+ 447              		.file 23 "OSAL/include/osal_event.h"
+ 448              		.file 24 "OSAL/include/application.h"
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 12
+
+
+ 449              		.file 25 "Core/Inc/adc.h"
+ 450              		.file 26 "Core/Inc/crc.h"
+ 451              		.file 27 "Core/Inc/i2c.h"
+ 452              		.file 28 "Core/Inc/tim.h"
+ 453              		.file 29 "Core/Inc/usart.h"
+ 454              		.file 30 "OSAL/include/osal_msg.h"
+ARM GAS  E:\cygwin64\tmp\ccg9Fyu9.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 app_task.c
+E:\cygwin64\tmp\ccg9Fyu9.s:16     .text.DPrint:00000000 $t
+E:\cygwin64\tmp\ccg9Fyu9.s:23     .text.DPrint:00000000 DPrint
+E:\cygwin64\tmp\ccg9Fyu9.s:85     .text.DPrint:00000044 $d
+E:\cygwin64\tmp\ccg9Fyu9.s:92     .text.Serial_Task_Init:00000000 $t
+E:\cygwin64\tmp\ccg9Fyu9.s:99     .text.Serial_Task_Init:00000000 Serial_Task_Init
+E:\cygwin64\tmp\ccg9Fyu9.s:116    .text.Serial_Task_Init:00000008 $d
+                            *COM*:00000001 Serial_TaskID
+E:\cygwin64\tmp\ccg9Fyu9.s:121    .text.Serial_Task_EventProcess:00000000 $t
+E:\cygwin64\tmp\ccg9Fyu9.s:128    .text.Serial_Task_EventProcess:00000000 Serial_Task_EventProcess
+E:\cygwin64\tmp\ccg9Fyu9.s:209    .text.Serial_Task_EventProcess:0000004c $d
+E:\cygwin64\tmp\ccg9Fyu9.s:216    .text.Period10ms_Task_Init:00000000 $t
+E:\cygwin64\tmp\ccg9Fyu9.s:223    .text.Period10ms_Task_Init:00000000 Period10ms_Task_Init
+E:\cygwin64\tmp\ccg9Fyu9.s:240    .text.Period10ms_Task_Init:00000008 $d
+                            *COM*:00000001 Period10ms_TaskID
+E:\cygwin64\tmp\ccg9Fyu9.s:245    .text.Period10ms_Task_EventProcess:00000000 $t
+E:\cygwin64\tmp\ccg9Fyu9.s:252    .text.Period10ms_Task_EventProcess:00000000 Period10ms_Task_EventProcess
+E:\cygwin64\tmp\ccg9Fyu9.s:379    .text.Period10ms_Task_EventProcess:0000007c $d
+E:\cygwin64\tmp\ccg9Fyu9.s:405    .data.adcvalue:00000000 adcvalue
+E:\cygwin64\tmp\ccg9Fyu9.s:388    .bss.buffer.7599:00000000 $d
+E:\cygwin64\tmp\ccg9Fyu9.s:392    .bss.buffer.7599:00000000 buffer.7599
+E:\cygwin64\tmp\ccg9Fyu9.s:398    .bss.num.7598:00000000 num.7598
+E:\cygwin64\tmp\ccg9Fyu9.s:399    .bss.num.7598:00000000 $d
+E:\cygwin64\tmp\ccg9Fyu9.s:401    .data.adcvalue:00000000 $d
+E:\cygwin64\tmp\ccg9Fyu9.s:418    .data.dir.7629:00000000 dir.7629
+E:\cygwin64\tmp\ccg9Fyu9.s:421    .rodata.Serial_Task_EventProcess.str1.4:00000000 $d
+
+UNDEFINED SYMBOLS
+vsnprintf
+HAL_UART_Transmit_DMA
+huart2
+osal_msg_receive
+osal_msg_deallocate
+HAL_GPIO_WritePin

@@ -1,0 +1,1508 @@
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"osal_timer.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.osalFindTimer,"ax",%progbits
+  16              		.align	1
+  17              		.global	osalFindTimer
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	osalFindTimer:
+  24              	.LFB39:
+  25              		.file 1 "OSAL/osal/osal_timer.c"
+   1:OSAL/osal/osal_timer.c **** /**************************************************************************************************
+   2:OSAL/osal/osal_timer.c ****   Filename:       osal_timer.c
+   3:OSAL/osal/osal_timer.c ****   Description:    OSAL Timer definition and manipulation functions.
+   4:OSAL/osal/osal_timer.c **** **************************************************************************************************/
+   5:OSAL/osal/osal_timer.c **** 
+   6:OSAL/osal/osal_timer.c **** /*********************************************************************
+   7:OSAL/osal/osal_timer.c ****  * INCLUDES
+   8:OSAL/osal/osal_timer.c ****  */
+   9:OSAL/osal/osal_timer.c **** #include "osal_timer.h"
+  10:OSAL/osal/osal_timer.c **** #include "osal_memory.h"
+  11:OSAL/osal/osal_timer.c **** #include "osal_event.h"
+  12:OSAL/osal/osal_timer.c **** #include "type.h"
+  13:OSAL/osal/osal_timer.c **** 
+  14:OSAL/osal/osal_timer.c **** /*********************************************************************
+  15:OSAL/osal/osal_timer.c ****  * MACROS
+  16:OSAL/osal/osal_timer.c ****  */
+  17:OSAL/osal/osal_timer.c **** 
+  18:OSAL/osal/osal_timer.c **** /*********************************************************************
+  19:OSAL/osal/osal_timer.c ****  * CONSTANTS
+  20:OSAL/osal/osal_timer.c ****  */
+  21:OSAL/osal/osal_timer.c **** 
+  22:OSAL/osal/osal_timer.c **** /*********************************************************************
+  23:OSAL/osal/osal_timer.c ****  * TYPEDEFS
+  24:OSAL/osal/osal_timer.c ****  */
+  25:OSAL/osal/osal_timer.c **** 
+  26:OSAL/osal/osal_timer.c **** typedef struct
+  27:OSAL/osal/osal_timer.c **** {
+  28:OSAL/osal/osal_timer.c ****   void   *next;
+  29:OSAL/osal/osal_timer.c ****   uint16 timeout;           //定时时间，每过一个系统时钟会自减
+  30:OSAL/osal/osal_timer.c ****   uint16 event_flag;        //定时事件，定时时间减完产生任务事件
+  31:OSAL/osal/osal_timer.c ****   uint8  task_id;           //响应的任务ID
+  32:OSAL/osal/osal_timer.c ****   uint16 reloadTimeout;     //重装定时时间
+  33:OSAL/osal/osal_timer.c **** } osalTimerRec_t;           //任务定时器，链表结构
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 2
+
+
+  34:OSAL/osal/osal_timer.c **** 
+  35:OSAL/osal/osal_timer.c **** /*********************************************************************
+  36:OSAL/osal/osal_timer.c ****  * GLOBAL VARIABLES
+  37:OSAL/osal/osal_timer.c ****  */
+  38:OSAL/osal/osal_timer.c **** 
+  39:OSAL/osal/osal_timer.c **** osalTimerRec_t  *timerHead; //任务定时器链表头指针
+  40:OSAL/osal/osal_timer.c **** uint8   tmr_decr_time;      //任务定时器更新时自减的数值单位
+  41:OSAL/osal/osal_timer.c **** uint8   timerActive;        //标识硬件定时器是否运行
+  42:OSAL/osal/osal_timer.c **** 
+  43:OSAL/osal/osal_timer.c **** /*********************************************************************
+  44:OSAL/osal/osal_timer.c ****  * EXTERNAL VARIABLES
+  45:OSAL/osal/osal_timer.c ****  */
+  46:OSAL/osal/osal_timer.c **** 
+  47:OSAL/osal/osal_timer.c **** /*********************************************************************
+  48:OSAL/osal/osal_timer.c ****  * EXTERNAL FUNCTIONS
+  49:OSAL/osal/osal_timer.c ****  */
+  50:OSAL/osal/osal_timer.c **** 
+  51:OSAL/osal/osal_timer.c **** /*********************************************************************
+  52:OSAL/osal/osal_timer.c ****  * LOCAL VARIABLES
+  53:OSAL/osal/osal_timer.c ****  */
+  54:OSAL/osal/osal_timer.c **** static uint32 osal_systemClock;   //记录系统时钟
+  55:OSAL/osal/osal_timer.c **** 
+  56:OSAL/osal/osal_timer.c **** /*********************************************************************
+  57:OSAL/osal/osal_timer.c ****  * LOCAL FUNCTION PROTOTYPES
+  58:OSAL/osal/osal_timer.c ****  */
+  59:OSAL/osal/osal_timer.c **** osalTimerRec_t *osalAddTimer( uint8 task_id, uint16 event_flag, uint16 timeout );
+  60:OSAL/osal/osal_timer.c **** osalTimerRec_t *osalFindTimer( uint8 task_id, uint16 event_flag );
+  61:OSAL/osal/osal_timer.c **** void osalDeleteTimer( osalTimerRec_t *rmTimer );
+  62:OSAL/osal/osal_timer.c **** void osal_timer_activate( uint8 turn_on );
+  63:OSAL/osal/osal_timer.c **** void osal_timer_hw_setup( uint8 turn_on );
+  64:OSAL/osal/osal_timer.c **** 
+  65:OSAL/osal/osal_timer.c **** /*********************************************************************
+  66:OSAL/osal/osal_timer.c ****  * FUNCTIONS
+  67:OSAL/osal/osal_timer.c ****  *********************************************************************/
+  68:OSAL/osal/osal_timer.c **** 
+  69:OSAL/osal/osal_timer.c **** /*********************************************************************
+  70:OSAL/osal/osal_timer.c ****  * @fn      osalTimerInit
+  71:OSAL/osal/osal_timer.c ****  *
+  72:OSAL/osal/osal_timer.c ****  * @brief   Initialization for the OSAL Timer System.
+  73:OSAL/osal/osal_timer.c ****  *
+  74:OSAL/osal/osal_timer.c ****  * @param   none
+  75:OSAL/osal/osal_timer.c ****  *
+  76:OSAL/osal/osal_timer.c ****  * @return
+  77:OSAL/osal/osal_timer.c ****  */
+  78:OSAL/osal/osal_timer.c **** void osalTimerInit( void )
+  79:OSAL/osal/osal_timer.c **** {
+  80:OSAL/osal/osal_timer.c ****   OSAL_TIMER_TICKINIT();    //初始化硬件定时器
+  81:OSAL/osal/osal_timer.c ****   
+  82:OSAL/osal/osal_timer.c ****   // Initialize the rollover modulo
+  83:OSAL/osal/osal_timer.c ****   tmr_decr_time = TIMER_DECR_TIME;
+  84:OSAL/osal/osal_timer.c **** 
+  85:OSAL/osal/osal_timer.c ****   // Initialize the system timer
+  86:OSAL/osal/osal_timer.c ****   osal_timer_activate( FALSE );
+  87:OSAL/osal/osal_timer.c ****   timerActive = FALSE;
+  88:OSAL/osal/osal_timer.c **** 
+  89:OSAL/osal/osal_timer.c ****   osal_systemClock = 0;
+  90:OSAL/osal/osal_timer.c **** }
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 3
+
+
+  91:OSAL/osal/osal_timer.c **** 
+  92:OSAL/osal/osal_timer.c **** /*********************************************************************
+  93:OSAL/osal/osal_timer.c ****  * @fn      osalAddTimer
+  94:OSAL/osal/osal_timer.c ****  *
+  95:OSAL/osal/osal_timer.c ****  * @brief   Add a timer to the timer list.
+  96:OSAL/osal/osal_timer.c ****  *          Ints must be disabled.
+  97:OSAL/osal/osal_timer.c ****  *
+  98:OSAL/osal/osal_timer.c ****  * @param   task_id
+  99:OSAL/osal/osal_timer.c ****  * @param   event_flag
+ 100:OSAL/osal/osal_timer.c ****  * @param   timeout
+ 101:OSAL/osal/osal_timer.c ****  *
+ 102:OSAL/osal/osal_timer.c ****  * @return  osalTimerRec_t * - pointer to newly created timer
+ 103:OSAL/osal/osal_timer.c ****  */
+ 104:OSAL/osal/osal_timer.c **** osalTimerRec_t * osalAddTimer( uint8 task_id, uint16 event_flag, uint16 timeout )
+ 105:OSAL/osal/osal_timer.c **** {
+ 106:OSAL/osal/osal_timer.c ****   osalTimerRec_t *newTimer;
+ 107:OSAL/osal/osal_timer.c ****   osalTimerRec_t *srchTimer;
+ 108:OSAL/osal/osal_timer.c **** 
+ 109:OSAL/osal/osal_timer.c ****   // Look for an existing timer first
+ 110:OSAL/osal/osal_timer.c ****   newTimer = osalFindTimer( task_id, event_flag );
+ 111:OSAL/osal/osal_timer.c ****   if ( newTimer )
+ 112:OSAL/osal/osal_timer.c ****   {
+ 113:OSAL/osal/osal_timer.c ****     // Timer is found - update it.
+ 114:OSAL/osal/osal_timer.c ****     newTimer->timeout = timeout;
+ 115:OSAL/osal/osal_timer.c **** 
+ 116:OSAL/osal/osal_timer.c ****     return ( newTimer );
+ 117:OSAL/osal/osal_timer.c ****   }
+ 118:OSAL/osal/osal_timer.c ****   else
+ 119:OSAL/osal/osal_timer.c ****   {
+ 120:OSAL/osal/osal_timer.c ****     // New Timer
+ 121:OSAL/osal/osal_timer.c ****     newTimer = osal_mem_alloc( sizeof( osalTimerRec_t ) );
+ 122:OSAL/osal/osal_timer.c **** 
+ 123:OSAL/osal/osal_timer.c ****     if ( newTimer )
+ 124:OSAL/osal/osal_timer.c ****     {
+ 125:OSAL/osal/osal_timer.c ****       // Fill in new timer
+ 126:OSAL/osal/osal_timer.c ****       newTimer->task_id = task_id;
+ 127:OSAL/osal/osal_timer.c ****       newTimer->event_flag = event_flag;
+ 128:OSAL/osal/osal_timer.c ****       newTimer->timeout = timeout;
+ 129:OSAL/osal/osal_timer.c ****       newTimer->next = (void *)NULL;
+ 130:OSAL/osal/osal_timer.c ****       newTimer->reloadTimeout = 0;
+ 131:OSAL/osal/osal_timer.c **** 
+ 132:OSAL/osal/osal_timer.c ****       // Does the timer list already exist
+ 133:OSAL/osal/osal_timer.c ****       if ( timerHead == NULL )
+ 134:OSAL/osal/osal_timer.c ****       {
+ 135:OSAL/osal/osal_timer.c ****         // Start task list
+ 136:OSAL/osal/osal_timer.c ****         timerHead = newTimer;
+ 137:OSAL/osal/osal_timer.c ****       }
+ 138:OSAL/osal/osal_timer.c ****       else
+ 139:OSAL/osal/osal_timer.c ****       {
+ 140:OSAL/osal/osal_timer.c ****         // Add it to the end of the timer list
+ 141:OSAL/osal/osal_timer.c ****         srchTimer = timerHead;
+ 142:OSAL/osal/osal_timer.c **** 
+ 143:OSAL/osal/osal_timer.c ****         // Stop at the last record
+ 144:OSAL/osal/osal_timer.c ****         while ( srchTimer->next )
+ 145:OSAL/osal/osal_timer.c ****           srchTimer = srchTimer->next;
+ 146:OSAL/osal/osal_timer.c **** 
+ 147:OSAL/osal/osal_timer.c ****         // Add to the list
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 4
+
+
+ 148:OSAL/osal/osal_timer.c ****         srchTimer->next = newTimer;
+ 149:OSAL/osal/osal_timer.c ****       }
+ 150:OSAL/osal/osal_timer.c ****       return ( newTimer );
+ 151:OSAL/osal/osal_timer.c ****     }
+ 152:OSAL/osal/osal_timer.c ****     else
+ 153:OSAL/osal/osal_timer.c ****       return ( (osalTimerRec_t *)NULL );
+ 154:OSAL/osal/osal_timer.c ****   }
+ 155:OSAL/osal/osal_timer.c **** }
+ 156:OSAL/osal/osal_timer.c **** 
+ 157:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 158:OSAL/osal/osal_timer.c ****  * @fn      osalFindTimer
+ 159:OSAL/osal/osal_timer.c ****  *
+ 160:OSAL/osal/osal_timer.c ****  * @brief   Find a timer in a timer list.
+ 161:OSAL/osal/osal_timer.c ****  *          Ints must be disabled.
+ 162:OSAL/osal/osal_timer.c ****  *
+ 163:OSAL/osal/osal_timer.c ****  * @param   task_id
+ 164:OSAL/osal/osal_timer.c ****  * @param   event_flag
+ 165:OSAL/osal/osal_timer.c ****  *
+ 166:OSAL/osal/osal_timer.c ****  * @return  osalTimerRec_t *
+ 167:OSAL/osal/osal_timer.c ****  */
+ 168:OSAL/osal/osal_timer.c **** osalTimerRec_t *osalFindTimer( uint8 task_id, uint16 event_flag )
+ 169:OSAL/osal/osal_timer.c **** {
+  26              		.loc 1 169 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+  31              	.LVL0:
+ 170:OSAL/osal/osal_timer.c ****   osalTimerRec_t *srchTimer;
+ 171:OSAL/osal/osal_timer.c **** 
+ 172:OSAL/osal/osal_timer.c ****   // Head of the timer list
+ 173:OSAL/osal/osal_timer.c ****   srchTimer = timerHead;
+  32              		.loc 1 173 0
+  33 0000 064B     		ldr	r3, .L6
+  34 0002 1B68     		ldr	r3, [r3]
+  35              	.LVL1:
+ 174:OSAL/osal/osal_timer.c **** 
+ 175:OSAL/osal/osal_timer.c ****   // Stop when found or at the end
+ 176:OSAL/osal/osal_timer.c ****   while ( srchTimer )
+  36              		.loc 1 176 0
+  37 0004 00E0     		b	.L2
+  38              	.L3:
+ 177:OSAL/osal/osal_timer.c ****   {
+ 178:OSAL/osal/osal_timer.c ****     if ( srchTimer->event_flag == event_flag &&
+ 179:OSAL/osal/osal_timer.c ****          srchTimer->task_id == task_id )
+ 180:OSAL/osal/osal_timer.c ****       break;
+ 181:OSAL/osal/osal_timer.c **** 
+ 182:OSAL/osal/osal_timer.c ****     // Not this one, check another
+ 183:OSAL/osal/osal_timer.c ****     srchTimer = srchTimer->next;
+  39              		.loc 1 183 0
+  40 0006 1B68     		ldr	r3, [r3]
+  41              	.LVL2:
+  42              	.L2:
+ 176:OSAL/osal/osal_timer.c ****   {
+  43              		.loc 1 176 0
+  44 0008 002B     		cmp	r3, #0
+  45 000a 05D0     		beq	.L1
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 5
+
+
+ 178:OSAL/osal/osal_timer.c ****          srchTimer->task_id == task_id )
+  46              		.loc 1 178 0
+  47 000c DA88     		ldrh	r2, [r3, #6]
+  48 000e 8A42     		cmp	r2, r1
+  49 0010 F9D1     		bne	.L3
+ 179:OSAL/osal/osal_timer.c ****       break;
+  50              		.loc 1 179 0 discriminator 1
+  51 0012 1A7A     		ldrb	r2, [r3, #8]
+ 178:OSAL/osal/osal_timer.c ****          srchTimer->task_id == task_id )
+  52              		.loc 1 178 0 discriminator 1
+  53 0014 8242     		cmp	r2, r0
+  54 0016 F6D1     		bne	.L3
+  55              	.L1:
+ 184:OSAL/osal/osal_timer.c ****   }
+ 185:OSAL/osal/osal_timer.c **** 
+ 186:OSAL/osal/osal_timer.c ****   return ( srchTimer );
+ 187:OSAL/osal/osal_timer.c **** }
+  56              		.loc 1 187 0
+  57 0018 1800     		movs	r0, r3
+  58              	.LVL3:
+  59              		@ sp needed
+  60 001a 7047     		bx	lr
+  61              	.L7:
+  62              		.align	2
+  63              	.L6:
+  64 001c 00000000 		.word	timerHead
+  65              		.cfi_endproc
+  66              	.LFE39:
+  68              		.section	.text.osalAddTimer,"ax",%progbits
+  69              		.align	1
+  70              		.global	osalAddTimer
+  71              		.syntax unified
+  72              		.code	16
+  73              		.thumb_func
+  74              		.fpu softvfp
+  76              	osalAddTimer:
+  77              	.LFB38:
+ 105:OSAL/osal/osal_timer.c ****   osalTimerRec_t *newTimer;
+  78              		.loc 1 105 0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              	.LVL4:
+  83 0000 70B5     		push	{r4, r5, r6, lr}
+  84              	.LCFI0:
+  85              		.cfi_def_cfa_offset 16
+  86              		.cfi_offset 4, -16
+  87              		.cfi_offset 5, -12
+  88              		.cfi_offset 6, -8
+  89              		.cfi_offset 14, -4
+  90 0002 0500     		movs	r5, r0
+  91 0004 0C00     		movs	r4, r1
+  92 0006 1600     		movs	r6, r2
+ 110:OSAL/osal/osal_timer.c ****   if ( newTimer )
+  93              		.loc 1 110 0
+  94 0008 FFF7FEFF 		bl	osalFindTimer
+  95              	.LVL5:
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 6
+
+
+ 111:OSAL/osal/osal_timer.c ****   {
+  96              		.loc 1 111 0
+  97 000c 0028     		cmp	r0, #0
+  98 000e 01D0     		beq	.L9
+ 114:OSAL/osal/osal_timer.c **** 
+  99              		.loc 1 114 0
+ 100 0010 8680     		strh	r6, [r0, #4]
+ 101              	.L8:
+ 155:OSAL/osal/osal_timer.c **** 
+ 102              		.loc 1 155 0
+ 103              		@ sp needed
+ 104 0012 70BD     		pop	{r4, r5, r6, pc}
+ 105              	.L9:
+ 121:OSAL/osal/osal_timer.c **** 
+ 106              		.loc 1 121 0
+ 107 0014 0C20     		movs	r0, #12
+ 108              	.LVL6:
+ 109 0016 FFF7FEFF 		bl	osal_mem_alloc
+ 110              	.LVL7:
+ 123:OSAL/osal/osal_timer.c ****     {
+ 111              		.loc 1 123 0
+ 112 001a 0028     		cmp	r0, #0
+ 113 001c F9D0     		beq	.L8
+ 126:OSAL/osal/osal_timer.c ****       newTimer->event_flag = event_flag;
+ 114              		.loc 1 126 0
+ 115 001e 0572     		strb	r5, [r0, #8]
+ 127:OSAL/osal/osal_timer.c ****       newTimer->timeout = timeout;
+ 116              		.loc 1 127 0
+ 117 0020 C480     		strh	r4, [r0, #6]
+ 128:OSAL/osal/osal_timer.c ****       newTimer->next = (void *)NULL;
+ 118              		.loc 1 128 0
+ 119 0022 8680     		strh	r6, [r0, #4]
+ 129:OSAL/osal/osal_timer.c ****       newTimer->reloadTimeout = 0;
+ 120              		.loc 1 129 0
+ 121 0024 0023     		movs	r3, #0
+ 122 0026 0360     		str	r3, [r0]
+ 130:OSAL/osal/osal_timer.c **** 
+ 123              		.loc 1 130 0
+ 124 0028 4381     		strh	r3, [r0, #10]
+ 133:OSAL/osal/osal_timer.c ****       {
+ 125              		.loc 1 133 0
+ 126 002a 064B     		ldr	r3, .L13
+ 127 002c 1A68     		ldr	r2, [r3]
+ 128 002e 002A     		cmp	r2, #0
+ 129 0030 02D1     		bne	.L11
+ 136:OSAL/osal/osal_timer.c ****       }
+ 130              		.loc 1 136 0
+ 131 0032 1860     		str	r0, [r3]
+ 132 0034 EDE7     		b	.L8
+ 133              	.LVL8:
+ 134              	.L12:
+ 145:OSAL/osal/osal_timer.c **** 
+ 135              		.loc 1 145 0
+ 136 0036 1A00     		movs	r2, r3
+ 137              	.LVL9:
+ 138              	.L11:
+ 144:OSAL/osal/osal_timer.c ****           srchTimer = srchTimer->next;
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 7
+
+
+ 139              		.loc 1 144 0
+ 140 0038 1368     		ldr	r3, [r2]
+ 141 003a 002B     		cmp	r3, #0
+ 142 003c FBD1     		bne	.L12
+ 148:OSAL/osal/osal_timer.c ****       }
+ 143              		.loc 1 148 0
+ 144 003e 1060     		str	r0, [r2]
+ 145 0040 E7E7     		b	.L8
+ 146              	.L14:
+ 147 0042 C046     		.align	2
+ 148              	.L13:
+ 149 0044 00000000 		.word	timerHead
+ 150              		.cfi_endproc
+ 151              	.LFE38:
+ 153              		.section	.text.osalDeleteTimer,"ax",%progbits
+ 154              		.align	1
+ 155              		.global	osalDeleteTimer
+ 156              		.syntax unified
+ 157              		.code	16
+ 158              		.thumb_func
+ 159              		.fpu softvfp
+ 161              	osalDeleteTimer:
+ 162              	.LFB40:
+ 188:OSAL/osal/osal_timer.c **** 
+ 189:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 190:OSAL/osal/osal_timer.c ****  * @fn      osalDeleteTimer
+ 191:OSAL/osal/osal_timer.c ****  *
+ 192:OSAL/osal/osal_timer.c ****  * @brief   Delete a timer from a timer list.
+ 193:OSAL/osal/osal_timer.c ****  *
+ 194:OSAL/osal/osal_timer.c ****  * @param   table
+ 195:OSAL/osal/osal_timer.c ****  * @param   rmTimer
+ 196:OSAL/osal/osal_timer.c ****  *
+ 197:OSAL/osal/osal_timer.c ****  * @return  none
+ 198:OSAL/osal/osal_timer.c ****  */
+ 199:OSAL/osal/osal_timer.c **** void osalDeleteTimer( osalTimerRec_t *rmTimer )
+ 200:OSAL/osal/osal_timer.c **** {
+ 163              		.loc 1 200 0
+ 164              		.cfi_startproc
+ 165              		@ args = 0, pretend = 0, frame = 0
+ 166              		@ frame_needed = 0, uses_anonymous_args = 0
+ 167              		@ link register save eliminated.
+ 168              	.LVL10:
+ 201:OSAL/osal/osal_timer.c ****   // Does the timer list really exist
+ 202:OSAL/osal/osal_timer.c ****   if ( rmTimer )
+ 169              		.loc 1 202 0
+ 170 0000 0028     		cmp	r0, #0
+ 171 0002 01D0     		beq	.L15
+ 203:OSAL/osal/osal_timer.c ****   {
+ 204:OSAL/osal/osal_timer.c ****     // Clear the event flag and osalTimerUpdate() will delete 
+ 205:OSAL/osal/osal_timer.c ****     // the timer from the list.
+ 206:OSAL/osal/osal_timer.c ****     rmTimer->event_flag = 0;
+ 172              		.loc 1 206 0
+ 173 0004 0023     		movs	r3, #0
+ 174 0006 C380     		strh	r3, [r0, #6]
+ 175              	.L15:
+ 207:OSAL/osal/osal_timer.c ****   }
+ 208:OSAL/osal/osal_timer.c **** }
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 8
+
+
+ 176              		.loc 1 208 0
+ 177              		@ sp needed
+ 178 0008 7047     		bx	lr
+ 179              		.cfi_endproc
+ 180              	.LFE40:
+ 182              		.section	.text.osal_timer_hw_setup,"ax",%progbits
+ 183              		.align	1
+ 184              		.global	osal_timer_hw_setup
+ 185              		.syntax unified
+ 186              		.code	16
+ 187              		.thumb_func
+ 188              		.fpu softvfp
+ 190              	osal_timer_hw_setup:
+ 191              	.LFB42:
+ 209:OSAL/osal/osal_timer.c **** 
+ 210:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 211:OSAL/osal/osal_timer.c ****  * @fn      osal_timer_activate
+ 212:OSAL/osal/osal_timer.c ****  *
+ 213:OSAL/osal/osal_timer.c ****  * @brief
+ 214:OSAL/osal/osal_timer.c ****  *
+ 215:OSAL/osal/osal_timer.c ****  *   Turns the hardware timer on or off
+ 216:OSAL/osal/osal_timer.c ****  *
+ 217:OSAL/osal/osal_timer.c ****  * @param  uint8 turn_on - false - turn off, true - turn on
+ 218:OSAL/osal/osal_timer.c ****  *
+ 219:OSAL/osal/osal_timer.c ****  * @return  none
+ 220:OSAL/osal/osal_timer.c ****  */
+ 221:OSAL/osal/osal_timer.c **** void osal_timer_activate( uint8 turn_on )
+ 222:OSAL/osal/osal_timer.c **** {
+ 223:OSAL/osal/osal_timer.c ****   osal_timer_hw_setup( turn_on );
+ 224:OSAL/osal/osal_timer.c ****   timerActive = turn_on;
+ 225:OSAL/osal/osal_timer.c **** }
+ 226:OSAL/osal/osal_timer.c **** 
+ 227:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 228:OSAL/osal/osal_timer.c ****  * @fn      osal_timer_hw_setup
+ 229:OSAL/osal/osal_timer.c ****  *
+ 230:OSAL/osal/osal_timer.c ****  * @brief
+ 231:OSAL/osal/osal_timer.c ****  *
+ 232:OSAL/osal/osal_timer.c ****  *   Setup the timer hardware.
+ 233:OSAL/osal/osal_timer.c ****  *
+ 234:OSAL/osal/osal_timer.c ****  * @param  uint8 turn_on
+ 235:OSAL/osal/osal_timer.c ****  *
+ 236:OSAL/osal/osal_timer.c ****  * @return  void
+ 237:OSAL/osal/osal_timer.c ****  */
+ 238:OSAL/osal/osal_timer.c **** void osal_timer_hw_setup( uint8 turn_on )
+ 239:OSAL/osal/osal_timer.c **** {
+ 192              		.loc 1 239 0
+ 193              		.cfi_startproc
+ 194              		@ args = 0, pretend = 0, frame = 0
+ 195              		@ frame_needed = 0, uses_anonymous_args = 0
+ 196              	.LVL11:
+ 197 0000 10B5     		push	{r4, lr}
+ 198              	.LCFI1:
+ 199              		.cfi_def_cfa_offset 8
+ 200              		.cfi_offset 4, -8
+ 201              		.cfi_offset 14, -4
+ 240:OSAL/osal/osal_timer.c ****   if (turn_on)
+ 202              		.loc 1 240 0
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 9
+
+
+ 203 0002 0028     		cmp	r0, #0
+ 204 0004 02D1     		bne	.L20
+ 241:OSAL/osal/osal_timer.c ****   {
+ 242:OSAL/osal/osal_timer.c ****     OSAL_TIMER_TICKSTART( ) ;
+ 243:OSAL/osal/osal_timer.c ****   }
+ 244:OSAL/osal/osal_timer.c ****   else
+ 245:OSAL/osal/osal_timer.c ****   {
+ 246:OSAL/osal/osal_timer.c ****     OSAL_TIMER_TICKSTOP( );
+ 205              		.loc 1 246 0
+ 206 0006 FFF7FEFF 		bl	OSAL_TIMER_TICKSTOP
+ 207              	.LVL12:
+ 208              	.L17:
+ 247:OSAL/osal/osal_timer.c ****   }
+ 248:OSAL/osal/osal_timer.c **** }
+ 209              		.loc 1 248 0
+ 210              		@ sp needed
+ 211 000a 10BD     		pop	{r4, pc}
+ 212              	.LVL13:
+ 213              	.L20:
+ 242:OSAL/osal/osal_timer.c ****   }
+ 214              		.loc 1 242 0
+ 215 000c FFF7FEFF 		bl	OSAL_TIMER_TICKSTART
+ 216              	.LVL14:
+ 217 0010 FBE7     		b	.L17
+ 218              		.cfi_endproc
+ 219              	.LFE42:
+ 221              		.section	.text.osal_timer_activate,"ax",%progbits
+ 222              		.align	1
+ 223              		.global	osal_timer_activate
+ 224              		.syntax unified
+ 225              		.code	16
+ 226              		.thumb_func
+ 227              		.fpu softvfp
+ 229              	osal_timer_activate:
+ 230              	.LFB41:
+ 222:OSAL/osal/osal_timer.c ****   osal_timer_hw_setup( turn_on );
+ 231              		.loc 1 222 0
+ 232              		.cfi_startproc
+ 233              		@ args = 0, pretend = 0, frame = 0
+ 234              		@ frame_needed = 0, uses_anonymous_args = 0
+ 235              	.LVL15:
+ 236 0000 10B5     		push	{r4, lr}
+ 237              	.LCFI2:
+ 238              		.cfi_def_cfa_offset 8
+ 239              		.cfi_offset 4, -8
+ 240              		.cfi_offset 14, -4
+ 241 0002 0400     		movs	r4, r0
+ 223:OSAL/osal/osal_timer.c ****   timerActive = turn_on;
+ 242              		.loc 1 223 0
+ 243 0004 FFF7FEFF 		bl	osal_timer_hw_setup
+ 244              	.LVL16:
+ 224:OSAL/osal/osal_timer.c **** }
+ 245              		.loc 1 224 0
+ 246 0008 014B     		ldr	r3, .L22
+ 247 000a 1C70     		strb	r4, [r3]
+ 225:OSAL/osal/osal_timer.c **** 
+ 248              		.loc 1 225 0
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 10
+
+
+ 249              		@ sp needed
+ 250 000c 10BD     		pop	{r4, pc}
+ 251              	.L23:
+ 252 000e C046     		.align	2
+ 253              	.L22:
+ 254 0010 00000000 		.word	timerActive
+ 255              		.cfi_endproc
+ 256              	.LFE41:
+ 258              		.section	.text.osalTimerInit,"ax",%progbits
+ 259              		.align	1
+ 260              		.global	osalTimerInit
+ 261              		.syntax unified
+ 262              		.code	16
+ 263              		.thumb_func
+ 264              		.fpu softvfp
+ 266              	osalTimerInit:
+ 267              	.LFB37:
+  79:OSAL/osal/osal_timer.c ****   OSAL_TIMER_TICKINIT();    //初始化硬件定时器
+ 268              		.loc 1 79 0
+ 269              		.cfi_startproc
+ 270              		@ args = 0, pretend = 0, frame = 0
+ 271              		@ frame_needed = 0, uses_anonymous_args = 0
+ 272 0000 10B5     		push	{r4, lr}
+ 273              	.LCFI3:
+ 274              		.cfi_def_cfa_offset 8
+ 275              		.cfi_offset 4, -8
+ 276              		.cfi_offset 14, -4
+  80:OSAL/osal/osal_timer.c ****   
+ 277              		.loc 1 80 0
+ 278 0002 FFF7FEFF 		bl	OSAL_TIMER_TICKINIT
+ 279              	.LVL17:
+  83:OSAL/osal/osal_timer.c **** 
+ 280              		.loc 1 83 0
+ 281 0006 064B     		ldr	r3, .L25
+ 282 0008 0122     		movs	r2, #1
+ 283 000a 1A70     		strb	r2, [r3]
+  86:OSAL/osal/osal_timer.c ****   timerActive = FALSE;
+ 284              		.loc 1 86 0
+ 285 000c 0020     		movs	r0, #0
+ 286 000e FFF7FEFF 		bl	osal_timer_activate
+ 287              	.LVL18:
+  87:OSAL/osal/osal_timer.c **** 
+ 288              		.loc 1 87 0
+ 289 0012 0023     		movs	r3, #0
+ 290 0014 034A     		ldr	r2, .L25+4
+ 291 0016 1370     		strb	r3, [r2]
+  89:OSAL/osal/osal_timer.c **** }
+ 292              		.loc 1 89 0
+ 293 0018 034A     		ldr	r2, .L25+8
+ 294 001a 1360     		str	r3, [r2]
+  90:OSAL/osal/osal_timer.c **** 
+ 295              		.loc 1 90 0
+ 296              		@ sp needed
+ 297 001c 10BD     		pop	{r4, pc}
+ 298              	.L26:
+ 299 001e C046     		.align	2
+ 300              	.L25:
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 11
+
+
+ 301 0020 00000000 		.word	tmr_decr_time
+ 302 0024 00000000 		.word	timerActive
+ 303 0028 00000000 		.word	.LANCHOR0
+ 304              		.cfi_endproc
+ 305              	.LFE37:
+ 307              		.section	.text.osal_start_timerEx,"ax",%progbits
+ 308              		.align	1
+ 309              		.global	osal_start_timerEx
+ 310              		.syntax unified
+ 311              		.code	16
+ 312              		.thumb_func
+ 313              		.fpu softvfp
+ 315              	osal_start_timerEx:
+ 316              	.LFB43:
+ 249:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 250:OSAL/osal/osal_timer.c ****  * @fn      osal_start_timerEx
+ 251:OSAL/osal/osal_timer.c ****  *
+ 252:OSAL/osal/osal_timer.c ****  * @brief
+ 253:OSAL/osal/osal_timer.c ****  *
+ 254:OSAL/osal/osal_timer.c ****  *   This function is called to start a timer to expire in n mSecs.
+ 255:OSAL/osal/osal_timer.c ****  *   When the timer expires, the calling task will get the specified event.
+ 256:OSAL/osal/osal_timer.c ****  *
+ 257:OSAL/osal/osal_timer.c ****  * @param   uint8 taskID - task id to set timer for
+ 258:OSAL/osal/osal_timer.c ****  * @param   uint16 event_id - event to be notified with
+ 259:OSAL/osal/osal_timer.c ****  * @param   UNINT16 timeout_value - in milliseconds.
+ 260:OSAL/osal/osal_timer.c ****  *
+ 261:OSAL/osal/osal_timer.c ****  * @return  SUCCESS, or NO_TIMER_AVAIL.
+ 262:OSAL/osal/osal_timer.c ****  */
+ 263:OSAL/osal/osal_timer.c **** uint8 osal_start_timerEx( uint8 taskID, uint16 event_id, uint16 timeout_value )
+ 264:OSAL/osal/osal_timer.c **** {
+ 317              		.loc 1 264 0
+ 318              		.cfi_startproc
+ 319              		@ args = 0, pretend = 0, frame = 0
+ 320              		@ frame_needed = 0, uses_anonymous_args = 0
+ 321              	.LVL19:
+ 322 0000 10B5     		push	{r4, lr}
+ 323              	.LCFI4:
+ 324              		.cfi_def_cfa_offset 8
+ 325              		.cfi_offset 4, -8
+ 326              		.cfi_offset 14, -4
+ 265:OSAL/osal/osal_timer.c ****   osalTimerRec_t *newTimer;
+ 266:OSAL/osal/osal_timer.c **** 
+ 267:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 268:OSAL/osal/osal_timer.c **** 
+ 269:OSAL/osal/osal_timer.c ****   // Add timer
+ 270:OSAL/osal/osal_timer.c ****   newTimer = osalAddTimer( taskID, event_id, timeout_value );
+ 327              		.loc 1 270 0
+ 328 0002 FFF7FEFF 		bl	osalAddTimer
+ 329              	.LVL20:
+ 330 0006 041E     		subs	r4, r0, #0
+ 331              	.LVL21:
+ 271:OSAL/osal/osal_timer.c **** 
+ 272:OSAL/osal/osal_timer.c ****   if ( newTimer )
+ 332              		.loc 1 272 0
+ 333 0008 03D0     		beq	.L28
+ 273:OSAL/osal/osal_timer.c ****   {
+ 274:OSAL/osal/osal_timer.c ****     // Does the hal timer need to be started?
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 12
+
+
+ 275:OSAL/osal/osal_timer.c ****     if ( timerActive == FALSE )
+ 334              		.loc 1 275 0
+ 335 000a 074B     		ldr	r3, .L32
+ 336 000c 1B78     		ldrb	r3, [r3]
+ 337 000e 002B     		cmp	r3, #0
+ 338 0010 03D0     		beq	.L31
+ 339              	.LVL22:
+ 340              	.L28:
+ 276:OSAL/osal/osal_timer.c ****     {
+ 277:OSAL/osal/osal_timer.c ****       osal_timer_activate( TRUE );
+ 278:OSAL/osal/osal_timer.c ****     }
+ 279:OSAL/osal/osal_timer.c ****   }
+ 280:OSAL/osal/osal_timer.c **** 
+ 281:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 282:OSAL/osal/osal_timer.c **** 
+ 283:OSAL/osal/osal_timer.c ****   return ( (newTimer != NULL) ? SUCCESS : NO_TIMER_AVAIL );
+ 341              		.loc 1 283 0
+ 342 0012 002C     		cmp	r4, #0
+ 343 0014 05D0     		beq	.L30
+ 344 0016 0120     		movs	r0, #1
+ 345              	.L29:
+ 284:OSAL/osal/osal_timer.c **** }
+ 346              		.loc 1 284 0 discriminator 4
+ 347              		@ sp needed
+ 348              	.LVL23:
+ 349 0018 10BD     		pop	{r4, pc}
+ 350              	.LVL24:
+ 351              	.L31:
+ 277:OSAL/osal/osal_timer.c ****     }
+ 352              		.loc 1 277 0
+ 353 001a 0120     		movs	r0, #1
+ 354              	.LVL25:
+ 355 001c FFF7FEFF 		bl	osal_timer_activate
+ 356              	.LVL26:
+ 357 0020 F7E7     		b	.L28
+ 358              	.L30:
+ 283:OSAL/osal/osal_timer.c **** }
+ 359              		.loc 1 283 0
+ 360 0022 0520     		movs	r0, #5
+ 361 0024 F8E7     		b	.L29
+ 362              	.L33:
+ 363 0026 C046     		.align	2
+ 364              	.L32:
+ 365 0028 00000000 		.word	timerActive
+ 366              		.cfi_endproc
+ 367              	.LFE43:
+ 369              		.section	.text.osal_start_reload_timer,"ax",%progbits
+ 370              		.align	1
+ 371              		.global	osal_start_reload_timer
+ 372              		.syntax unified
+ 373              		.code	16
+ 374              		.thumb_func
+ 375              		.fpu softvfp
+ 377              	osal_start_reload_timer:
+ 378              	.LFB44:
+ 285:OSAL/osal/osal_timer.c **** 
+ 286:OSAL/osal/osal_timer.c **** /*********************************************************************
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 13
+
+
+ 287:OSAL/osal/osal_timer.c ****  * @fn      osal_start_reload_timer
+ 288:OSAL/osal/osal_timer.c ****  *
+ 289:OSAL/osal/osal_timer.c ****  * @brief
+ 290:OSAL/osal/osal_timer.c ****  *
+ 291:OSAL/osal/osal_timer.c ****  *   This function is called to start a timer to expire in n mSecs.
+ 292:OSAL/osal/osal_timer.c ****  *   When the timer expires, the calling task will get the specified event
+ 293:OSAL/osal/osal_timer.c ****  *   and the timer will be reloaded with the timeout value.
+ 294:OSAL/osal/osal_timer.c ****  *
+ 295:OSAL/osal/osal_timer.c ****  * @param   uint8 taskID - task id to set timer for
+ 296:OSAL/osal/osal_timer.c ****  * @param   uint16 event_id - event to be notified with
+ 297:OSAL/osal/osal_timer.c ****  * @param   UNINT16 timeout_value - in milliseconds.
+ 298:OSAL/osal/osal_timer.c ****  *
+ 299:OSAL/osal/osal_timer.c ****  * @return  SUCCESS, or NO_TIMER_AVAIL.
+ 300:OSAL/osal/osal_timer.c ****  */
+ 301:OSAL/osal/osal_timer.c **** uint8 osal_start_reload_timer( uint8 taskID, uint16 event_id, uint16 timeout_value )
+ 302:OSAL/osal/osal_timer.c **** {
+ 379              		.loc 1 302 0
+ 380              		.cfi_startproc
+ 381              		@ args = 0, pretend = 0, frame = 0
+ 382              		@ frame_needed = 0, uses_anonymous_args = 0
+ 383              	.LVL27:
+ 384 0000 70B5     		push	{r4, r5, r6, lr}
+ 385              	.LCFI5:
+ 386              		.cfi_def_cfa_offset 16
+ 387              		.cfi_offset 4, -16
+ 388              		.cfi_offset 5, -12
+ 389              		.cfi_offset 6, -8
+ 390              		.cfi_offset 14, -4
+ 391 0002 1500     		movs	r5, r2
+ 303:OSAL/osal/osal_timer.c ****   osalTimerRec_t *newTimer;
+ 304:OSAL/osal/osal_timer.c **** 
+ 305:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 306:OSAL/osal/osal_timer.c **** 
+ 307:OSAL/osal/osal_timer.c ****   // Add timer
+ 308:OSAL/osal/osal_timer.c ****   newTimer = osalAddTimer( taskID, event_id, timeout_value );
+ 392              		.loc 1 308 0
+ 393 0004 FFF7FEFF 		bl	osalAddTimer
+ 394              	.LVL28:
+ 395 0008 041E     		subs	r4, r0, #0
+ 396              	.LVL29:
+ 309:OSAL/osal/osal_timer.c ****   if ( newTimer )
+ 397              		.loc 1 309 0
+ 398 000a 00D0     		beq	.L35
+ 310:OSAL/osal/osal_timer.c ****   {
+ 311:OSAL/osal/osal_timer.c ****     // Load the reload timeout value
+ 312:OSAL/osal/osal_timer.c ****     newTimer->reloadTimeout = timeout_value;
+ 399              		.loc 1 312 0
+ 400 000c 4581     		strh	r5, [r0, #10]
+ 401              	.L35:
+ 313:OSAL/osal/osal_timer.c ****   }
+ 314:OSAL/osal/osal_timer.c **** 
+ 315:OSAL/osal/osal_timer.c ****   if ( newTimer )
+ 402              		.loc 1 315 0
+ 403 000e 002C     		cmp	r4, #0
+ 404 0010 03D0     		beq	.L36
+ 316:OSAL/osal/osal_timer.c ****   {
+ 317:OSAL/osal/osal_timer.c ****     // Does the hal timer need to be started?
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 14
+
+
+ 318:OSAL/osal/osal_timer.c ****     if ( timerActive == FALSE )
+ 405              		.loc 1 318 0
+ 406 0012 074B     		ldr	r3, .L40
+ 407 0014 1B78     		ldrb	r3, [r3]
+ 408 0016 002B     		cmp	r3, #0
+ 409 0018 03D0     		beq	.L39
+ 410              	.LVL30:
+ 411              	.L36:
+ 319:OSAL/osal/osal_timer.c ****     {
+ 320:OSAL/osal/osal_timer.c ****       osal_timer_activate( TRUE );
+ 321:OSAL/osal/osal_timer.c ****     }
+ 322:OSAL/osal/osal_timer.c ****   }
+ 323:OSAL/osal/osal_timer.c **** 
+ 324:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 325:OSAL/osal/osal_timer.c **** 
+ 326:OSAL/osal/osal_timer.c ****   return ( (newTimer != NULL) ? SUCCESS : NO_TIMER_AVAIL );
+ 412              		.loc 1 326 0
+ 413 001a 002C     		cmp	r4, #0
+ 414 001c 05D0     		beq	.L38
+ 415 001e 0120     		movs	r0, #1
+ 416              	.L37:
+ 327:OSAL/osal/osal_timer.c **** }
+ 417              		.loc 1 327 0 discriminator 4
+ 418              		@ sp needed
+ 419              	.LVL31:
+ 420 0020 70BD     		pop	{r4, r5, r6, pc}
+ 421              	.LVL32:
+ 422              	.L39:
+ 320:OSAL/osal/osal_timer.c ****     }
+ 423              		.loc 1 320 0
+ 424 0022 0120     		movs	r0, #1
+ 425              	.LVL33:
+ 426 0024 FFF7FEFF 		bl	osal_timer_activate
+ 427              	.LVL34:
+ 428 0028 F7E7     		b	.L36
+ 429              	.L38:
+ 326:OSAL/osal/osal_timer.c **** }
+ 430              		.loc 1 326 0
+ 431 002a 0520     		movs	r0, #5
+ 432 002c F8E7     		b	.L37
+ 433              	.L41:
+ 434 002e C046     		.align	2
+ 435              	.L40:
+ 436 0030 00000000 		.word	timerActive
+ 437              		.cfi_endproc
+ 438              	.LFE44:
+ 440              		.section	.text.osal_stop_timerEx,"ax",%progbits
+ 441              		.align	1
+ 442              		.global	osal_stop_timerEx
+ 443              		.syntax unified
+ 444              		.code	16
+ 445              		.thumb_func
+ 446              		.fpu softvfp
+ 448              	osal_stop_timerEx:
+ 449              	.LFB45:
+ 328:OSAL/osal/osal_timer.c **** 
+ 329:OSAL/osal/osal_timer.c **** /*********************************************************************
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 15
+
+
+ 330:OSAL/osal/osal_timer.c ****  * @fn      osal_stop_timerEx
+ 331:OSAL/osal/osal_timer.c ****  *
+ 332:OSAL/osal/osal_timer.c ****  * @brief
+ 333:OSAL/osal/osal_timer.c ****  *
+ 334:OSAL/osal/osal_timer.c ****  *   This function is called to stop a timer that has already been started.
+ 335:OSAL/osal/osal_timer.c ****  *   If ZSUCCESS, the function will cancel the timer and prevent the event
+ 336:OSAL/osal/osal_timer.c ****  *   associated with the timer from being set for the calling task.
+ 337:OSAL/osal/osal_timer.c ****  *
+ 338:OSAL/osal/osal_timer.c ****  * @param   uint8 task_id - task id of timer to stop
+ 339:OSAL/osal/osal_timer.c ****  * @param   uint16 event_id - identifier of the timer that is to be stopped
+ 340:OSAL/osal/osal_timer.c ****  *
+ 341:OSAL/osal/osal_timer.c ****  * @return  SUCCESS or INVALID_EVENT_ID
+ 342:OSAL/osal/osal_timer.c ****  */
+ 343:OSAL/osal/osal_timer.c **** uint8 osal_stop_timerEx( uint8 task_id, uint16 event_id )
+ 344:OSAL/osal/osal_timer.c **** {
+ 450              		.loc 1 344 0
+ 451              		.cfi_startproc
+ 452              		@ args = 0, pretend = 0, frame = 0
+ 453              		@ frame_needed = 0, uses_anonymous_args = 0
+ 454              	.LVL35:
+ 455 0000 10B5     		push	{r4, lr}
+ 456              	.LCFI6:
+ 457              		.cfi_def_cfa_offset 8
+ 458              		.cfi_offset 4, -8
+ 459              		.cfi_offset 14, -4
+ 345:OSAL/osal/osal_timer.c ****   osalTimerRec_t *foundTimer;
+ 346:OSAL/osal/osal_timer.c **** 
+ 347:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 348:OSAL/osal/osal_timer.c **** 
+ 349:OSAL/osal/osal_timer.c ****   // Find the timer to stop
+ 350:OSAL/osal/osal_timer.c ****   foundTimer = osalFindTimer( task_id, event_id );
+ 460              		.loc 1 350 0
+ 461 0002 FFF7FEFF 		bl	osalFindTimer
+ 462              	.LVL36:
+ 463 0006 041E     		subs	r4, r0, #0
+ 464              	.LVL37:
+ 351:OSAL/osal/osal_timer.c ****   if ( foundTimer )
+ 465              		.loc 1 351 0
+ 466 0008 01D0     		beq	.L43
+ 352:OSAL/osal/osal_timer.c ****   {
+ 353:OSAL/osal/osal_timer.c ****     osalDeleteTimer( foundTimer );
+ 467              		.loc 1 353 0
+ 468 000a FFF7FEFF 		bl	osalDeleteTimer
+ 469              	.LVL38:
+ 470              	.L43:
+ 354:OSAL/osal/osal_timer.c ****   }
+ 355:OSAL/osal/osal_timer.c **** 
+ 356:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 357:OSAL/osal/osal_timer.c **** 
+ 358:OSAL/osal/osal_timer.c ****   return ( (foundTimer != NULL) ? SUCCESS : INVALID_EVENT_ID );
+ 471              		.loc 1 358 0
+ 472 000e 002C     		cmp	r4, #0
+ 473 0010 01D0     		beq	.L45
+ 474 0012 0120     		movs	r0, #1
+ 475              	.L44:
+ 359:OSAL/osal/osal_timer.c **** }
+ 476              		.loc 1 359 0 discriminator 4
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 16
+
+
+ 477              		@ sp needed
+ 478              	.LVL39:
+ 479 0014 10BD     		pop	{r4, pc}
+ 480              	.LVL40:
+ 481              	.L45:
+ 358:OSAL/osal/osal_timer.c **** }
+ 482              		.loc 1 358 0
+ 483 0016 0420     		movs	r0, #4
+ 484 0018 FCE7     		b	.L44
+ 485              		.cfi_endproc
+ 486              	.LFE45:
+ 488              		.section	.text.osal_get_timeoutEx,"ax",%progbits
+ 489              		.align	1
+ 490              		.global	osal_get_timeoutEx
+ 491              		.syntax unified
+ 492              		.code	16
+ 493              		.thumb_func
+ 494              		.fpu softvfp
+ 496              	osal_get_timeoutEx:
+ 497              	.LFB46:
+ 360:OSAL/osal/osal_timer.c **** 
+ 361:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 362:OSAL/osal/osal_timer.c ****  * @fn      osal_get_timeoutEx
+ 363:OSAL/osal/osal_timer.c ****  *
+ 364:OSAL/osal/osal_timer.c ****  * @brief
+ 365:OSAL/osal/osal_timer.c ****  *
+ 366:OSAL/osal/osal_timer.c ****  * @param   uint8 task_id - task id of timer to check
+ 367:OSAL/osal/osal_timer.c ****  * @param   uint16 event_id - identifier of timer to be checked
+ 368:OSAL/osal/osal_timer.c ****  *
+ 369:OSAL/osal/osal_timer.c ****  * @return  Return the timer's tick count if found, zero otherwise.
+ 370:OSAL/osal/osal_timer.c ****  */
+ 371:OSAL/osal/osal_timer.c **** uint16 osal_get_timeoutEx( uint8 task_id, uint16 event_id )
+ 372:OSAL/osal/osal_timer.c **** {
+ 498              		.loc 1 372 0
+ 499              		.cfi_startproc
+ 500              		@ args = 0, pretend = 0, frame = 0
+ 501              		@ frame_needed = 0, uses_anonymous_args = 0
+ 502              	.LVL41:
+ 503 0000 10B5     		push	{r4, lr}
+ 504              	.LCFI7:
+ 505              		.cfi_def_cfa_offset 8
+ 506              		.cfi_offset 4, -8
+ 507              		.cfi_offset 14, -4
+ 508              	.LVL42:
+ 373:OSAL/osal/osal_timer.c ****   uint16 rtrn = 0;
+ 374:OSAL/osal/osal_timer.c ****   osalTimerRec_t *tmr;
+ 375:OSAL/osal/osal_timer.c **** 
+ 376:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 377:OSAL/osal/osal_timer.c **** 
+ 378:OSAL/osal/osal_timer.c ****   tmr = osalFindTimer( task_id, event_id );
+ 509              		.loc 1 378 0
+ 510 0002 FFF7FEFF 		bl	osalFindTimer
+ 511              	.LVL43:
+ 379:OSAL/osal/osal_timer.c **** 
+ 380:OSAL/osal/osal_timer.c ****   if ( tmr )
+ 512              		.loc 1 380 0
+ 513 0006 0028     		cmp	r0, #0
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 17
+
+
+ 514 0008 01D0     		beq	.L48
+ 381:OSAL/osal/osal_timer.c ****   {
+ 382:OSAL/osal/osal_timer.c ****     rtrn = tmr->timeout;
+ 515              		.loc 1 382 0
+ 516 000a 8088     		ldrh	r0, [r0, #4]
+ 517              	.LVL44:
+ 518              	.L47:
+ 383:OSAL/osal/osal_timer.c ****   }
+ 384:OSAL/osal/osal_timer.c **** 
+ 385:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 386:OSAL/osal/osal_timer.c **** 
+ 387:OSAL/osal/osal_timer.c ****   return rtrn;
+ 388:OSAL/osal/osal_timer.c **** }
+ 519              		.loc 1 388 0
+ 520              		@ sp needed
+ 521 000c 10BD     		pop	{r4, pc}
+ 522              	.LVL45:
+ 523              	.L48:
+ 373:OSAL/osal/osal_timer.c ****   osalTimerRec_t *tmr;
+ 524              		.loc 1 373 0
+ 525 000e 0020     		movs	r0, #0
+ 526              	.LVL46:
+ 527 0010 FCE7     		b	.L47
+ 528              		.cfi_endproc
+ 529              	.LFE46:
+ 531              		.section	.text.osal_timer_num_active,"ax",%progbits
+ 532              		.align	1
+ 533              		.global	osal_timer_num_active
+ 534              		.syntax unified
+ 535              		.code	16
+ 536              		.thumb_func
+ 537              		.fpu softvfp
+ 539              	osal_timer_num_active:
+ 540              	.LFB47:
+ 389:OSAL/osal/osal_timer.c **** 
+ 390:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 391:OSAL/osal/osal_timer.c ****  * @fn      osal_timer_num_active
+ 392:OSAL/osal/osal_timer.c ****  *
+ 393:OSAL/osal/osal_timer.c ****  * @brief
+ 394:OSAL/osal/osal_timer.c ****  *
+ 395:OSAL/osal/osal_timer.c ****  *   This function counts the number of active timers.
+ 396:OSAL/osal/osal_timer.c ****  *
+ 397:OSAL/osal/osal_timer.c ****  * @return  uint8 - number of timers
+ 398:OSAL/osal/osal_timer.c ****  */
+ 399:OSAL/osal/osal_timer.c **** uint8 osal_timer_num_active( void )
+ 400:OSAL/osal/osal_timer.c **** {
+ 541              		.loc 1 400 0
+ 542              		.cfi_startproc
+ 543              		@ args = 0, pretend = 0, frame = 0
+ 544              		@ frame_needed = 0, uses_anonymous_args = 0
+ 545              		@ link register save eliminated.
+ 546              	.LVL47:
+ 401:OSAL/osal/osal_timer.c ****   uint8 num_timers = 0;
+ 402:OSAL/osal/osal_timer.c ****   osalTimerRec_t *srchTimer;
+ 403:OSAL/osal/osal_timer.c **** 
+ 404:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 405:OSAL/osal/osal_timer.c **** 
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 18
+
+
+ 406:OSAL/osal/osal_timer.c ****   // Head of the timer list
+ 407:OSAL/osal/osal_timer.c ****   srchTimer = timerHead;
+ 547              		.loc 1 407 0
+ 548 0000 044B     		ldr	r3, .L52
+ 549 0002 1B68     		ldr	r3, [r3]
+ 550              	.LVL48:
+ 401:OSAL/osal/osal_timer.c ****   uint8 num_timers = 0;
+ 551              		.loc 1 401 0
+ 552 0004 0020     		movs	r0, #0
+ 408:OSAL/osal/osal_timer.c **** 
+ 409:OSAL/osal/osal_timer.c ****   // Count timers in the list
+ 410:OSAL/osal/osal_timer.c ****   while ( srchTimer != NULL )
+ 553              		.loc 1 410 0
+ 554 0006 02E0     		b	.L50
+ 555              	.LVL49:
+ 556              	.L51:
+ 411:OSAL/osal/osal_timer.c ****   {
+ 412:OSAL/osal/osal_timer.c ****     num_timers++;
+ 557              		.loc 1 412 0
+ 558 0008 0130     		adds	r0, r0, #1
+ 559              	.LVL50:
+ 560 000a C0B2     		uxtb	r0, r0
+ 561              	.LVL51:
+ 413:OSAL/osal/osal_timer.c ****     srchTimer = srchTimer->next;
+ 562              		.loc 1 413 0
+ 563 000c 1B68     		ldr	r3, [r3]
+ 564              	.LVL52:
+ 565              	.L50:
+ 410:OSAL/osal/osal_timer.c ****   {
+ 566              		.loc 1 410 0
+ 567 000e 002B     		cmp	r3, #0
+ 568 0010 FAD1     		bne	.L51
+ 414:OSAL/osal/osal_timer.c ****   }
+ 415:OSAL/osal/osal_timer.c **** 
+ 416:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 417:OSAL/osal/osal_timer.c **** 
+ 418:OSAL/osal/osal_timer.c ****   return num_timers;
+ 419:OSAL/osal/osal_timer.c **** }
+ 569              		.loc 1 419 0
+ 570              		@ sp needed
+ 571 0012 7047     		bx	lr
+ 572              	.L53:
+ 573              		.align	2
+ 574              	.L52:
+ 575 0014 00000000 		.word	timerHead
+ 576              		.cfi_endproc
+ 577              	.LFE47:
+ 579              		.section	.text.osalTimerUpdate,"ax",%progbits
+ 580              		.align	1
+ 581              		.global	osalTimerUpdate
+ 582              		.syntax unified
+ 583              		.code	16
+ 584              		.thumb_func
+ 585              		.fpu softvfp
+ 587              	osalTimerUpdate:
+ 588              	.LFB48:
+ 420:OSAL/osal/osal_timer.c **** 
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 19
+
+
+ 421:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 422:OSAL/osal/osal_timer.c ****  * @fn      osalTimerUpdate
+ 423:OSAL/osal/osal_timer.c ****  *
+ 424:OSAL/osal/osal_timer.c ****  * @brief   Update the timer structures for a timer tick.
+ 425:OSAL/osal/osal_timer.c ****  *
+ 426:OSAL/osal/osal_timer.c ****  * @param   none
+ 427:OSAL/osal/osal_timer.c ****  *
+ 428:OSAL/osal/osal_timer.c ****  * @return  none
+ 429:OSAL/osal/osal_timer.c ****  *********************************************************************/
+ 430:OSAL/osal/osal_timer.c **** void osalTimerUpdate( uint16 updateTime )
+ 431:OSAL/osal/osal_timer.c **** {
+ 589              		.loc 1 431 0
+ 590              		.cfi_startproc
+ 591              		@ args = 0, pretend = 0, frame = 0
+ 592              		@ frame_needed = 0, uses_anonymous_args = 0
+ 593              	.LVL53:
+ 594 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 595              	.LCFI8:
+ 596              		.cfi_def_cfa_offset 24
+ 597              		.cfi_offset 3, -24
+ 598              		.cfi_offset 4, -20
+ 599              		.cfi_offset 5, -16
+ 600              		.cfi_offset 6, -12
+ 601              		.cfi_offset 7, -8
+ 602              		.cfi_offset 14, -4
+ 603 0002 0600     		movs	r6, r0
+ 432:OSAL/osal/osal_timer.c ****   osalTimerRec_t *srchTimer;
+ 433:OSAL/osal/osal_timer.c ****   osalTimerRec_t *prevTimer;
+ 434:OSAL/osal/osal_timer.c **** 
+ 435:OSAL/osal/osal_timer.c ****   HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 436:OSAL/osal/osal_timer.c ****   // Update the system time
+ 437:OSAL/osal/osal_timer.c ****   osal_systemClock += updateTime;
+ 604              		.loc 1 437 0
+ 605 0004 224A     		ldr	r2, .L71
+ 606 0006 1368     		ldr	r3, [r2]
+ 607 0008 1B18     		adds	r3, r3, r0
+ 608 000a 1360     		str	r3, [r2]
+ 438:OSAL/osal/osal_timer.c ****   HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 439:OSAL/osal/osal_timer.c **** 
+ 440:OSAL/osal/osal_timer.c ****   // Look for open timer slot
+ 441:OSAL/osal/osal_timer.c ****   if ( timerHead != NULL )
+ 609              		.loc 1 441 0
+ 610 000c 214B     		ldr	r3, .L71+4
+ 611 000e 1C68     		ldr	r4, [r3]
+ 612 0010 002C     		cmp	r4, #0
+ 613 0012 3BD0     		beq	.L54
+ 442:OSAL/osal/osal_timer.c ****   {
+ 443:OSAL/osal/osal_timer.c ****     // Add it to the end of the timer list
+ 444:OSAL/osal/osal_timer.c ****     srchTimer = timerHead;
+ 445:OSAL/osal/osal_timer.c ****     prevTimer = (void *)NULL;
+ 614              		.loc 1 445 0
+ 615 0014 0027     		movs	r7, #0
+ 616 0016 16E0     		b	.L55
+ 617              	.LVL54:
+ 618              	.L57:
+ 619              	.LBB2:
+ 446:OSAL/osal/osal_timer.c **** 
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 20
+
+
+ 447:OSAL/osal/osal_timer.c ****     // Look for open timer slot
+ 448:OSAL/osal/osal_timer.c ****     while ( srchTimer )
+ 449:OSAL/osal/osal_timer.c ****     {
+ 450:OSAL/osal/osal_timer.c ****       osalTimerRec_t *freeTimer = NULL;
+ 451:OSAL/osal/osal_timer.c ****      
+ 452:OSAL/osal/osal_timer.c ****       HAL_ENTER_CRITICAL_SECTION(); // Hold off interrupts.
+ 453:OSAL/osal/osal_timer.c ****       
+ 454:OSAL/osal/osal_timer.c ****       if (srchTimer->timeout <= updateTime)
+ 455:OSAL/osal/osal_timer.c ****       {
+ 456:OSAL/osal/osal_timer.c ****         srchTimer->timeout = 0;
+ 457:OSAL/osal/osal_timer.c ****       }
+ 458:OSAL/osal/osal_timer.c ****       else
+ 459:OSAL/osal/osal_timer.c ****       {
+ 460:OSAL/osal/osal_timer.c ****         srchTimer->timeout = srchTimer->timeout - updateTime;
+ 620              		.loc 1 460 0
+ 621 0018 9B1B     		subs	r3, r3, r6
+ 622 001a A380     		strh	r3, [r4, #4]
+ 623 001c 1AE0     		b	.L58
+ 624              	.L59:
+ 461:OSAL/osal/osal_timer.c ****       }
+ 462:OSAL/osal/osal_timer.c ****       
+ 463:OSAL/osal/osal_timer.c ****       // Check for reloading
+ 464:OSAL/osal/osal_timer.c ****       if ( (srchTimer->timeout == 0) && (srchTimer->reloadTimeout) && (srchTimer->event_flag) )
+ 465:OSAL/osal/osal_timer.c ****       {
+ 466:OSAL/osal/osal_timer.c ****         // Notify the task of a timeout
+ 467:OSAL/osal/osal_timer.c ****         osal_set_event( srchTimer->task_id, srchTimer->event_flag );
+ 468:OSAL/osal/osal_timer.c ****         
+ 469:OSAL/osal/osal_timer.c ****         // Reload the timer timeout value
+ 470:OSAL/osal/osal_timer.c ****         srchTimer->timeout = srchTimer->reloadTimeout;
+ 471:OSAL/osal/osal_timer.c ****       }
+ 472:OSAL/osal/osal_timer.c ****       
+ 473:OSAL/osal/osal_timer.c ****       // When timeout or delete (event_flag == 0)
+ 474:OSAL/osal/osal_timer.c ****       if ( srchTimer->timeout == 0 || srchTimer->event_flag == 0 )
+ 625              		.loc 1 474 0
+ 626 001e A388     		ldrh	r3, [r4, #4]
+ 627 0020 002B     		cmp	r3, #0
+ 628 0022 02D0     		beq	.L60
+ 629              		.loc 1 474 0 is_stmt 0 discriminator 1
+ 630 0024 E388     		ldrh	r3, [r4, #6]
+ 631 0026 002B     		cmp	r3, #0
+ 632 0028 27D1     		bne	.L61
+ 633              	.L60:
+ 475:OSAL/osal/osal_timer.c ****       {
+ 476:OSAL/osal/osal_timer.c ****         // Take out of list
+ 477:OSAL/osal/osal_timer.c ****         if ( prevTimer == NULL )
+ 634              		.loc 1 477 0 is_stmt 1
+ 635 002a 002F     		cmp	r7, #0
+ 636 002c 21D0     		beq	.L69
+ 478:OSAL/osal/osal_timer.c ****           timerHead = srchTimer->next;
+ 479:OSAL/osal/osal_timer.c ****         else
+ 480:OSAL/osal/osal_timer.c ****           prevTimer->next = srchTimer->next;
+ 637              		.loc 1 480 0
+ 638 002e 2368     		ldr	r3, [r4]
+ 639 0030 3B60     		str	r3, [r7]
+ 640              	.L63:
+ 641              	.LVL55:
+ 481:OSAL/osal/osal_timer.c **** 
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 21
+
+
+ 482:OSAL/osal/osal_timer.c ****         // Setup to free memory
+ 483:OSAL/osal/osal_timer.c ****         freeTimer = srchTimer;
+ 642              		.loc 1 483 0
+ 643 0032 2500     		movs	r5, r4
+ 484:OSAL/osal/osal_timer.c **** 
+ 485:OSAL/osal/osal_timer.c ****         // Next
+ 486:OSAL/osal/osal_timer.c ****         srchTimer = srchTimer->next;
+ 644              		.loc 1 486 0
+ 645 0034 2468     		ldr	r4, [r4]
+ 646              	.LVL56:
+ 647              	.L64:
+ 487:OSAL/osal/osal_timer.c ****       }
+ 488:OSAL/osal/osal_timer.c ****       else
+ 489:OSAL/osal/osal_timer.c ****       {
+ 490:OSAL/osal/osal_timer.c ****         // Get next
+ 491:OSAL/osal/osal_timer.c ****         prevTimer = srchTimer;
+ 492:OSAL/osal/osal_timer.c ****         srchTimer = srchTimer->next;
+ 493:OSAL/osal/osal_timer.c ****       }
+ 494:OSAL/osal/osal_timer.c ****       
+ 495:OSAL/osal/osal_timer.c ****       HAL_EXIT_CRITICAL_SECTION(); // Re-enable interrupts.
+ 496:OSAL/osal/osal_timer.c ****       
+ 497:OSAL/osal/osal_timer.c ****       if ( freeTimer )
+ 648              		.loc 1 497 0
+ 649 0036 002D     		cmp	r5, #0
+ 650 0038 05D0     		beq	.L55
+ 498:OSAL/osal/osal_timer.c ****       {
+ 499:OSAL/osal/osal_timer.c ****         if ( freeTimer->timeout == 0 )
+ 651              		.loc 1 499 0
+ 652 003a AB88     		ldrh	r3, [r5, #4]
+ 653 003c 002B     		cmp	r3, #0
+ 654 003e 20D0     		beq	.L70
+ 655              	.L66:
+ 500:OSAL/osal/osal_timer.c ****         {
+ 501:OSAL/osal/osal_timer.c ****           osal_set_event( freeTimer->task_id, freeTimer->event_flag );
+ 502:OSAL/osal/osal_timer.c ****         }
+ 503:OSAL/osal/osal_timer.c ****         osal_mem_free( freeTimer );
+ 656              		.loc 1 503 0
+ 657 0040 2800     		movs	r0, r5
+ 658 0042 FFF7FEFF 		bl	osal_mem_free
+ 659              	.LVL57:
+ 660              	.L55:
+ 661              	.LBE2:
+ 448:OSAL/osal/osal_timer.c ****     {
+ 662              		.loc 1 448 0
+ 663 0046 002C     		cmp	r4, #0
+ 664 0048 20D0     		beq	.L54
+ 665              	.LVL58:
+ 666              	.LBB3:
+ 454:OSAL/osal/osal_timer.c ****       {
+ 667              		.loc 1 454 0
+ 668 004a A388     		ldrh	r3, [r4, #4]
+ 669 004c B342     		cmp	r3, r6
+ 670 004e E3D8     		bhi	.L57
+ 456:OSAL/osal/osal_timer.c ****       }
+ 671              		.loc 1 456 0
+ 672 0050 0023     		movs	r3, #0
+ 673 0052 A380     		strh	r3, [r4, #4]
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 22
+
+
+ 674              	.L58:
+ 464:OSAL/osal/osal_timer.c ****       {
+ 675              		.loc 1 464 0
+ 676 0054 A388     		ldrh	r3, [r4, #4]
+ 677 0056 002B     		cmp	r3, #0
+ 678 0058 E1D1     		bne	.L59
+ 464:OSAL/osal/osal_timer.c ****       {
+ 679              		.loc 1 464 0 is_stmt 0 discriminator 1
+ 680 005a 6389     		ldrh	r3, [r4, #10]
+ 681 005c 002B     		cmp	r3, #0
+ 682 005e DED0     		beq	.L59
+ 464:OSAL/osal/osal_timer.c ****       {
+ 683              		.loc 1 464 0 discriminator 2
+ 684 0060 E188     		ldrh	r1, [r4, #6]
+ 685 0062 0029     		cmp	r1, #0
+ 686 0064 DBD0     		beq	.L59
+ 467:OSAL/osal/osal_timer.c ****         
+ 687              		.loc 1 467 0 is_stmt 1
+ 688 0066 207A     		ldrb	r0, [r4, #8]
+ 689 0068 FFF7FEFF 		bl	osal_set_event
+ 690              	.LVL59:
+ 470:OSAL/osal/osal_timer.c ****       }
+ 691              		.loc 1 470 0
+ 692 006c 6389     		ldrh	r3, [r4, #10]
+ 693 006e A380     		strh	r3, [r4, #4]
+ 694 0070 D5E7     		b	.L59
+ 695              	.L69:
+ 478:OSAL/osal/osal_timer.c ****         else
+ 696              		.loc 1 478 0
+ 697 0072 084B     		ldr	r3, .L71+4
+ 698 0074 2268     		ldr	r2, [r4]
+ 699 0076 1A60     		str	r2, [r3]
+ 700 0078 DBE7     		b	.L63
+ 701              	.L61:
+ 702              	.LVL60:
+ 491:OSAL/osal/osal_timer.c ****         srchTimer = srchTimer->next;
+ 703              		.loc 1 491 0
+ 704 007a 2700     		movs	r7, r4
+ 492:OSAL/osal/osal_timer.c ****       }
+ 705              		.loc 1 492 0
+ 706 007c 2468     		ldr	r4, [r4]
+ 707              	.LVL61:
+ 450:OSAL/osal/osal_timer.c ****      
+ 708              		.loc 1 450 0
+ 709 007e 0025     		movs	r5, #0
+ 710 0080 D9E7     		b	.L64
+ 711              	.LVL62:
+ 712              	.L70:
+ 501:OSAL/osal/osal_timer.c ****         }
+ 713              		.loc 1 501 0
+ 714 0082 E988     		ldrh	r1, [r5, #6]
+ 715 0084 287A     		ldrb	r0, [r5, #8]
+ 716 0086 FFF7FEFF 		bl	osal_set_event
+ 717              	.LVL63:
+ 718 008a D9E7     		b	.L66
+ 719              	.LVL64:
+ 720              	.L54:
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 23
+
+
+ 721              	.LBE3:
+ 504:OSAL/osal/osal_timer.c ****       }
+ 505:OSAL/osal/osal_timer.c ****     }
+ 506:OSAL/osal/osal_timer.c ****   }
+ 507:OSAL/osal/osal_timer.c **** }
+ 722              		.loc 1 507 0
+ 723              		@ sp needed
+ 724 008c F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 725              	.L72:
+ 726 008e C046     		.align	2
+ 727              	.L71:
+ 728 0090 00000000 		.word	.LANCHOR0
+ 729 0094 00000000 		.word	timerHead
+ 730              		.cfi_endproc
+ 731              	.LFE48:
+ 733              		.section	.text.osal_GetSystemClock,"ax",%progbits
+ 734              		.align	1
+ 735              		.global	osal_GetSystemClock
+ 736              		.syntax unified
+ 737              		.code	16
+ 738              		.thumb_func
+ 739              		.fpu softvfp
+ 741              	osal_GetSystemClock:
+ 742              	.LFB49:
+ 508:OSAL/osal/osal_timer.c **** 
+ 509:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 510:OSAL/osal/osal_timer.c ****  * @fn      osal_GetSystemClock()
+ 511:OSAL/osal/osal_timer.c ****  *
+ 512:OSAL/osal/osal_timer.c ****  * @brief   Read the local system clock.
+ 513:OSAL/osal/osal_timer.c ****  *
+ 514:OSAL/osal/osal_timer.c ****  * @param   none
+ 515:OSAL/osal/osal_timer.c ****  *
+ 516:OSAL/osal/osal_timer.c ****  * @return  local clock in milliseconds
+ 517:OSAL/osal/osal_timer.c ****  */
+ 518:OSAL/osal/osal_timer.c **** uint32 osal_GetSystemClock( void )
+ 519:OSAL/osal/osal_timer.c **** {
+ 743              		.loc 1 519 0
+ 744              		.cfi_startproc
+ 745              		@ args = 0, pretend = 0, frame = 0
+ 746              		@ frame_needed = 0, uses_anonymous_args = 0
+ 747              		@ link register save eliminated.
+ 520:OSAL/osal/osal_timer.c ****   return ( osal_systemClock );
+ 748              		.loc 1 520 0
+ 749 0000 014B     		ldr	r3, .L74
+ 750 0002 1868     		ldr	r0, [r3]
+ 521:OSAL/osal/osal_timer.c **** }
+ 751              		.loc 1 521 0
+ 752              		@ sp needed
+ 753 0004 7047     		bx	lr
+ 754              	.L75:
+ 755 0006 C046     		.align	2
+ 756              	.L74:
+ 757 0008 00000000 		.word	.LANCHOR0
+ 758              		.cfi_endproc
+ 759              	.LFE49:
+ 761              		.section	.text.osal_update_timers,"ax",%progbits
+ 762              		.align	1
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 24
+
+
+ 763              		.global	osal_update_timers
+ 764              		.syntax unified
+ 765              		.code	16
+ 766              		.thumb_func
+ 767              		.fpu softvfp
+ 769              	osal_update_timers:
+ 770              	.LFB50:
+ 522:OSAL/osal/osal_timer.c **** 
+ 523:OSAL/osal/osal_timer.c **** /*********************************************************************
+ 524:OSAL/osal/osal_timer.c ****  * @fn      osal_update_timers
+ 525:OSAL/osal/osal_timer.c ****  *
+ 526:OSAL/osal/osal_timer.c ****  * @brief   Update the timer structures for timer ticks.
+ 527:OSAL/osal/osal_timer.c ****  *
+ 528:OSAL/osal/osal_timer.c ****  * @param   none
+ 529:OSAL/osal/osal_timer.c ****  *
+ 530:OSAL/osal/osal_timer.c ****  * @return  none
+ 531:OSAL/osal/osal_timer.c ****  */
+ 532:OSAL/osal/osal_timer.c **** //在每次系统定时溢出时调用一次，更新计时器
+ 533:OSAL/osal/osal_timer.c **** void osal_update_timers( void )
+ 534:OSAL/osal/osal_timer.c **** {
+ 771              		.loc 1 534 0
+ 772              		.cfi_startproc
+ 773              		@ args = 0, pretend = 0, frame = 0
+ 774              		@ frame_needed = 0, uses_anonymous_args = 0
+ 775 0000 10B5     		push	{r4, lr}
+ 776              	.LCFI9:
+ 777              		.cfi_def_cfa_offset 8
+ 778              		.cfi_offset 4, -8
+ 779              		.cfi_offset 14, -4
+ 535:OSAL/osal/osal_timer.c ****   osalTimerUpdate( tmr_decr_time );
+ 780              		.loc 1 535 0
+ 781 0002 024B     		ldr	r3, .L77
+ 782 0004 1878     		ldrb	r0, [r3]
+ 783 0006 FFF7FEFF 		bl	osalTimerUpdate
+ 784              	.LVL65:
+ 536:OSAL/osal/osal_timer.c **** }
+ 785              		.loc 1 536 0
+ 786              		@ sp needed
+ 787 000a 10BD     		pop	{r4, pc}
+ 788              	.L78:
+ 789              		.align	2
+ 790              	.L77:
+ 791 000c 00000000 		.word	tmr_decr_time
+ 792              		.cfi_endproc
+ 793              	.LFE50:
+ 795              		.comm	timerActive,1,1
+ 796              		.comm	tmr_decr_time,1,1
+ 797              		.comm	timerHead,4,4
+ 798              		.section	.bss.osal_systemClock,"aw",%nobits
+ 799              		.align	2
+ 800              		.set	.LANCHOR0,. + 0
+ 803              	osal_systemClock:
+ 804 0000 00000000 		.space	4
+ 805              		.text
+ 806              	.Letext0:
+ 807              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 808              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 25
+
+
+ 809              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 810              		.file 5 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 811              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 812              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 813              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 814              		.file 9 "OSAL/include/type.h"
+ 815              		.file 10 "OSAL/include/osal_event.h"
+ 816              		.file 11 "OSAL/include/osal_memory.h"
+ 817              		.file 12 "OSAL/include/timer.h"
+ARM GAS  E:\cygwin64\tmp\ccJMNkpu.s 			page 26
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 osal_timer.c
+E:\cygwin64\tmp\ccJMNkpu.s:16     .text.osalFindTimer:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:23     .text.osalFindTimer:00000000 osalFindTimer
+E:\cygwin64\tmp\ccJMNkpu.s:64     .text.osalFindTimer:0000001c $d
+                            *COM*:00000004 timerHead
+E:\cygwin64\tmp\ccJMNkpu.s:69     .text.osalAddTimer:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:76     .text.osalAddTimer:00000000 osalAddTimer
+E:\cygwin64\tmp\ccJMNkpu.s:149    .text.osalAddTimer:00000044 $d
+E:\cygwin64\tmp\ccJMNkpu.s:154    .text.osalDeleteTimer:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:161    .text.osalDeleteTimer:00000000 osalDeleteTimer
+E:\cygwin64\tmp\ccJMNkpu.s:183    .text.osal_timer_hw_setup:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:190    .text.osal_timer_hw_setup:00000000 osal_timer_hw_setup
+E:\cygwin64\tmp\ccJMNkpu.s:222    .text.osal_timer_activate:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:229    .text.osal_timer_activate:00000000 osal_timer_activate
+E:\cygwin64\tmp\ccJMNkpu.s:254    .text.osal_timer_activate:00000010 $d
+                            *COM*:00000001 timerActive
+E:\cygwin64\tmp\ccJMNkpu.s:259    .text.osalTimerInit:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:266    .text.osalTimerInit:00000000 osalTimerInit
+E:\cygwin64\tmp\ccJMNkpu.s:301    .text.osalTimerInit:00000020 $d
+                            *COM*:00000001 tmr_decr_time
+E:\cygwin64\tmp\ccJMNkpu.s:308    .text.osal_start_timerEx:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:315    .text.osal_start_timerEx:00000000 osal_start_timerEx
+E:\cygwin64\tmp\ccJMNkpu.s:365    .text.osal_start_timerEx:00000028 $d
+E:\cygwin64\tmp\ccJMNkpu.s:370    .text.osal_start_reload_timer:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:377    .text.osal_start_reload_timer:00000000 osal_start_reload_timer
+E:\cygwin64\tmp\ccJMNkpu.s:436    .text.osal_start_reload_timer:00000030 $d
+E:\cygwin64\tmp\ccJMNkpu.s:441    .text.osal_stop_timerEx:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:448    .text.osal_stop_timerEx:00000000 osal_stop_timerEx
+E:\cygwin64\tmp\ccJMNkpu.s:489    .text.osal_get_timeoutEx:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:496    .text.osal_get_timeoutEx:00000000 osal_get_timeoutEx
+E:\cygwin64\tmp\ccJMNkpu.s:532    .text.osal_timer_num_active:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:539    .text.osal_timer_num_active:00000000 osal_timer_num_active
+E:\cygwin64\tmp\ccJMNkpu.s:575    .text.osal_timer_num_active:00000014 $d
+E:\cygwin64\tmp\ccJMNkpu.s:580    .text.osalTimerUpdate:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:587    .text.osalTimerUpdate:00000000 osalTimerUpdate
+E:\cygwin64\tmp\ccJMNkpu.s:728    .text.osalTimerUpdate:00000090 $d
+E:\cygwin64\tmp\ccJMNkpu.s:734    .text.osal_GetSystemClock:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:741    .text.osal_GetSystemClock:00000000 osal_GetSystemClock
+E:\cygwin64\tmp\ccJMNkpu.s:757    .text.osal_GetSystemClock:00000008 $d
+E:\cygwin64\tmp\ccJMNkpu.s:762    .text.osal_update_timers:00000000 $t
+E:\cygwin64\tmp\ccJMNkpu.s:769    .text.osal_update_timers:00000000 osal_update_timers
+E:\cygwin64\tmp\ccJMNkpu.s:791    .text.osal_update_timers:0000000c $d
+E:\cygwin64\tmp\ccJMNkpu.s:799    .bss.osal_systemClock:00000000 $d
+E:\cygwin64\tmp\ccJMNkpu.s:803    .bss.osal_systemClock:00000000 osal_systemClock
+
+UNDEFINED SYMBOLS
+osal_mem_alloc
+OSAL_TIMER_TICKSTOP
+OSAL_TIMER_TICKSTART
+OSAL_TIMER_TICKINIT
+osal_mem_free
+osal_set_event

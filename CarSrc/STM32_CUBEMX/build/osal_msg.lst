@@ -1,0 +1,1223 @@
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"osal_msg.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.osal_msg_allocate,"ax",%progbits
+  16              		.align	1
+  17              		.global	osal_msg_allocate
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	osal_msg_allocate:
+  24              	.LFB37:
+  25              		.file 1 "OSAL/osal/osal_msg.c"
+   1:OSAL/osal/osal_msg.c **** #include "osal_msg.h"
+   2:OSAL/osal/osal_msg.c **** #include "osal_memory.h"
+   3:OSAL/osal/osal_msg.c **** #include "osal_event.h"
+   4:OSAL/osal/osal_msg.c **** /*********************************************************************
+   5:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_allocate
+   6:OSAL/osal/osal_msg.c ****  *
+   7:OSAL/osal/osal_msg.c ****  * @brief
+   8:OSAL/osal/osal_msg.c ****  *
+   9:OSAL/osal/osal_msg.c ****  *    This function is called by a task to allocate a message buffer
+  10:OSAL/osal/osal_msg.c ****  *    into which the task will encode the particular message it wishes
+  11:OSAL/osal/osal_msg.c ****  *    to send.  This common buffer scheme is used to strictly limit the
+  12:OSAL/osal/osal_msg.c ****  *    creation of message buffers within the system due to RAM size
+  13:OSAL/osal/osal_msg.c ****  *    limitations on the microprocessor.   Note that all message buffers
+  14:OSAL/osal/osal_msg.c ****  *    are a fixed size (at least initially).  The parameter len is kept
+  15:OSAL/osal/osal_msg.c ****  *    in case a message pool with varying fixed message sizes is later
+  16:OSAL/osal/osal_msg.c ****  *    created (for example, a pool of message buffers of size LARGE,
+  17:OSAL/osal/osal_msg.c ****  *    MEDIUM and SMALL could be maintained and allocated based on request
+  18:OSAL/osal/osal_msg.c ****  *    from the tasks).
+  19:OSAL/osal/osal_msg.c ****  *
+  20:OSAL/osal/osal_msg.c ****  * @param   uint8 len  - wanted buffer length
+  21:OSAL/osal/osal_msg.c ****  * @return  pointer to allocated buffer or NULL if allocation failed.
+  22:OSAL/osal/osal_msg.c ****  */
+  23:OSAL/osal/osal_msg.c **** uint8 * osal_msg_allocate( uint16 len )
+  24:OSAL/osal/osal_msg.c **** {
+  26              		.loc 1 24 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              	.LVL0:
+  31 0000 10B5     		push	{r4, lr}
+  32              	.LCFI0:
+  33              		.cfi_def_cfa_offset 8
+  34              		.cfi_offset 4, -8
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 2
+
+
+  35              		.cfi_offset 14, -4
+  36 0002 041E     		subs	r4, r0, #0
+  25:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *hdr;
+  26:OSAL/osal/osal_msg.c **** 
+  27:OSAL/osal/osal_msg.c ****   if ( len == 0 )
+  37              		.loc 1 27 0
+  38 0004 0CD0     		beq	.L3
+  28:OSAL/osal/osal_msg.c ****     return ( NULL );
+  29:OSAL/osal/osal_msg.c **** 
+  30:OSAL/osal/osal_msg.c ****   hdr = (osal_msg_hdr_t *) osal_mem_alloc( (short)(len + sizeof( osal_msg_hdr_t )) );
+  39              		.loc 1 30 0
+  40 0006 0830     		adds	r0, r0, #8
+  41              	.LVL1:
+  42 0008 80B2     		uxth	r0, r0
+  43 000a FFF7FEFF 		bl	osal_mem_alloc
+  44              	.LVL2:
+  31:OSAL/osal/osal_msg.c ****   if ( hdr )
+  45              		.loc 1 31 0
+  46 000e 0028     		cmp	r0, #0
+  47 0010 08D0     		beq	.L4
+  32:OSAL/osal/osal_msg.c ****   {
+  33:OSAL/osal/osal_msg.c ****     hdr->next = NULL;
+  48              		.loc 1 33 0
+  49 0012 0023     		movs	r3, #0
+  50 0014 0360     		str	r3, [r0]
+  34:OSAL/osal/osal_msg.c ****     hdr->len = len;
+  51              		.loc 1 34 0
+  52 0016 8480     		strh	r4, [r0, #4]
+  35:OSAL/osal/osal_msg.c ****     hdr->dest_id = TASK_NO_TASK;
+  53              		.loc 1 35 0
+  54 0018 0633     		adds	r3, r3, #6
+  55 001a 8371     		strb	r3, [r0, #6]
+  36:OSAL/osal/osal_msg.c ****     return ( (uint8 *) (hdr + 1) );
+  56              		.loc 1 36 0
+  57 001c 0830     		adds	r0, r0, #8
+  58              	.LVL3:
+  59              	.L1:
+  37:OSAL/osal/osal_msg.c ****   }
+  38:OSAL/osal/osal_msg.c ****   else
+  39:OSAL/osal/osal_msg.c ****     return ( NULL );
+  40:OSAL/osal/osal_msg.c **** }
+  60              		.loc 1 40 0
+  61              		@ sp needed
+  62 001e 10BD     		pop	{r4, pc}
+  63              	.LVL4:
+  64              	.L3:
+  28:OSAL/osal/osal_msg.c **** 
+  65              		.loc 1 28 0
+  66 0020 0020     		movs	r0, #0
+  67              	.LVL5:
+  68 0022 FCE7     		b	.L1
+  69              	.LVL6:
+  70              	.L4:
+  39:OSAL/osal/osal_msg.c **** }
+  71              		.loc 1 39 0
+  72 0024 0020     		movs	r0, #0
+  73              	.LVL7:
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 3
+
+
+  74 0026 FAE7     		b	.L1
+  75              		.cfi_endproc
+  76              	.LFE37:
+  78              		.section	.text.osal_msg_deallocate,"ax",%progbits
+  79              		.align	1
+  80              		.global	osal_msg_deallocate
+  81              		.syntax unified
+  82              		.code	16
+  83              		.thumb_func
+  84              		.fpu softvfp
+  86              	osal_msg_deallocate:
+  87              	.LFB38:
+  41:OSAL/osal/osal_msg.c **** 
+  42:OSAL/osal/osal_msg.c **** /*********************************************************************
+  43:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_deallocate
+  44:OSAL/osal/osal_msg.c ****  *
+  45:OSAL/osal/osal_msg.c ****  * @brief
+  46:OSAL/osal/osal_msg.c ****  *
+  47:OSAL/osal/osal_msg.c ****  *    This function is used to deallocate a message buffer. This function
+  48:OSAL/osal/osal_msg.c ****  *    is called by a task (or processing element) after it has finished
+  49:OSAL/osal/osal_msg.c ****  *    processing a received message.
+  50:OSAL/osal/osal_msg.c ****  *
+  51:OSAL/osal/osal_msg.c ****  *
+  52:OSAL/osal/osal_msg.c ****  * @param   uint8 *msg_ptr - pointer to new message buffer
+  53:OSAL/osal/osal_msg.c ****  *
+  54:OSAL/osal/osal_msg.c ****  * @return  SUCCESS, INVALID_MSG_POINTER
+  55:OSAL/osal/osal_msg.c ****  */
+  56:OSAL/osal/osal_msg.c **** uint8 osal_msg_deallocate( uint8 *msg_ptr )
+  57:OSAL/osal/osal_msg.c **** {
+  88              		.loc 1 57 0
+  89              		.cfi_startproc
+  90              		@ args = 0, pretend = 0, frame = 0
+  91              		@ frame_needed = 0, uses_anonymous_args = 0
+  92              	.LVL8:
+  93 0000 10B5     		push	{r4, lr}
+  94              	.LCFI1:
+  95              		.cfi_def_cfa_offset 8
+  96              		.cfi_offset 4, -8
+  97              		.cfi_offset 14, -4
+  58:OSAL/osal/osal_msg.c ****   uint8 *x;
+  59:OSAL/osal/osal_msg.c **** 
+  60:OSAL/osal/osal_msg.c ****   if ( msg_ptr == NULL )
+  98              		.loc 1 60 0
+  99 0002 0028     		cmp	r0, #0
+ 100 0004 0BD0     		beq	.L7
+  61:OSAL/osal/osal_msg.c ****     return ( INVALID_MSG_POINTER );
+  62:OSAL/osal/osal_msg.c **** 
+  63:OSAL/osal/osal_msg.c ****   // don't deallocate queued buffer
+  64:OSAL/osal/osal_msg.c ****   if ( OSAL_MSG_ID( msg_ptr ) != TASK_NO_TASK )
+ 101              		.loc 1 64 0
+ 102 0006 0300     		movs	r3, r0
+ 103 0008 083B     		subs	r3, r3, #8
+ 104 000a 9B79     		ldrb	r3, [r3, #6]
+ 105 000c 062B     		cmp	r3, #6
+ 106 000e 01D0     		beq	.L9
+  65:OSAL/osal/osal_msg.c ****     return ( MSG_BUFFER_NOT_AVAIL );
+ 107              		.loc 1 65 0
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 4
+
+
+ 108 0010 0720     		movs	r0, #7
+ 109              	.LVL9:
+ 110              	.L6:
+  66:OSAL/osal/osal_msg.c **** 
+  67:OSAL/osal/osal_msg.c ****   x = (uint8 *)((uint8 *)msg_ptr - sizeof( osal_msg_hdr_t ));
+  68:OSAL/osal/osal_msg.c **** 
+  69:OSAL/osal/osal_msg.c ****   osal_mem_free( (void *)x );
+  70:OSAL/osal/osal_msg.c **** 
+  71:OSAL/osal/osal_msg.c ****   return ( SUCCESS );
+  72:OSAL/osal/osal_msg.c **** }
+ 111              		.loc 1 72 0
+ 112              		@ sp needed
+ 113 0012 10BD     		pop	{r4, pc}
+ 114              	.LVL10:
+ 115              	.L9:
+  67:OSAL/osal/osal_msg.c **** 
+ 116              		.loc 1 67 0
+ 117 0014 0838     		subs	r0, r0, #8
+ 118              	.LVL11:
+  69:OSAL/osal/osal_msg.c **** 
+ 119              		.loc 1 69 0
+ 120 0016 FFF7FEFF 		bl	osal_mem_free
+ 121              	.LVL12:
+  71:OSAL/osal/osal_msg.c **** }
+ 122              		.loc 1 71 0
+ 123 001a 0120     		movs	r0, #1
+ 124 001c F9E7     		b	.L6
+ 125              	.LVL13:
+ 126              	.L7:
+  61:OSAL/osal/osal_msg.c **** 
+ 127              		.loc 1 61 0
+ 128 001e 0320     		movs	r0, #3
+ 129              	.LVL14:
+ 130 0020 F7E7     		b	.L6
+ 131              		.cfi_endproc
+ 132              	.LFE38:
+ 134              		.section	.text.osal_msg_find,"ax",%progbits
+ 135              		.align	1
+ 136              		.global	osal_msg_find
+ 137              		.syntax unified
+ 138              		.code	16
+ 139              		.thumb_func
+ 140              		.fpu softvfp
+ 142              	osal_msg_find:
+ 143              	.LFB41:
+  73:OSAL/osal/osal_msg.c **** 
+  74:OSAL/osal/osal_msg.c **** /*********************************************************************
+  75:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_send
+  76:OSAL/osal/osal_msg.c ****  *
+  77:OSAL/osal/osal_msg.c ****  * @brief
+  78:OSAL/osal/osal_msg.c ****  *
+  79:OSAL/osal/osal_msg.c ****  *    This function is called by a task to send a command message to
+  80:OSAL/osal/osal_msg.c ****  *    another task or processing element.  The sending_task field must
+  81:OSAL/osal/osal_msg.c ****  *    refer to a valid task, since the task ID will be used
+  82:OSAL/osal/osal_msg.c ****  *    for the response message.  This function will also set a message
+  83:OSAL/osal/osal_msg.c ****  *    ready event in the destination tasks event list.
+  84:OSAL/osal/osal_msg.c ****  *
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 5
+
+
+  85:OSAL/osal/osal_msg.c ****  *
+  86:OSAL/osal/osal_msg.c ****  * @param   uint8 destination task - Send msg to?  Task ID
+  87:OSAL/osal/osal_msg.c ****  * @param   uint8 *msg_ptr - pointer to new message buffer
+  88:OSAL/osal/osal_msg.c ****  * @param   uint8 len - length of data in message
+  89:OSAL/osal/osal_msg.c ****  *
+  90:OSAL/osal/osal_msg.c ****  * @return  SUCCESS, INVALID_TASK, INVALID_MSG_POINTER
+  91:OSAL/osal/osal_msg.c ****  */
+  92:OSAL/osal/osal_msg.c **** uint8 osal_msg_send( uint8 destination_task, uint8 *msg_ptr )
+  93:OSAL/osal/osal_msg.c **** {
+  94:OSAL/osal/osal_msg.c ****   if ( msg_ptr == NULL )
+  95:OSAL/osal/osal_msg.c ****     return ( INVALID_MSG_POINTER );
+  96:OSAL/osal/osal_msg.c **** 
+  97:OSAL/osal/osal_msg.c ****   if ( destination_task >= tasksCnt )
+  98:OSAL/osal/osal_msg.c ****   {
+  99:OSAL/osal/osal_msg.c ****     osal_msg_deallocate( msg_ptr );
+ 100:OSAL/osal/osal_msg.c ****     return ( INVALID_TASK );
+ 101:OSAL/osal/osal_msg.c ****   }
+ 102:OSAL/osal/osal_msg.c **** 
+ 103:OSAL/osal/osal_msg.c ****   // Check the message header
+ 104:OSAL/osal/osal_msg.c ****   if ( OSAL_MSG_NEXT( msg_ptr ) != NULL ||
+ 105:OSAL/osal/osal_msg.c ****        OSAL_MSG_ID( msg_ptr ) != TASK_NO_TASK )
+ 106:OSAL/osal/osal_msg.c ****   {
+ 107:OSAL/osal/osal_msg.c ****     osal_msg_deallocate( msg_ptr );
+ 108:OSAL/osal/osal_msg.c ****     return ( INVALID_MSG_POINTER );
+ 109:OSAL/osal/osal_msg.c ****   }
+ 110:OSAL/osal/osal_msg.c **** 
+ 111:OSAL/osal/osal_msg.c ****   OSAL_MSG_ID( msg_ptr ) = destination_task;
+ 112:OSAL/osal/osal_msg.c **** 
+ 113:OSAL/osal/osal_msg.c ****   // queue message
+ 114:OSAL/osal/osal_msg.c ****   osal_msg_enqueue( &osal_qHead, msg_ptr );
+ 115:OSAL/osal/osal_msg.c **** 
+ 116:OSAL/osal/osal_msg.c ****   // Signal the task that a message is waiting
+ 117:OSAL/osal/osal_msg.c ****   osal_set_event( destination_task, SYS_EVENT_MSG );
+ 118:OSAL/osal/osal_msg.c **** 
+ 119:OSAL/osal/osal_msg.c ****   return ( SUCCESS );
+ 120:OSAL/osal/osal_msg.c **** }
+ 121:OSAL/osal/osal_msg.c **** 
+ 122:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 123:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_receive
+ 124:OSAL/osal/osal_msg.c ****  *
+ 125:OSAL/osal/osal_msg.c ****  * @brief
+ 126:OSAL/osal/osal_msg.c ****  *
+ 127:OSAL/osal/osal_msg.c ****  *    This function is called by a task to retrieve a received command
+ 128:OSAL/osal/osal_msg.c ****  *    message. The calling task must deallocate the message buffer after
+ 129:OSAL/osal/osal_msg.c ****  *    processing the message using the osal_msg_deallocate() call.
+ 130:OSAL/osal/osal_msg.c ****  *
+ 131:OSAL/osal/osal_msg.c ****  * @param   uint8 task_id - receiving tasks ID
+ 132:OSAL/osal/osal_msg.c ****  *
+ 133:OSAL/osal/osal_msg.c ****  * @return  *uint8 - message information or NULL if no message
+ 134:OSAL/osal/osal_msg.c ****  */
+ 135:OSAL/osal/osal_msg.c **** uint8 *osal_msg_receive( uint8 task_id )
+ 136:OSAL/osal/osal_msg.c **** {
+ 137:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *listHdr;
+ 138:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *prevHdr = NULL;
+ 139:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *foundHdr = NULL;
+ 140:OSAL/osal/osal_msg.c ****   
+ 141:OSAL/osal/osal_msg.c **** 
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 6
+
+
+ 142:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 143:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ 144:OSAL/osal/osal_msg.c **** 
+ 145:OSAL/osal/osal_msg.c ****   // Point to the top of the queue
+ 146:OSAL/osal/osal_msg.c ****   listHdr = osal_qHead;
+ 147:OSAL/osal/osal_msg.c **** 
+ 148:OSAL/osal/osal_msg.c ****   // Look through the queue for a message that belongs to the asking task
+ 149:OSAL/osal/osal_msg.c ****   while ( listHdr != NULL )
+ 150:OSAL/osal/osal_msg.c ****   {
+ 151:OSAL/osal/osal_msg.c ****     if ( (listHdr - 1)->dest_id == task_id )
+ 152:OSAL/osal/osal_msg.c ****     {
+ 153:OSAL/osal/osal_msg.c ****       if ( foundHdr == NULL )
+ 154:OSAL/osal/osal_msg.c ****       {
+ 155:OSAL/osal/osal_msg.c ****         // Save the first one
+ 156:OSAL/osal/osal_msg.c ****         foundHdr = listHdr;
+ 157:OSAL/osal/osal_msg.c ****       }
+ 158:OSAL/osal/osal_msg.c ****       else
+ 159:OSAL/osal/osal_msg.c ****       {
+ 160:OSAL/osal/osal_msg.c ****         // Second msg found, stop looking
+ 161:OSAL/osal/osal_msg.c ****         break;
+ 162:OSAL/osal/osal_msg.c ****       }
+ 163:OSAL/osal/osal_msg.c ****     }
+ 164:OSAL/osal/osal_msg.c ****     if ( foundHdr == NULL )
+ 165:OSAL/osal/osal_msg.c ****     {
+ 166:OSAL/osal/osal_msg.c ****       prevHdr = listHdr;
+ 167:OSAL/osal/osal_msg.c ****     }
+ 168:OSAL/osal/osal_msg.c ****     listHdr = OSAL_MSG_NEXT( listHdr );
+ 169:OSAL/osal/osal_msg.c ****   }
+ 170:OSAL/osal/osal_msg.c **** 
+ 171:OSAL/osal/osal_msg.c ****   // Is there more than one?
+ 172:OSAL/osal/osal_msg.c ****   if ( listHdr != NULL )
+ 173:OSAL/osal/osal_msg.c ****   {
+ 174:OSAL/osal/osal_msg.c ****     // Yes, Signal the task that a message is waiting
+ 175:OSAL/osal/osal_msg.c ****     osal_set_event( task_id, SYS_EVENT_MSG );
+ 176:OSAL/osal/osal_msg.c ****   }
+ 177:OSAL/osal/osal_msg.c ****   else
+ 178:OSAL/osal/osal_msg.c ****   {
+ 179:OSAL/osal/osal_msg.c ****     // No more
+ 180:OSAL/osal/osal_msg.c ****     osal_clear_event( task_id, SYS_EVENT_MSG );
+ 181:OSAL/osal/osal_msg.c ****   }
+ 182:OSAL/osal/osal_msg.c **** 
+ 183:OSAL/osal/osal_msg.c ****   // Did we find a message?
+ 184:OSAL/osal/osal_msg.c ****   if ( foundHdr != NULL )
+ 185:OSAL/osal/osal_msg.c ****   {
+ 186:OSAL/osal/osal_msg.c ****     // Take out of the link list
+ 187:OSAL/osal/osal_msg.c ****     osal_msg_extract( &osal_qHead, foundHdr, prevHdr );
+ 188:OSAL/osal/osal_msg.c ****   }
+ 189:OSAL/osal/osal_msg.c **** 
+ 190:OSAL/osal/osal_msg.c ****   // Release interrupts
+ 191:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 192:OSAL/osal/osal_msg.c **** 
+ 193:OSAL/osal/osal_msg.c ****   return ( (uint8*) foundHdr );
+ 194:OSAL/osal/osal_msg.c **** }
+ 195:OSAL/osal/osal_msg.c **** 
+ 196:OSAL/osal/osal_msg.c **** /**************************************************************************************************
+ 197:OSAL/osal/osal_msg.c ****  * @fn          osal_msg_find
+ 198:OSAL/osal/osal_msg.c ****  *
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 7
+
+
+ 199:OSAL/osal/osal_msg.c ****  * @brief       This function finds in place an OSAL message matching the task_id and event
+ 200:OSAL/osal/osal_msg.c ****  *              parameters.
+ 201:OSAL/osal/osal_msg.c ****  *
+ 202:OSAL/osal/osal_msg.c ****  * input parameters
+ 203:OSAL/osal/osal_msg.c ****  *
+ 204:OSAL/osal/osal_msg.c ****  * @param       task_id - The OSAL task id that the enqueued OSAL message must match.
+ 205:OSAL/osal/osal_msg.c ****  * @param       event - The OSAL event id that the enqueued OSAL message must match.
+ 206:OSAL/osal/osal_msg.c ****  *
+ 207:OSAL/osal/osal_msg.c ****  * output parameters
+ 208:OSAL/osal/osal_msg.c ****  *
+ 209:OSAL/osal/osal_msg.c ****  * None.
+ 210:OSAL/osal/osal_msg.c ****  *
+ 211:OSAL/osal/osal_msg.c ****  * @return      NULL if no match, otherwise an in place pointer to the matching OSAL message.
+ 212:OSAL/osal/osal_msg.c ****  **************************************************************************************************
+ 213:OSAL/osal/osal_msg.c ****  */
+ 214:OSAL/osal/osal_msg.c **** osal_event_hdr_t *osal_msg_find(uint8 task_id, uint8 event)
+ 215:OSAL/osal/osal_msg.c **** {
+ 144              		.loc 1 215 0
+ 145              		.cfi_startproc
+ 146              		@ args = 0, pretend = 0, frame = 0
+ 147              		@ frame_needed = 0, uses_anonymous_args = 0
+ 148              		@ link register save eliminated.
+ 149              	.LVL15:
+ 216:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *pHdr;
+ 217:OSAL/osal/osal_msg.c ****   
+ 218:OSAL/osal/osal_msg.c **** 
+ 219:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();  // Hold off interrupts.
+ 220:OSAL/osal/osal_msg.c **** 
+ 221:OSAL/osal/osal_msg.c ****   pHdr = osal_qHead;  // Point to the top of the queue.
+ 150              		.loc 1 221 0
+ 151 0000 084B     		ldr	r3, .L15
+ 152 0002 1B68     		ldr	r3, [r3]
+ 153              	.LVL16:
+ 222:OSAL/osal/osal_msg.c **** 
+ 223:OSAL/osal/osal_msg.c ****   // Look through the queue for a message that matches the task_id and event parameters.
+ 224:OSAL/osal/osal_msg.c ****   while (pHdr != NULL)
+ 154              		.loc 1 224 0
+ 155 0004 01E0     		b	.L11
+ 156              	.L12:
+ 225:OSAL/osal/osal_msg.c ****   {
+ 226:OSAL/osal/osal_msg.c ****     if (((pHdr-1)->dest_id == task_id) && (((osal_event_hdr_t *)pHdr)->event == event))
+ 227:OSAL/osal/osal_msg.c ****     {
+ 228:OSAL/osal/osal_msg.c ****       break;
+ 229:OSAL/osal/osal_msg.c ****     }
+ 230:OSAL/osal/osal_msg.c **** 
+ 231:OSAL/osal/osal_msg.c ****     pHdr = OSAL_MSG_NEXT(pHdr);
+ 157              		.loc 1 231 0
+ 158 0006 083B     		subs	r3, r3, #8
+ 159              	.LVL17:
+ 160 0008 1B68     		ldr	r3, [r3]
+ 161              	.LVL18:
+ 162              	.L11:
+ 224:OSAL/osal/osal_msg.c ****   {
+ 163              		.loc 1 224 0
+ 164 000a 002B     		cmp	r3, #0
+ 165 000c 07D0     		beq	.L10
+ 226:OSAL/osal/osal_msg.c ****     {
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 8
+
+
+ 166              		.loc 1 226 0
+ 167 000e 1A00     		movs	r2, r3
+ 168 0010 083A     		subs	r2, r2, #8
+ 169 0012 9279     		ldrb	r2, [r2, #6]
+ 170 0014 8242     		cmp	r2, r0
+ 171 0016 F6D1     		bne	.L12
+ 226:OSAL/osal/osal_msg.c ****     {
+ 172              		.loc 1 226 0 is_stmt 0 discriminator 1
+ 173 0018 1A78     		ldrb	r2, [r3]
+ 174 001a 8A42     		cmp	r2, r1
+ 175 001c F3D1     		bne	.L12
+ 176              	.L10:
+ 232:OSAL/osal/osal_msg.c ****   }
+ 233:OSAL/osal/osal_msg.c **** 
+ 234:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();  // Release interrupts.
+ 235:OSAL/osal/osal_msg.c **** 
+ 236:OSAL/osal/osal_msg.c ****   return (osal_event_hdr_t *)pHdr;
+ 237:OSAL/osal/osal_msg.c **** }
+ 177              		.loc 1 237 0 is_stmt 1
+ 178 001e 1800     		movs	r0, r3
+ 179              	.LVL19:
+ 180              		@ sp needed
+ 181 0020 7047     		bx	lr
+ 182              	.L16:
+ 183 0022 C046     		.align	2
+ 184              	.L15:
+ 185 0024 00000000 		.word	osal_qHead
+ 186              		.cfi_endproc
+ 187              	.LFE41:
+ 189              		.section	.text.osal_msg_enqueue,"ax",%progbits
+ 190              		.align	1
+ 191              		.global	osal_msg_enqueue
+ 192              		.syntax unified
+ 193              		.code	16
+ 194              		.thumb_func
+ 195              		.fpu softvfp
+ 197              	osal_msg_enqueue:
+ 198              	.LFB42:
+ 238:OSAL/osal/osal_msg.c **** 
+ 239:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 240:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_enqueue
+ 241:OSAL/osal/osal_msg.c ****  *
+ 242:OSAL/osal/osal_msg.c ****  * @brief
+ 243:OSAL/osal/osal_msg.c ****  *
+ 244:OSAL/osal/osal_msg.c ****  *    This function enqueues an OSAL message into an OSAL queue.
+ 245:OSAL/osal/osal_msg.c ****  *
+ 246:OSAL/osal/osal_msg.c ****  * @param   osal_msg_q_t *q_ptr - OSAL queue
+ 247:OSAL/osal/osal_msg.c ****  * @param   void *msg_ptr  - OSAL message
+ 248:OSAL/osal/osal_msg.c ****  *
+ 249:OSAL/osal/osal_msg.c ****  * @return  none
+ 250:OSAL/osal/osal_msg.c ****  */
+ 251:OSAL/osal/osal_msg.c **** void osal_msg_enqueue( osal_msg_q_t *q_ptr, void *msg_ptr )
+ 252:OSAL/osal/osal_msg.c **** {
+ 199              		.loc 1 252 0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 0
+ 202              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 9
+
+
+ 203              		@ link register save eliminated.
+ 204              	.LVL20:
+ 253:OSAL/osal/osal_msg.c ****   void *list;
+ 254:OSAL/osal/osal_msg.c ****   
+ 255:OSAL/osal/osal_msg.c **** 
+ 256:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 257:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ 258:OSAL/osal/osal_msg.c **** 
+ 259:OSAL/osal/osal_msg.c ****   OSAL_MSG_NEXT( msg_ptr ) = NULL;
+ 205              		.loc 1 259 0
+ 206 0000 0B00     		movs	r3, r1
+ 207 0002 083B     		subs	r3, r3, #8
+ 208 0004 0022     		movs	r2, #0
+ 209 0006 1A60     		str	r2, [r3]
+ 260:OSAL/osal/osal_msg.c ****   // If first message in queue
+ 261:OSAL/osal/osal_msg.c ****   if ( *q_ptr == NULL )
+ 210              		.loc 1 261 0
+ 211 0008 0268     		ldr	r2, [r0]
+ 212 000a 002A     		cmp	r2, #0
+ 213 000c 02D1     		bne	.L18
+ 262:OSAL/osal/osal_msg.c ****   {
+ 263:OSAL/osal/osal_msg.c ****     *q_ptr = msg_ptr;
+ 214              		.loc 1 263 0
+ 215 000e 0160     		str	r1, [r0]
+ 216 0010 07E0     		b	.L17
+ 217              	.LVL21:
+ 218              	.L20:
+ 264:OSAL/osal/osal_msg.c ****   }
+ 265:OSAL/osal/osal_msg.c ****   else
+ 266:OSAL/osal/osal_msg.c ****   {
+ 267:OSAL/osal/osal_msg.c ****     // Find end of queue
+ 268:OSAL/osal/osal_msg.c ****     for ( list = *q_ptr; OSAL_MSG_NEXT( list ) != NULL; list = OSAL_MSG_NEXT( list ) );
+ 219              		.loc 1 268 0
+ 220 0012 1A00     		movs	r2, r3
+ 221              	.LVL22:
+ 222              	.L18:
+ 223              		.loc 1 268 0 is_stmt 0 discriminator 1
+ 224 0014 1300     		movs	r3, r2
+ 225 0016 083B     		subs	r3, r3, #8
+ 226 0018 1B68     		ldr	r3, [r3]
+ 227 001a 002B     		cmp	r3, #0
+ 228 001c F9D1     		bne	.L20
+ 269:OSAL/osal/osal_msg.c **** 
+ 270:OSAL/osal/osal_msg.c ****     // Add message to end of queue
+ 271:OSAL/osal/osal_msg.c ****     OSAL_MSG_NEXT( list ) = msg_ptr;
+ 229              		.loc 1 271 0 is_stmt 1
+ 230 001e 083A     		subs	r2, r2, #8
+ 231              	.LVL23:
+ 232 0020 1160     		str	r1, [r2]
+ 233              	.LVL24:
+ 234              	.L17:
+ 272:OSAL/osal/osal_msg.c ****   }
+ 273:OSAL/osal/osal_msg.c **** 
+ 274:OSAL/osal/osal_msg.c ****   // Re-enable interrupts
+ 275:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 276:OSAL/osal/osal_msg.c **** }
+ 235              		.loc 1 276 0
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 10
+
+
+ 236              		@ sp needed
+ 237 0022 7047     		bx	lr
+ 238              		.cfi_endproc
+ 239              	.LFE42:
+ 241              		.section	.text.osal_msg_send,"ax",%progbits
+ 242              		.align	1
+ 243              		.global	osal_msg_send
+ 244              		.syntax unified
+ 245              		.code	16
+ 246              		.thumb_func
+ 247              		.fpu softvfp
+ 249              	osal_msg_send:
+ 250              	.LFB39:
+  93:OSAL/osal/osal_msg.c ****   if ( msg_ptr == NULL )
+ 251              		.loc 1 93 0
+ 252              		.cfi_startproc
+ 253              		@ args = 0, pretend = 0, frame = 0
+ 254              		@ frame_needed = 0, uses_anonymous_args = 0
+ 255              	.LVL25:
+ 256 0000 10B5     		push	{r4, lr}
+ 257              	.LCFI2:
+ 258              		.cfi_def_cfa_offset 8
+ 259              		.cfi_offset 4, -8
+ 260              		.cfi_offset 14, -4
+ 261 0002 0400     		movs	r4, r0
+  94:OSAL/osal/osal_msg.c ****     return ( INVALID_MSG_POINTER );
+ 262              		.loc 1 94 0
+ 263 0004 0029     		cmp	r1, #0
+ 264 0006 24D0     		beq	.L26
+  97:OSAL/osal/osal_msg.c ****   {
+ 265              		.loc 1 97 0
+ 266 0008 134B     		ldr	r3, .L28
+ 267 000a 1B78     		ldrb	r3, [r3]
+ 268 000c 8342     		cmp	r3, r0
+ 269 000e 0ED9     		bls	.L27
+ 104:OSAL/osal/osal_msg.c ****        OSAL_MSG_ID( msg_ptr ) != TASK_NO_TASK )
+ 270              		.loc 1 104 0
+ 271 0010 0B00     		movs	r3, r1
+ 272 0012 083B     		subs	r3, r3, #8
+ 273 0014 1B68     		ldr	r3, [r3]
+ 274 0016 002B     		cmp	r3, #0
+ 275 0018 04D1     		bne	.L24
+ 105:OSAL/osal/osal_msg.c ****   {
+ 276              		.loc 1 105 0 discriminator 1
+ 277 001a 0B00     		movs	r3, r1
+ 278 001c 083B     		subs	r3, r3, #8
+ 279 001e 9B79     		ldrb	r3, [r3, #6]
+ 104:OSAL/osal/osal_msg.c ****        OSAL_MSG_ID( msg_ptr ) != TASK_NO_TASK )
+ 280              		.loc 1 104 0 discriminator 1
+ 281 0020 062B     		cmp	r3, #6
+ 282 0022 09D0     		beq	.L25
+ 283              	.L24:
+ 107:OSAL/osal/osal_msg.c ****     return ( INVALID_MSG_POINTER );
+ 284              		.loc 1 107 0
+ 285 0024 0800     		movs	r0, r1
+ 286              	.LVL26:
+ 287 0026 FFF7FEFF 		bl	osal_msg_deallocate
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 11
+
+
+ 288              	.LVL27:
+ 108:OSAL/osal/osal_msg.c ****   }
+ 289              		.loc 1 108 0
+ 290 002a 0320     		movs	r0, #3
+ 291              	.L22:
+ 120:OSAL/osal/osal_msg.c **** 
+ 292              		.loc 1 120 0
+ 293              		@ sp needed
+ 294 002c 10BD     		pop	{r4, pc}
+ 295              	.LVL28:
+ 296              	.L27:
+  99:OSAL/osal/osal_msg.c ****     return ( INVALID_TASK );
+ 297              		.loc 1 99 0
+ 298 002e 0800     		movs	r0, r1
+ 299              	.LVL29:
+ 300 0030 FFF7FEFF 		bl	osal_msg_deallocate
+ 301              	.LVL30:
+ 100:OSAL/osal/osal_msg.c ****   }
+ 302              		.loc 1 100 0
+ 303 0034 0220     		movs	r0, #2
+ 304 0036 F9E7     		b	.L22
+ 305              	.LVL31:
+ 306              	.L25:
+ 111:OSAL/osal/osal_msg.c **** 
+ 307              		.loc 1 111 0
+ 308 0038 0B00     		movs	r3, r1
+ 309 003a 083B     		subs	r3, r3, #8
+ 310 003c 9871     		strb	r0, [r3, #6]
+ 114:OSAL/osal/osal_msg.c **** 
+ 311              		.loc 1 114 0
+ 312 003e 0748     		ldr	r0, .L28+4
+ 313              	.LVL32:
+ 314 0040 FFF7FEFF 		bl	osal_msg_enqueue
+ 315              	.LVL33:
+ 117:OSAL/osal/osal_msg.c **** 
+ 316              		.loc 1 117 0
+ 317 0044 8021     		movs	r1, #128
+ 318 0046 0902     		lsls	r1, r1, #8
+ 319 0048 2000     		movs	r0, r4
+ 320 004a FFF7FEFF 		bl	osal_set_event
+ 321              	.LVL34:
+ 119:OSAL/osal/osal_msg.c **** }
+ 322              		.loc 1 119 0
+ 323 004e 0120     		movs	r0, #1
+ 324 0050 ECE7     		b	.L22
+ 325              	.LVL35:
+ 326              	.L26:
+  95:OSAL/osal/osal_msg.c **** 
+ 327              		.loc 1 95 0
+ 328 0052 0320     		movs	r0, #3
+ 329              	.LVL36:
+ 330 0054 EAE7     		b	.L22
+ 331              	.L29:
+ 332 0056 C046     		.align	2
+ 333              	.L28:
+ 334 0058 00000000 		.word	tasksCnt
+ 335 005c 00000000 		.word	osal_qHead
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 12
+
+
+ 336              		.cfi_endproc
+ 337              	.LFE39:
+ 339              		.section	.text.osal_msg_dequeue,"ax",%progbits
+ 340              		.align	1
+ 341              		.global	osal_msg_dequeue
+ 342              		.syntax unified
+ 343              		.code	16
+ 344              		.thumb_func
+ 345              		.fpu softvfp
+ 347              	osal_msg_dequeue:
+ 348              	.LFB43:
+ 277:OSAL/osal/osal_msg.c **** 
+ 278:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 279:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_dequeue
+ 280:OSAL/osal/osal_msg.c ****  *
+ 281:OSAL/osal/osal_msg.c ****  * @brief
+ 282:OSAL/osal/osal_msg.c ****  *
+ 283:OSAL/osal/osal_msg.c ****  *    This function dequeues an OSAL message from an OSAL queue.
+ 284:OSAL/osal/osal_msg.c ****  *
+ 285:OSAL/osal/osal_msg.c ****  * @param   osal_msg_q_t *q_ptr - OSAL queue
+ 286:OSAL/osal/osal_msg.c ****  *
+ 287:OSAL/osal/osal_msg.c ****  * @return  void * - pointer to OSAL message or NULL of queue is empty.
+ 288:OSAL/osal/osal_msg.c ****  */
+ 289:OSAL/osal/osal_msg.c **** void *osal_msg_dequeue( osal_msg_q_t *q_ptr )
+ 290:OSAL/osal/osal_msg.c **** {
+ 349              		.loc 1 290 0
+ 350              		.cfi_startproc
+ 351              		@ args = 0, pretend = 0, frame = 0
+ 352              		@ frame_needed = 0, uses_anonymous_args = 0
+ 353              		@ link register save eliminated.
+ 354              	.LVL37:
+ 291:OSAL/osal/osal_msg.c ****   void *msg_ptr = NULL;
+ 292:OSAL/osal/osal_msg.c ****   
+ 293:OSAL/osal/osal_msg.c **** 
+ 294:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 295:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ 296:OSAL/osal/osal_msg.c **** 
+ 297:OSAL/osal/osal_msg.c ****   if ( *q_ptr != NULL )
+ 355              		.loc 1 297 0
+ 356 0000 0368     		ldr	r3, [r0]
+ 357 0002 002B     		cmp	r3, #0
+ 358 0004 09D0     		beq	.L32
+ 359              	.LVL38:
+ 298:OSAL/osal/osal_msg.c ****   {
+ 299:OSAL/osal/osal_msg.c ****     // Dequeue message
+ 300:OSAL/osal/osal_msg.c ****     msg_ptr = *q_ptr;
+ 301:OSAL/osal/osal_msg.c ****     *q_ptr = OSAL_MSG_NEXT( msg_ptr );
+ 360              		.loc 1 301 0
+ 361 0006 1A00     		movs	r2, r3
+ 362 0008 083A     		subs	r2, r2, #8
+ 363 000a 1168     		ldr	r1, [r2]
+ 364 000c 0160     		str	r1, [r0]
+ 302:OSAL/osal/osal_msg.c ****     OSAL_MSG_NEXT( msg_ptr ) = NULL;
+ 365              		.loc 1 302 0
+ 366 000e 0021     		movs	r1, #0
+ 367 0010 1160     		str	r1, [r2]
+ 303:OSAL/osal/osal_msg.c ****     OSAL_MSG_ID( msg_ptr ) = TASK_NO_TASK;
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 13
+
+
+ 368              		.loc 1 303 0
+ 369 0012 0631     		adds	r1, r1, #6
+ 370 0014 9171     		strb	r1, [r2, #6]
+ 371              	.LVL39:
+ 372              	.L30:
+ 304:OSAL/osal/osal_msg.c ****   }
+ 305:OSAL/osal/osal_msg.c **** 
+ 306:OSAL/osal/osal_msg.c ****   // Re-enable interrupts
+ 307:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 308:OSAL/osal/osal_msg.c **** 
+ 309:OSAL/osal/osal_msg.c ****   return msg_ptr;
+ 310:OSAL/osal/osal_msg.c **** }
+ 373              		.loc 1 310 0
+ 374 0016 1800     		movs	r0, r3
+ 375              	.LVL40:
+ 376              		@ sp needed
+ 377 0018 7047     		bx	lr
+ 378              	.LVL41:
+ 379              	.L32:
+ 291:OSAL/osal/osal_msg.c ****   
+ 380              		.loc 1 291 0
+ 381 001a 0023     		movs	r3, #0
+ 309:OSAL/osal/osal_msg.c **** }
+ 382              		.loc 1 309 0
+ 383 001c FBE7     		b	.L30
+ 384              		.cfi_endproc
+ 385              	.LFE43:
+ 387              		.section	.text.osal_msg_push,"ax",%progbits
+ 388              		.align	1
+ 389              		.global	osal_msg_push
+ 390              		.syntax unified
+ 391              		.code	16
+ 392              		.thumb_func
+ 393              		.fpu softvfp
+ 395              	osal_msg_push:
+ 396              	.LFB44:
+ 311:OSAL/osal/osal_msg.c **** 
+ 312:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 313:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_push
+ 314:OSAL/osal/osal_msg.c ****  *
+ 315:OSAL/osal/osal_msg.c ****  * @brief
+ 316:OSAL/osal/osal_msg.c ****  *
+ 317:OSAL/osal/osal_msg.c ****  *    This function pushes an OSAL message to the head of an OSAL
+ 318:OSAL/osal/osal_msg.c ****  *    queue.
+ 319:OSAL/osal/osal_msg.c ****  *
+ 320:OSAL/osal/osal_msg.c ****  * @param   osal_msg_q_t *q_ptr - OSAL queue
+ 321:OSAL/osal/osal_msg.c ****  * @param   void *msg_ptr  - OSAL message
+ 322:OSAL/osal/osal_msg.c ****  *
+ 323:OSAL/osal/osal_msg.c ****  * @return  none
+ 324:OSAL/osal/osal_msg.c ****  */
+ 325:OSAL/osal/osal_msg.c **** void osal_msg_push( osal_msg_q_t *q_ptr, void *msg_ptr )
+ 326:OSAL/osal/osal_msg.c **** {
+ 397              		.loc 1 326 0
+ 398              		.cfi_startproc
+ 399              		@ args = 0, pretend = 0, frame = 0
+ 400              		@ frame_needed = 0, uses_anonymous_args = 0
+ 401              		@ link register save eliminated.
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 14
+
+
+ 402              	.LVL42:
+ 327:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 328:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ 329:OSAL/osal/osal_msg.c **** 
+ 330:OSAL/osal/osal_msg.c ****   // Push message to head of queue
+ 331:OSAL/osal/osal_msg.c ****   OSAL_MSG_NEXT( msg_ptr ) = *q_ptr;
+ 403              		.loc 1 331 0
+ 404 0000 0B00     		movs	r3, r1
+ 405 0002 083B     		subs	r3, r3, #8
+ 406 0004 0268     		ldr	r2, [r0]
+ 407 0006 1A60     		str	r2, [r3]
+ 332:OSAL/osal/osal_msg.c ****   *q_ptr = msg_ptr;
+ 408              		.loc 1 332 0
+ 409 0008 0160     		str	r1, [r0]
+ 333:OSAL/osal/osal_msg.c **** 
+ 334:OSAL/osal/osal_msg.c ****   // Re-enable interrupts
+ 335:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 336:OSAL/osal/osal_msg.c **** }
+ 410              		.loc 1 336 0
+ 411              		@ sp needed
+ 412 000a 7047     		bx	lr
+ 413              		.cfi_endproc
+ 414              	.LFE44:
+ 416              		.section	.text.osal_msg_extract,"ax",%progbits
+ 417              		.align	1
+ 418              		.global	osal_msg_extract
+ 419              		.syntax unified
+ 420              		.code	16
+ 421              		.thumb_func
+ 422              		.fpu softvfp
+ 424              	osal_msg_extract:
+ 425              	.LFB45:
+ 337:OSAL/osal/osal_msg.c **** 
+ 338:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 339:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_extract
+ 340:OSAL/osal/osal_msg.c ****  *
+ 341:OSAL/osal/osal_msg.c ****  * @brief
+ 342:OSAL/osal/osal_msg.c ****  *
+ 343:OSAL/osal/osal_msg.c ****  *    This function extracts and removes an OSAL message from the
+ 344:OSAL/osal/osal_msg.c ****  *    middle of an OSAL queue.
+ 345:OSAL/osal/osal_msg.c ****  *
+ 346:OSAL/osal/osal_msg.c ****  * @param   osal_msg_q_t *q_ptr - OSAL queue
+ 347:OSAL/osal/osal_msg.c ****  * @param   void *msg_ptr  - OSAL message to be extracted
+ 348:OSAL/osal/osal_msg.c ****  * @param   void *prev_ptr  - OSAL message before msg_ptr in queue
+ 349:OSAL/osal/osal_msg.c ****  *
+ 350:OSAL/osal/osal_msg.c ****  * @return  none
+ 351:OSAL/osal/osal_msg.c ****  */
+ 352:OSAL/osal/osal_msg.c **** void osal_msg_extract( osal_msg_q_t *q_ptr, void *msg_ptr, void *prev_ptr )
+ 353:OSAL/osal/osal_msg.c **** {
+ 426              		.loc 1 353 0
+ 427              		.cfi_startproc
+ 428              		@ args = 0, pretend = 0, frame = 0
+ 429              		@ frame_needed = 0, uses_anonymous_args = 0
+ 430              		@ link register save eliminated.
+ 431              	.LVL43:
+ 354:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 355:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 15
+
+
+ 356:OSAL/osal/osal_msg.c **** 
+ 357:OSAL/osal/osal_msg.c ****   if ( msg_ptr == *q_ptr )
+ 432              		.loc 1 357 0
+ 433 0000 0368     		ldr	r3, [r0]
+ 434 0002 8B42     		cmp	r3, r1
+ 435 0004 0AD0     		beq	.L37
+ 358:OSAL/osal/osal_msg.c ****   {
+ 359:OSAL/osal/osal_msg.c ****     // remove from first
+ 360:OSAL/osal/osal_msg.c ****     *q_ptr = OSAL_MSG_NEXT( msg_ptr );
+ 361:OSAL/osal/osal_msg.c ****   }
+ 362:OSAL/osal/osal_msg.c ****   else
+ 363:OSAL/osal/osal_msg.c ****   {
+ 364:OSAL/osal/osal_msg.c ****     // remove from middle
+ 365:OSAL/osal/osal_msg.c ****     OSAL_MSG_NEXT( prev_ptr ) = OSAL_MSG_NEXT( msg_ptr );
+ 436              		.loc 1 365 0
+ 437 0006 0B00     		movs	r3, r1
+ 438 0008 083B     		subs	r3, r3, #8
+ 439 000a 1B68     		ldr	r3, [r3]
+ 440 000c 083A     		subs	r2, r2, #8
+ 441              	.LVL44:
+ 442 000e 1360     		str	r3, [r2]
+ 443              	.LVL45:
+ 444              	.L36:
+ 366:OSAL/osal/osal_msg.c ****   }
+ 367:OSAL/osal/osal_msg.c ****   OSAL_MSG_NEXT( msg_ptr ) = NULL;
+ 445              		.loc 1 367 0
+ 446 0010 0839     		subs	r1, r1, #8
+ 447              	.LVL46:
+ 448 0012 0023     		movs	r3, #0
+ 449 0014 0B60     		str	r3, [r1]
+ 368:OSAL/osal/osal_msg.c ****   OSAL_MSG_ID( msg_ptr ) = TASK_NO_TASK;
+ 450              		.loc 1 368 0
+ 451 0016 0633     		adds	r3, r3, #6
+ 452 0018 8B71     		strb	r3, [r1, #6]
+ 369:OSAL/osal/osal_msg.c **** 
+ 370:OSAL/osal/osal_msg.c ****   // Re-enable interrupts
+ 371:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 372:OSAL/osal/osal_msg.c **** }
+ 453              		.loc 1 372 0
+ 454              		@ sp needed
+ 455 001a 7047     		bx	lr
+ 456              	.LVL47:
+ 457              	.L37:
+ 360:OSAL/osal/osal_msg.c ****   }
+ 458              		.loc 1 360 0
+ 459 001c 0B00     		movs	r3, r1
+ 460 001e 083B     		subs	r3, r3, #8
+ 461 0020 1B68     		ldr	r3, [r3]
+ 462 0022 0360     		str	r3, [r0]
+ 463 0024 F4E7     		b	.L36
+ 464              		.cfi_endproc
+ 465              	.LFE45:
+ 467              		.section	.text.osal_msg_receive,"ax",%progbits
+ 468              		.align	1
+ 469              		.global	osal_msg_receive
+ 470              		.syntax unified
+ 471              		.code	16
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 16
+
+
+ 472              		.thumb_func
+ 473              		.fpu softvfp
+ 475              	osal_msg_receive:
+ 476              	.LFB40:
+ 136:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *listHdr;
+ 477              		.loc 1 136 0
+ 478              		.cfi_startproc
+ 479              		@ args = 0, pretend = 0, frame = 0
+ 480              		@ frame_needed = 0, uses_anonymous_args = 0
+ 481              	.LVL48:
+ 482 0000 70B5     		push	{r4, r5, r6, lr}
+ 483              	.LCFI3:
+ 484              		.cfi_def_cfa_offset 16
+ 485              		.cfi_offset 4, -16
+ 486              		.cfi_offset 5, -12
+ 487              		.cfi_offset 6, -8
+ 488              		.cfi_offset 14, -4
+ 489              	.LVL49:
+ 146:OSAL/osal/osal_msg.c **** 
+ 490              		.loc 1 146 0
+ 491 0002 154B     		ldr	r3, .L49
+ 492 0004 1B68     		ldr	r3, [r3]
+ 493              	.LVL50:
+ 139:OSAL/osal/osal_msg.c ****   
+ 494              		.loc 1 139 0
+ 495 0006 0024     		movs	r4, #0
+ 138:OSAL/osal/osal_msg.c ****   osal_msg_hdr_t *foundHdr = NULL;
+ 496              		.loc 1 138 0
+ 497 0008 0025     		movs	r5, #0
+ 149:OSAL/osal/osal_msg.c ****   {
+ 498              		.loc 1 149 0
+ 499 000a 03E0     		b	.L39
+ 500              	.LVL51:
+ 501              	.L40:
+ 164:OSAL/osal/osal_msg.c ****     {
+ 502              		.loc 1 164 0
+ 503 000c 002C     		cmp	r4, #0
+ 504 000e 0CD0     		beq	.L48
+ 505              	.LVL52:
+ 506              	.L42:
+ 168:OSAL/osal/osal_msg.c ****   }
+ 507              		.loc 1 168 0
+ 508 0010 083B     		subs	r3, r3, #8
+ 509              	.LVL53:
+ 510 0012 1B68     		ldr	r3, [r3]
+ 511              	.LVL54:
+ 512              	.L39:
+ 149:OSAL/osal/osal_msg.c ****   {
+ 513              		.loc 1 149 0
+ 514 0014 002B     		cmp	r3, #0
+ 515 0016 0AD0     		beq	.L41
+ 151:OSAL/osal/osal_msg.c ****     {
+ 516              		.loc 1 151 0
+ 517 0018 1A00     		movs	r2, r3
+ 518 001a 083A     		subs	r2, r2, #8
+ 519 001c 9279     		ldrb	r2, [r2, #6]
+ 520 001e 8242     		cmp	r2, r0
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 17
+
+
+ 521 0020 F4D1     		bne	.L40
+ 153:OSAL/osal/osal_msg.c ****       {
+ 522              		.loc 1 153 0
+ 523 0022 002C     		cmp	r4, #0
+ 524 0024 03D1     		bne	.L41
+ 156:OSAL/osal/osal_msg.c ****       }
+ 525              		.loc 1 156 0
+ 526 0026 1C00     		movs	r4, r3
+ 527              	.LVL55:
+ 528 0028 F0E7     		b	.L40
+ 529              	.LVL56:
+ 530              	.L48:
+ 166:OSAL/osal/osal_msg.c ****     }
+ 531              		.loc 1 166 0
+ 532 002a 1D00     		movs	r5, r3
+ 533              	.LVL57:
+ 534 002c F0E7     		b	.L42
+ 535              	.LVL58:
+ 536              	.L41:
+ 172:OSAL/osal/osal_msg.c ****   {
+ 537              		.loc 1 172 0
+ 538 002e 002B     		cmp	r3, #0
+ 539 0030 0CD0     		beq	.L44
+ 175:OSAL/osal/osal_msg.c ****   }
+ 540              		.loc 1 175 0
+ 541 0032 8021     		movs	r1, #128
+ 542 0034 0902     		lsls	r1, r1, #8
+ 543 0036 FFF7FEFF 		bl	osal_set_event
+ 544              	.LVL59:
+ 545              	.L45:
+ 184:OSAL/osal/osal_msg.c ****   {
+ 546              		.loc 1 184 0
+ 547 003a 002C     		cmp	r4, #0
+ 548 003c 04D0     		beq	.L38
+ 187:OSAL/osal/osal_msg.c ****   }
+ 549              		.loc 1 187 0
+ 550 003e 2A00     		movs	r2, r5
+ 551 0040 2100     		movs	r1, r4
+ 552 0042 0548     		ldr	r0, .L49
+ 553 0044 FFF7FEFF 		bl	osal_msg_extract
+ 554              	.LVL60:
+ 555              	.L38:
+ 194:OSAL/osal/osal_msg.c **** 
+ 556              		.loc 1 194 0
+ 557 0048 2000     		movs	r0, r4
+ 558              		@ sp needed
+ 559              	.LVL61:
+ 560              	.LVL62:
+ 561 004a 70BD     		pop	{r4, r5, r6, pc}
+ 562              	.LVL63:
+ 563              	.L44:
+ 180:OSAL/osal/osal_msg.c ****   }
+ 564              		.loc 1 180 0
+ 565 004c 8021     		movs	r1, #128
+ 566 004e 0902     		lsls	r1, r1, #8
+ 567 0050 FFF7FEFF 		bl	osal_clear_event
+ 568              	.LVL64:
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 18
+
+
+ 569 0054 F1E7     		b	.L45
+ 570              	.L50:
+ 571 0056 C046     		.align	2
+ 572              	.L49:
+ 573 0058 00000000 		.word	osal_qHead
+ 574              		.cfi_endproc
+ 575              	.LFE40:
+ 577              		.section	.text.osal_msg_enqueue_max,"ax",%progbits
+ 578              		.align	1
+ 579              		.global	osal_msg_enqueue_max
+ 580              		.syntax unified
+ 581              		.code	16
+ 582              		.thumb_func
+ 583              		.fpu softvfp
+ 585              	osal_msg_enqueue_max:
+ 586              	.LFB46:
+ 373:OSAL/osal/osal_msg.c **** 
+ 374:OSAL/osal/osal_msg.c **** /*********************************************************************
+ 375:OSAL/osal/osal_msg.c ****  * @fn      osal_msg_enqueue_max
+ 376:OSAL/osal/osal_msg.c ****  *
+ 377:OSAL/osal/osal_msg.c ****  * @brief
+ 378:OSAL/osal/osal_msg.c ****  *
+ 379:OSAL/osal/osal_msg.c ****  *    This function enqueues an OSAL message into an OSAL queue if
+ 380:OSAL/osal/osal_msg.c ****  *    the length of the queue is less than max.
+ 381:OSAL/osal/osal_msg.c ****  *
+ 382:OSAL/osal/osal_msg.c ****  * @param   osal_msg_q_t *q_ptr - OSAL queue
+ 383:OSAL/osal/osal_msg.c ****  * @param   void *msg_ptr  - OSAL message
+ 384:OSAL/osal/osal_msg.c ****  * @param   uint8 max - maximum length of queue
+ 385:OSAL/osal/osal_msg.c ****  *
+ 386:OSAL/osal/osal_msg.c ****  * @return  TRUE if message was enqueued, FALSE otherwise
+ 387:OSAL/osal/osal_msg.c ****  */
+ 388:OSAL/osal/osal_msg.c **** uint8 osal_msg_enqueue_max( osal_msg_q_t *q_ptr, void *msg_ptr, uint8 max )
+ 389:OSAL/osal/osal_msg.c **** {
+ 587              		.loc 1 389 0
+ 588              		.cfi_startproc
+ 589              		@ args = 0, pretend = 0, frame = 0
+ 590              		@ frame_needed = 0, uses_anonymous_args = 0
+ 591              	.LVL65:
+ 592 0000 10B5     		push	{r4, lr}
+ 593              	.LCFI4:
+ 594              		.cfi_def_cfa_offset 8
+ 595              		.cfi_offset 4, -8
+ 596              		.cfi_offset 14, -4
+ 597              	.LVL66:
+ 390:OSAL/osal/osal_msg.c ****   void *list;
+ 391:OSAL/osal/osal_msg.c ****   uint8 ret = FALSE;
+ 392:OSAL/osal/osal_msg.c ****   
+ 393:OSAL/osal/osal_msg.c ****   // Hold off interrupts
+ 394:OSAL/osal/osal_msg.c ****   HAL_ENTER_CRITICAL_SECTION();
+ 395:OSAL/osal/osal_msg.c **** 
+ 396:OSAL/osal/osal_msg.c ****   // If first message in queue
+ 397:OSAL/osal/osal_msg.c ****   if ( *q_ptr == NULL )
+ 598              		.loc 1 397 0
+ 599 0002 0468     		ldr	r4, [r0]
+ 600 0004 002C     		cmp	r4, #0
+ 601 0006 02D0     		beq	.L57
+ 602              	.LVL67:
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 19
+
+
+ 398:OSAL/osal/osal_msg.c ****   {
+ 399:OSAL/osal/osal_msg.c ****     *q_ptr = msg_ptr;
+ 400:OSAL/osal/osal_msg.c ****     ret = TRUE;
+ 401:OSAL/osal/osal_msg.c ****   }
+ 402:OSAL/osal/osal_msg.c ****   else
+ 403:OSAL/osal/osal_msg.c ****   {
+ 404:OSAL/osal/osal_msg.c ****     // Find end of queue or max
+ 405:OSAL/osal/osal_msg.c ****     list = *q_ptr;
+ 406:OSAL/osal/osal_msg.c ****     max--;
+ 603              		.loc 1 406 0
+ 604 0008 013A     		subs	r2, r2, #1
+ 605              	.LVL68:
+ 606 000a D0B2     		uxtb	r0, r2
+ 607              	.LVL69:
+ 407:OSAL/osal/osal_msg.c ****     while ( (OSAL_MSG_NEXT( list ) != NULL) && (max > 0) )
+ 608              		.loc 1 407 0
+ 609 000c 05E0     		b	.L54
+ 610              	.LVL70:
+ 611              	.L57:
+ 399:OSAL/osal/osal_msg.c ****     ret = TRUE;
+ 612              		.loc 1 399 0
+ 613 000e 0160     		str	r1, [r0]
+ 614              	.LVL71:
+ 400:OSAL/osal/osal_msg.c ****   }
+ 615              		.loc 1 400 0
+ 616 0010 0120     		movs	r0, #1
+ 617              	.LVL72:
+ 618 0012 0EE0     		b	.L53
+ 619              	.LVL73:
+ 620              	.L56:
+ 408:OSAL/osal/osal_msg.c ****     {
+ 409:OSAL/osal/osal_msg.c ****       list = OSAL_MSG_NEXT( list );
+ 410:OSAL/osal/osal_msg.c ****       max--;
+ 621              		.loc 1 410 0
+ 622 0014 0138     		subs	r0, r0, #1
+ 623              	.LVL74:
+ 624 0016 C0B2     		uxtb	r0, r0
+ 625              	.LVL75:
+ 409:OSAL/osal/osal_msg.c ****       max--;
+ 626              		.loc 1 409 0
+ 627 0018 1C00     		movs	r4, r3
+ 628              	.LVL76:
+ 629              	.L54:
+ 407:OSAL/osal/osal_msg.c ****     {
+ 630              		.loc 1 407 0
+ 631 001a 2300     		movs	r3, r4
+ 632 001c 083B     		subs	r3, r3, #8
+ 633 001e 1B68     		ldr	r3, [r3]
+ 634 0020 002B     		cmp	r3, #0
+ 635 0022 01D0     		beq	.L55
+ 407:OSAL/osal/osal_msg.c ****     {
+ 636              		.loc 1 407 0 is_stmt 0 discriminator 1
+ 637 0024 0028     		cmp	r0, #0
+ 638 0026 F5D1     		bne	.L56
+ 639              	.L55:
+ 411:OSAL/osal/osal_msg.c ****     }
+ 412:OSAL/osal/osal_msg.c **** 
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 20
+
+
+ 413:OSAL/osal/osal_msg.c ****     // Add message to end of queue if max not reached
+ 414:OSAL/osal/osal_msg.c ****     if ( max != 0 )
+ 640              		.loc 1 414 0 is_stmt 1
+ 641 0028 0028     		cmp	r0, #0
+ 642 002a 02D0     		beq	.L53
+ 415:OSAL/osal/osal_msg.c ****     {
+ 416:OSAL/osal/osal_msg.c ****       OSAL_MSG_NEXT( list ) = msg_ptr;
+ 643              		.loc 1 416 0
+ 644 002c 083C     		subs	r4, r4, #8
+ 645              	.LVL77:
+ 646 002e 2160     		str	r1, [r4]
+ 647              	.LVL78:
+ 417:OSAL/osal/osal_msg.c ****       ret = TRUE;
+ 648              		.loc 1 417 0
+ 649 0030 0120     		movs	r0, #1
+ 650              	.LVL79:
+ 651              	.L53:
+ 418:OSAL/osal/osal_msg.c ****     }
+ 419:OSAL/osal/osal_msg.c ****   }
+ 420:OSAL/osal/osal_msg.c **** 
+ 421:OSAL/osal/osal_msg.c ****   // Re-enable interrupts
+ 422:OSAL/osal/osal_msg.c ****   HAL_EXIT_CRITICAL_SECTION();
+ 423:OSAL/osal/osal_msg.c **** 
+ 424:OSAL/osal/osal_msg.c ****   return ret;
+ 425:OSAL/osal/osal_msg.c **** }
+ 652              		.loc 1 425 0
+ 653              		@ sp needed
+ 654 0032 10BD     		pop	{r4, pc}
+ 655              		.cfi_endproc
+ 656              	.LFE46:
+ 658              		.text
+ 659              	.Letext0:
+ 660              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 661              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 662              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 663              		.file 5 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 664              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 665              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 666              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 667              		.file 9 "OSAL/include/type.h"
+ 668              		.file 10 "OSAL/include/osal.h"
+ 669              		.file 11 "OSAL/include/osal_event.h"
+ 670              		.file 12 "OSAL/include/application.h"
+ 671              		.file 13 "OSAL/include/osal_memory.h"
+ARM GAS  E:\cygwin64\tmp\ccWBgBAq.s 			page 21
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 osal_msg.c
+E:\cygwin64\tmp\ccWBgBAq.s:16     .text.osal_msg_allocate:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:23     .text.osal_msg_allocate:00000000 osal_msg_allocate
+E:\cygwin64\tmp\ccWBgBAq.s:79     .text.osal_msg_deallocate:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:86     .text.osal_msg_deallocate:00000000 osal_msg_deallocate
+E:\cygwin64\tmp\ccWBgBAq.s:135    .text.osal_msg_find:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:142    .text.osal_msg_find:00000000 osal_msg_find
+E:\cygwin64\tmp\ccWBgBAq.s:185    .text.osal_msg_find:00000024 $d
+E:\cygwin64\tmp\ccWBgBAq.s:190    .text.osal_msg_enqueue:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:197    .text.osal_msg_enqueue:00000000 osal_msg_enqueue
+E:\cygwin64\tmp\ccWBgBAq.s:242    .text.osal_msg_send:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:249    .text.osal_msg_send:00000000 osal_msg_send
+E:\cygwin64\tmp\ccWBgBAq.s:334    .text.osal_msg_send:00000058 $d
+E:\cygwin64\tmp\ccWBgBAq.s:340    .text.osal_msg_dequeue:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:347    .text.osal_msg_dequeue:00000000 osal_msg_dequeue
+E:\cygwin64\tmp\ccWBgBAq.s:388    .text.osal_msg_push:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:395    .text.osal_msg_push:00000000 osal_msg_push
+E:\cygwin64\tmp\ccWBgBAq.s:417    .text.osal_msg_extract:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:424    .text.osal_msg_extract:00000000 osal_msg_extract
+E:\cygwin64\tmp\ccWBgBAq.s:468    .text.osal_msg_receive:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:475    .text.osal_msg_receive:00000000 osal_msg_receive
+E:\cygwin64\tmp\ccWBgBAq.s:573    .text.osal_msg_receive:00000058 $d
+E:\cygwin64\tmp\ccWBgBAq.s:578    .text.osal_msg_enqueue_max:00000000 $t
+E:\cygwin64\tmp\ccWBgBAq.s:585    .text.osal_msg_enqueue_max:00000000 osal_msg_enqueue_max
+
+UNDEFINED SYMBOLS
+osal_mem_alloc
+osal_mem_free
+osal_qHead
+osal_set_event
+tasksCnt
+osal_clear_event

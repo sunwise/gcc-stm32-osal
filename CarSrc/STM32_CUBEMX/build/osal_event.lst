@@ -1,0 +1,707 @@
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"osal_event.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.osal_init_TaskHead,"ax",%progbits
+  16              		.align	1
+  17              		.global	osal_init_TaskHead
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	osal_init_TaskHead:
+  24              	.LFB39:
+  25              		.file 1 "OSAL/osal/osal_event.c"
+   1:OSAL/osal/osal_event.c **** #include "osal_event.h"
+   2:OSAL/osal/osal_event.c **** #include "osal_memory.h"
+   3:OSAL/osal/osal_event.c **** 
+   4:OSAL/osal/osal_event.c **** OsalTadkREC_t *TaskHead;
+   5:OSAL/osal/osal_event.c **** OsalTadkREC_t *TaskActive;
+   6:OSAL/osal/osal_event.c **** 
+   7:OSAL/osal/osal_event.c **** uint8 Task_id;				//任务ID统计
+   8:OSAL/osal/osal_event.c **** uint8 tasksCnt;				//任务数量统计
+   9:OSAL/osal/osal_event.c **** 
+  10:OSAL/osal/osal_event.c **** /*********************************************************************
+  11:OSAL/osal/osal_event.c ****  * @fn      osal_set_event
+  12:OSAL/osal/osal_event.c ****  *
+  13:OSAL/osal/osal_event.c ****  * @brief
+  14:OSAL/osal/osal_event.c ****  *
+  15:OSAL/osal/osal_event.c ****  *    This function is called to set the event flags for a task.  The
+  16:OSAL/osal/osal_event.c ****  *    event passed in is OR'd into the task's event variable.
+  17:OSAL/osal/osal_event.c ****  *
+  18:OSAL/osal/osal_event.c ****  * @param   byte task_id - receiving tasks ID
+  19:OSAL/osal/osal_event.c ****  * @param   byte event_flag - what event to set
+  20:OSAL/osal/osal_event.c ****  *
+  21:OSAL/osal/osal_event.c ****  * @return  ZSUCCESS, INVALID_TASK
+  22:OSAL/osal/osal_event.c ****  */
+  23:OSAL/osal/osal_event.c **** uint8 osal_set_event( byte task_id, uint16 event_flag )
+  24:OSAL/osal/osal_event.c **** {
+  25:OSAL/osal/osal_event.c ****   	OsalTadkREC_t *srchTask;
+  26:OSAL/osal/osal_event.c **** 
+  27:OSAL/osal/osal_event.c ****   	srchTask = osalFindTask( task_id );
+  28:OSAL/osal/osal_event.c ****   	if ( srchTask ) 
+  29:OSAL/osal/osal_event.c **** 	{
+  30:OSAL/osal/osal_event.c **** 	    // Hold off interrupts
+  31:OSAL/osal/osal_event.c **** 	    HAL_ENTER_CRITICAL_SECTION();
+  32:OSAL/osal/osal_event.c **** 	    // Stuff the event bit(s)
+  33:OSAL/osal/osal_event.c **** 	    srchTask->events |= event_flag;
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 2
+
+
+  34:OSAL/osal/osal_event.c **** 	    // Release interrupts
+  35:OSAL/osal/osal_event.c ****     	HAL_EXIT_CRITICAL_SECTION();
+  36:OSAL/osal/osal_event.c ****   	}
+  37:OSAL/osal/osal_event.c ****   	else
+  38:OSAL/osal/osal_event.c ****     	return ( INVALID_TASK );
+  39:OSAL/osal/osal_event.c **** 
+  40:OSAL/osal/osal_event.c ****   	return ( ZSUCCESS );
+  41:OSAL/osal/osal_event.c **** }
+  42:OSAL/osal/osal_event.c **** 
+  43:OSAL/osal/osal_event.c **** /*********************************************************************
+  44:OSAL/osal/osal_event.c ****  * @fn      osal_clear_event
+  45:OSAL/osal/osal_event.c ****  *
+  46:OSAL/osal/osal_event.c ****  * @brief
+  47:OSAL/osal/osal_event.c ****  *
+  48:OSAL/osal/osal_event.c ****  *    This function is called to clear the event flags for a task. The
+  49:OSAL/osal/osal_event.c ****  *    event passed in is masked out of the task's event variable.
+  50:OSAL/osal/osal_event.c ****  *
+  51:OSAL/osal/osal_event.c ****  * @param   uint8 task_id - receiving tasks ID
+  52:OSAL/osal/osal_event.c ****  * @param   uint8 event_flag - what event to clear
+  53:OSAL/osal/osal_event.c ****  *
+  54:OSAL/osal/osal_event.c ****  * @return  SUCCESS, INVALID_TASK
+  55:OSAL/osal/osal_event.c ****  */
+  56:OSAL/osal/osal_event.c **** uint8 osal_clear_event( uint8 task_id, uint16 event_flag )
+  57:OSAL/osal/osal_event.c **** {
+  58:OSAL/osal/osal_event.c ****   	OsalTadkREC_t *srchTask;
+  59:OSAL/osal/osal_event.c **** 
+  60:OSAL/osal/osal_event.c ****   	srchTask = osalFindTask( task_id );
+  61:OSAL/osal/osal_event.c ****   	if ( srchTask ) 
+  62:OSAL/osal/osal_event.c **** 	{
+  63:OSAL/osal/osal_event.c **** 	    // Hold off interrupts
+  64:OSAL/osal/osal_event.c **** 	    HAL_ENTER_CRITICAL_SECTION();
+  65:OSAL/osal/osal_event.c **** 	    // Stuff the event bit(s)
+  66:OSAL/osal/osal_event.c **** 	    srchTask->events &= ~event_flag;
+  67:OSAL/osal/osal_event.c **** 	    // Release interrupts
+  68:OSAL/osal/osal_event.c ****     	HAL_EXIT_CRITICAL_SECTION();
+  69:OSAL/osal/osal_event.c ****   	}
+  70:OSAL/osal/osal_event.c ****   	else
+  71:OSAL/osal/osal_event.c ****     	return ( INVALID_TASK );
+  72:OSAL/osal/osal_event.c **** 
+  73:OSAL/osal/osal_event.c ****   	return ( ZSUCCESS );
+  74:OSAL/osal/osal_event.c **** }
+  75:OSAL/osal/osal_event.c **** /***************************************************************************
+  76:OSAL/osal/osal_event.c ****  * @fn       osal_init_TaskHead
+  77:OSAL/osal/osal_event.c ****  *
+  78:OSAL/osal/osal_event.c ****  * @brief   init task link's head
+  79:OSAL/osal/osal_event.c ****  *
+  80:OSAL/osal/osal_event.c ****  * @param   none
+  81:OSAL/osal/osal_event.c ****  *
+  82:OSAL/osal/osal_event.c ****  * @return
+  83:OSAL/osal/osal_event.c ****  */
+  84:OSAL/osal/osal_event.c **** void  osal_init_TaskHead( void )
+  85:OSAL/osal/osal_event.c **** {
+  26              		.loc 1 85 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30              		@ link register save eliminated.
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 3
+
+
+  86:OSAL/osal/osal_event.c **** 	TaskHead   = (OsalTadkREC_t *)NULL;
+  31              		.loc 1 86 0
+  32 0000 0023     		movs	r3, #0
+  33 0002 034A     		ldr	r2, .L2
+  34 0004 1360     		str	r3, [r2]
+  87:OSAL/osal/osal_event.c **** 	TaskActive = (OsalTadkREC_t *)NULL;
+  35              		.loc 1 87 0
+  36 0006 034A     		ldr	r2, .L2+4
+  37 0008 1360     		str	r3, [r2]
+  88:OSAL/osal/osal_event.c **** 	Task_id = 0;
+  38              		.loc 1 88 0
+  39 000a 034A     		ldr	r2, .L2+8
+  40 000c 1370     		strb	r3, [r2]
+  89:OSAL/osal/osal_event.c ****  }
+  41              		.loc 1 89 0
+  42              		@ sp needed
+  43 000e 7047     		bx	lr
+  44              	.L3:
+  45              		.align	2
+  46              	.L2:
+  47 0010 00000000 		.word	TaskHead
+  48 0014 00000000 		.word	TaskActive
+  49 0018 00000000 		.word	Task_id
+  50              		.cfi_endproc
+  51              	.LFE39:
+  53              		.section	.text.osal_Task_init,"ax",%progbits
+  54              		.align	1
+  55              		.global	osal_Task_init
+  56              		.syntax unified
+  57              		.code	16
+  58              		.thumb_func
+  59              		.fpu softvfp
+  61              	osal_Task_init:
+  62              	.LFB40:
+  90:OSAL/osal/osal_event.c **** 
+  91:OSAL/osal/osal_event.c **** /***************************************************************************
+  92:OSAL/osal/osal_event.c ****  * @fn       osal_Task_init
+  93:OSAL/osal/osal_event.c ****  *
+  94:OSAL/osal/osal_event.c ****  * @brief   init task 
+  95:OSAL/osal/osal_event.c ****  *
+  96:OSAL/osal/osal_event.c ****  * @param   none
+  97:OSAL/osal/osal_event.c ****  *
+  98:OSAL/osal/osal_event.c ****  * @return
+  99:OSAL/osal/osal_event.c ****  */
+ 100:OSAL/osal/osal_event.c **** void osal_Task_init(void)
+ 101:OSAL/osal/osal_event.c **** {
+  63              		.loc 1 101 0
+  64              		.cfi_startproc
+  65              		@ args = 0, pretend = 0, frame = 0
+  66              		@ frame_needed = 0, uses_anonymous_args = 0
+  67 0000 10B5     		push	{r4, lr}
+  68              	.LCFI0:
+  69              		.cfi_def_cfa_offset 8
+  70              		.cfi_offset 4, -8
+  71              		.cfi_offset 14, -4
+ 102:OSAL/osal/osal_event.c **** 	TaskActive = TaskHead;
+  72              		.loc 1 102 0
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 4
+
+
+  73 0002 0B4B     		ldr	r3, .L9
+  74 0004 1A68     		ldr	r2, [r3]
+  75 0006 0B4B     		ldr	r3, .L9+4
+  76 0008 1A60     		str	r2, [r3]
+ 103:OSAL/osal/osal_event.c **** 	while(TaskActive)
+  77              		.loc 1 103 0
+  78 000a 03E0     		b	.L5
+  79              	.L6:
+ 104:OSAL/osal/osal_event.c **** 	{
+ 105:OSAL/osal/osal_event.c **** 	  if(TaskActive->pfnInit)
+ 106:OSAL/osal/osal_event.c **** 	  {
+ 107:OSAL/osal/osal_event.c **** 		 TaskActive->pfnInit(TaskActive->taskID);
+ 108:OSAL/osal/osal_event.c **** 	  }
+ 109:OSAL/osal/osal_event.c **** 	  TaskActive = TaskActive->next;
+  80              		.loc 1 109 0
+  81 000c 094B     		ldr	r3, .L9+4
+  82 000e 1A68     		ldr	r2, [r3]
+  83 0010 1268     		ldr	r2, [r2]
+  84 0012 1A60     		str	r2, [r3]
+  85              	.L5:
+ 103:OSAL/osal/osal_event.c **** 	while(TaskActive)
+  86              		.loc 1 103 0
+  87 0014 074B     		ldr	r3, .L9+4
+  88 0016 1B68     		ldr	r3, [r3]
+  89 0018 002B     		cmp	r3, #0
+  90 001a 05D0     		beq	.L8
+ 105:OSAL/osal/osal_event.c **** 	  {
+  91              		.loc 1 105 0
+  92 001c 5A68     		ldr	r2, [r3, #4]
+  93 001e 002A     		cmp	r2, #0
+  94 0020 F4D0     		beq	.L6
+ 107:OSAL/osal/osal_event.c **** 	  }
+  95              		.loc 1 107 0
+  96 0022 187B     		ldrb	r0, [r3, #12]
+  97 0024 9047     		blx	r2
+  98              	.LVL0:
+  99 0026 F1E7     		b	.L6
+ 100              	.L8:
+ 110:OSAL/osal/osal_event.c **** 	}
+ 111:OSAL/osal/osal_event.c **** 	TaskActive = (OsalTadkREC_t *)NULL;
+ 101              		.loc 1 111 0
+ 102 0028 024B     		ldr	r3, .L9+4
+ 103 002a 0022     		movs	r2, #0
+ 104 002c 1A60     		str	r2, [r3]
+ 112:OSAL/osal/osal_event.c **** }
+ 105              		.loc 1 112 0
+ 106              		@ sp needed
+ 107 002e 10BD     		pop	{r4, pc}
+ 108              	.L10:
+ 109              		.align	2
+ 110              	.L9:
+ 111 0030 00000000 		.word	TaskHead
+ 112 0034 00000000 		.word	TaskActive
+ 113              		.cfi_endproc
+ 114              	.LFE40:
+ 116              		.section	.text.osal_add_Task,"ax",%progbits
+ 117              		.align	1
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 5
+
+
+ 118              		.global	osal_add_Task
+ 119              		.syntax unified
+ 120              		.code	16
+ 121              		.thumb_func
+ 122              		.fpu softvfp
+ 124              	osal_add_Task:
+ 125              	.LFB41:
+ 113:OSAL/osal/osal_event.c **** /***************************************************************************
+ 114:OSAL/osal/osal_event.c ****  * @fn       osal_add_Task
+ 115:OSAL/osal/osal_event.c ****  *
+ 116:OSAL/osal/osal_event.c ****  * @brief   osal_add_Task
+ 117:OSAL/osal/osal_event.c ****  *
+ 118:OSAL/osal/osal_event.c ****  * @param   none
+ 119:OSAL/osal/osal_event.c ****  *
+ 120:OSAL/osal/osal_event.c ****  * @return
+ 121:OSAL/osal/osal_event.c ****  */
+ 122:OSAL/osal/osal_event.c **** void  osal_add_Task(pTaskInitFn pfnInit,
+ 123:OSAL/osal/osal_event.c ****                   	pTaskEventHandlerFn pfnEventProcessor,
+ 124:OSAL/osal/osal_event.c ****                   	uint8 taskPriority)
+ 125:OSAL/osal/osal_event.c **** {
+ 126              		.loc 1 125 0
+ 127              		.cfi_startproc
+ 128              		@ args = 0, pretend = 0, frame = 0
+ 129              		@ frame_needed = 0, uses_anonymous_args = 0
+ 130              	.LVL1:
+ 131 0000 70B5     		push	{r4, r5, r6, lr}
+ 132              	.LCFI1:
+ 133              		.cfi_def_cfa_offset 16
+ 134              		.cfi_offset 4, -16
+ 135              		.cfi_offset 5, -12
+ 136              		.cfi_offset 6, -8
+ 137              		.cfi_offset 14, -4
+ 138 0002 0600     		movs	r6, r0
+ 139 0004 0D00     		movs	r5, r1
+ 140 0006 1400     		movs	r4, r2
+ 126:OSAL/osal/osal_event.c **** 	OsalTadkREC_t  *TaskNew;
+ 127:OSAL/osal/osal_event.c **** 	OsalTadkREC_t  *TaskSech;
+ 128:OSAL/osal/osal_event.c **** 	OsalTadkREC_t  **TaskPTR;
+ 129:OSAL/osal/osal_event.c **** 	TaskNew = osal_mem_alloc(sizeof(OsalTadkREC_t));
+ 141              		.loc 1 129 0
+ 142 0008 1020     		movs	r0, #16
+ 143              	.LVL2:
+ 144 000a FFF7FEFF 		bl	osal_mem_alloc
+ 145              	.LVL3:
+ 130:OSAL/osal/osal_event.c **** 	if(TaskNew)
+ 146              		.loc 1 130 0
+ 147 000e 0028     		cmp	r0, #0
+ 148 0010 1CD0     		beq	.L11
+ 131:OSAL/osal/osal_event.c **** 	{
+ 132:OSAL/osal/osal_event.c **** 		TaskNew->pfnInit = pfnInit;
+ 149              		.loc 1 132 0
+ 150 0012 4660     		str	r6, [r0, #4]
+ 133:OSAL/osal/osal_event.c **** 		TaskNew->pfnEventProcessor = pfnEventProcessor;
+ 151              		.loc 1 133 0
+ 152 0014 8560     		str	r5, [r0, #8]
+ 134:OSAL/osal/osal_event.c **** 		TaskNew->taskID = Task_id++;
+ 153              		.loc 1 134 0
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 6
+
+
+ 154 0016 0E4A     		ldr	r2, .L18
+ 155 0018 1378     		ldrb	r3, [r2]
+ 156 001a 591C     		adds	r1, r3, #1
+ 157 001c 1170     		strb	r1, [r2]
+ 158 001e 0373     		strb	r3, [r0, #12]
+ 135:OSAL/osal/osal_event.c **** 		TaskNew->events = 0;
+ 159              		.loc 1 135 0
+ 160 0020 0023     		movs	r3, #0
+ 161 0022 C381     		strh	r3, [r0, #14]
+ 136:OSAL/osal/osal_event.c **** 		TaskNew->taskPriority = taskPriority;
+ 162              		.loc 1 136 0
+ 163 0024 4473     		strb	r4, [r0, #13]
+ 137:OSAL/osal/osal_event.c **** 		TaskNew->next = (OsalTadkREC_t *)NULL;
+ 164              		.loc 1 137 0
+ 165 0026 0360     		str	r3, [r0]
+ 166              	.LVL4:
+ 138:OSAL/osal/osal_event.c **** 		
+ 139:OSAL/osal/osal_event.c **** 		TaskPTR = &TaskHead;
+ 140:OSAL/osal/osal_event.c **** 	    TaskSech = TaskHead;
+ 167              		.loc 1 140 0
+ 168 0028 0A49     		ldr	r1, .L18+4
+ 169 002a 0B68     		ldr	r3, [r1]
+ 170              	.LVL5:
+ 141:OSAL/osal/osal_event.c **** 
+ 142:OSAL/osal/osal_event.c **** 	    tasksCnt++;			//任务数量统计
+ 171              		.loc 1 142 0
+ 172 002c 0A4D     		ldr	r5, .L18+8
+ 173              	.LVL6:
+ 174 002e 2A78     		ldrb	r2, [r5]
+ 175 0030 0132     		adds	r2, r2, #1
+ 176 0032 2A70     		strb	r2, [r5]
+ 177              	.LVL7:
+ 178              	.L13:
+ 143:OSAL/osal/osal_event.c **** 		
+ 144:OSAL/osal/osal_event.c **** 		while(TaskSech)
+ 179              		.loc 1 144 0
+ 180 0034 002B     		cmp	r3, #0
+ 181 0036 08D0     		beq	.L16
+ 145:OSAL/osal/osal_event.c **** 		{
+ 146:OSAL/osal/osal_event.c **** 			if(TaskNew->taskPriority > TaskSech->taskPriority)
+ 182              		.loc 1 146 0
+ 183 0038 5A7B     		ldrb	r2, [r3, #13]
+ 184 003a A242     		cmp	r2, r4
+ 185 003c 02D3     		bcc	.L17
+ 147:OSAL/osal/osal_event.c **** 			{
+ 148:OSAL/osal/osal_event.c **** 				TaskNew->next = TaskSech;
+ 149:OSAL/osal/osal_event.c **** 				*TaskPTR = TaskNew;
+ 150:OSAL/osal/osal_event.c **** 				return;
+ 151:OSAL/osal/osal_event.c **** 			}
+ 152:OSAL/osal/osal_event.c **** 			TaskPTR = &TaskSech->next;
+ 186              		.loc 1 152 0
+ 187 003e 1900     		movs	r1, r3
+ 188              	.LVL8:
+ 153:OSAL/osal/osal_event.c **** 			TaskSech = TaskSech->next;
+ 189              		.loc 1 153 0
+ 190 0040 1B68     		ldr	r3, [r3]
+ 191              	.LVL9:
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 7
+
+
+ 192 0042 F7E7     		b	.L13
+ 193              	.L17:
+ 148:OSAL/osal/osal_event.c **** 				*TaskPTR = TaskNew;
+ 194              		.loc 1 148 0
+ 195 0044 0360     		str	r3, [r0]
+ 149:OSAL/osal/osal_event.c **** 				return;
+ 196              		.loc 1 149 0
+ 197 0046 0860     		str	r0, [r1]
+ 198              	.LVL10:
+ 150:OSAL/osal/osal_event.c **** 			}
+ 199              		.loc 1 150 0
+ 200 0048 00E0     		b	.L11
+ 201              	.LVL11:
+ 202              	.L16:
+ 154:OSAL/osal/osal_event.c **** 		}
+ 155:OSAL/osal/osal_event.c **** 		*TaskPTR = TaskNew;
+ 203              		.loc 1 155 0
+ 204 004a 0860     		str	r0, [r1]
+ 205              	.LVL12:
+ 206              	.L11:
+ 156:OSAL/osal/osal_event.c **** 	}
+ 157:OSAL/osal/osal_event.c **** 	return;
+ 158:OSAL/osal/osal_event.c **** }
+ 207              		.loc 1 158 0
+ 208              		@ sp needed
+ 209              	.LVL13:
+ 210 004c 70BD     		pop	{r4, r5, r6, pc}
+ 211              	.L19:
+ 212 004e C046     		.align	2
+ 213              	.L18:
+ 214 0050 00000000 		.word	Task_id
+ 215 0054 00000000 		.word	TaskHead
+ 216 0058 00000000 		.word	tasksCnt
+ 217              		.cfi_endproc
+ 218              	.LFE41:
+ 220              		.section	.text.osalNextActiveTask,"ax",%progbits
+ 221              		.align	1
+ 222              		.global	osalNextActiveTask
+ 223              		.syntax unified
+ 224              		.code	16
+ 225              		.thumb_func
+ 226              		.fpu softvfp
+ 228              	osalNextActiveTask:
+ 229              	.LFB42:
+ 159:OSAL/osal/osal_event.c **** 
+ 160:OSAL/osal/osal_event.c **** /*********************************************************************
+ 161:OSAL/osal/osal_event.c ****  * @fn      osalNextActiveTask
+ 162:OSAL/osal/osal_event.c ****  *
+ 163:OSAL/osal/osal_event.c ****  * @brief   This function will return the next active task.
+ 164:OSAL/osal/osal_event.c ****  *
+ 165:OSAL/osal/osal_event.c ****  * NOTE:    Task queue is in priority order. We can stop at the
+ 166:OSAL/osal/osal_event.c ****  *          first task that is "ready" (events element non-zero)
+ 167:OSAL/osal/osal_event.c ****  *
+ 168:OSAL/osal/osal_event.c ****  * @param   none
+ 169:OSAL/osal/osal_event.c ****  *
+ 170:OSAL/osal/osal_event.c ****  * @return  pointer to the found task, NULL if not found
+ 171:OSAL/osal/osal_event.c ****  */
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 8
+
+
+ 172:OSAL/osal/osal_event.c **** OsalTadkREC_t *osalNextActiveTask( void )
+ 173:OSAL/osal/osal_event.c **** {
+ 230              		.loc 1 173 0
+ 231              		.cfi_startproc
+ 232              		@ args = 0, pretend = 0, frame = 0
+ 233              		@ frame_needed = 0, uses_anonymous_args = 0
+ 234              		@ link register save eliminated.
+ 174:OSAL/osal/osal_event.c ****   	OsalTadkREC_t  *TaskSech;
+ 175:OSAL/osal/osal_event.c **** 
+ 176:OSAL/osal/osal_event.c ****   	// Start at the beginning
+ 177:OSAL/osal/osal_event.c ****   	TaskSech = TaskHead;
+ 235              		.loc 1 177 0
+ 236 0000 044B     		ldr	r3, .L24
+ 237 0002 1868     		ldr	r0, [r3]
+ 238              	.LVL14:
+ 239              	.L21:
+ 178:OSAL/osal/osal_event.c **** 
+ 179:OSAL/osal/osal_event.c ****   	// When found or not
+ 180:OSAL/osal/osal_event.c ****   	while ( TaskSech ) 
+ 240              		.loc 1 180 0
+ 241 0004 0028     		cmp	r0, #0
+ 242 0006 04D0     		beq	.L20
+ 181:OSAL/osal/osal_event.c **** 	{
+ 182:OSAL/osal/osal_event.c ****         if ( TaskSech->events)  
+ 243              		.loc 1 182 0
+ 244 0008 C389     		ldrh	r3, [r0, #14]
+ 245 000a 002B     		cmp	r3, #0
+ 246 000c 01D1     		bne	.L20
+ 183:OSAL/osal/osal_event.c ****         {
+ 184:OSAL/osal/osal_event.c **** 		  	// task is highest priority that is ready
+ 185:OSAL/osal/osal_event.c ****           	return  TaskSech;
+ 186:OSAL/osal/osal_event.c ****       	}
+ 187:OSAL/osal/osal_event.c ****       	TaskSech =  TaskSech->next;
+ 247              		.loc 1 187 0
+ 248 000e 0068     		ldr	r0, [r0]
+ 249              	.LVL15:
+ 250 0010 F8E7     		b	.L21
+ 251              	.L20:
+ 188:OSAL/osal/osal_event.c ****   	}
+ 189:OSAL/osal/osal_event.c ****   	return NULL;
+ 190:OSAL/osal/osal_event.c **** }
+ 252              		.loc 1 190 0
+ 253              		@ sp needed
+ 254 0012 7047     		bx	lr
+ 255              	.L25:
+ 256              		.align	2
+ 257              	.L24:
+ 258 0014 00000000 		.word	TaskHead
+ 259              		.cfi_endproc
+ 260              	.LFE42:
+ 262              		.section	.text.osalFindTask,"ax",%progbits
+ 263              		.align	1
+ 264              		.global	osalFindTask
+ 265              		.syntax unified
+ 266              		.code	16
+ 267              		.thumb_func
+ 268              		.fpu softvfp
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 9
+
+
+ 270              	osalFindTask:
+ 271              	.LFB43:
+ 191:OSAL/osal/osal_event.c **** 
+ 192:OSAL/osal/osal_event.c **** /*********************************************************************
+ 193:OSAL/osal/osal_event.c ****  * @fn      osalFindActiveTask
+ 194:OSAL/osal/osal_event.c ****  *
+ 195:OSAL/osal/osal_event.c ****  * @brief   This function will return the taskid task.
+ 196:OSAL/osal/osal_event.c ****  *
+ 197:OSAL/osal/osal_event.c ****  * NOTE:    Task queue is in priority order. We can stop at the
+ 198:OSAL/osal/osal_event.c ****  *          first task that is "ready" (events element non-zero)
+ 199:OSAL/osal/osal_event.c ****  *
+ 200:OSAL/osal/osal_event.c ****  * @param   task_id
+ 201:OSAL/osal/osal_event.c ****  *
+ 202:OSAL/osal/osal_event.c ****  * @return  pointer to the found task, NULL if not found
+ 203:OSAL/osal/osal_event.c ****  */
+ 204:OSAL/osal/osal_event.c **** 
+ 205:OSAL/osal/osal_event.c **** OsalTadkREC_t *osalFindTask( uint8 taskID )
+ 206:OSAL/osal/osal_event.c **** {
+ 272              		.loc 1 206 0
+ 273              		.cfi_startproc
+ 274              		@ args = 0, pretend = 0, frame = 0
+ 275              		@ frame_needed = 0, uses_anonymous_args = 0
+ 276              		@ link register save eliminated.
+ 277              	.LVL16:
+ 207:OSAL/osal/osal_event.c **** 	OsalTadkREC_t *TaskSech;
+ 208:OSAL/osal/osal_event.c **** 	TaskSech = TaskHead;
+ 278              		.loc 1 208 0
+ 279 0000 054B     		ldr	r3, .L30
+ 280 0002 1B68     		ldr	r3, [r3]
+ 281              	.LVL17:
+ 282              	.L27:
+ 209:OSAL/osal/osal_event.c **** 	while(TaskSech)
+ 283              		.loc 1 209 0
+ 284 0004 002B     		cmp	r3, #0
+ 285 0006 04D0     		beq	.L26
+ 210:OSAL/osal/osal_event.c **** 	{
+ 211:OSAL/osal/osal_event.c **** 		if(TaskSech->taskID == taskID)
+ 286              		.loc 1 211 0
+ 287 0008 1A7B     		ldrb	r2, [r3, #12]
+ 288 000a 8242     		cmp	r2, r0
+ 289 000c 01D0     		beq	.L26
+ 212:OSAL/osal/osal_event.c **** 		{
+ 213:OSAL/osal/osal_event.c **** 			return (TaskSech);
+ 214:OSAL/osal/osal_event.c **** 		}
+ 215:OSAL/osal/osal_event.c **** 		TaskSech = TaskSech->next;
+ 290              		.loc 1 215 0
+ 291 000e 1B68     		ldr	r3, [r3]
+ 292              	.LVL18:
+ 293 0010 F8E7     		b	.L27
+ 294              	.L26:
+ 216:OSAL/osal/osal_event.c **** 	}
+ 217:OSAL/osal/osal_event.c **** 	return ((OsalTadkREC_t *)NULL);
+ 218:OSAL/osal/osal_event.c **** }
+ 295              		.loc 1 218 0
+ 296 0012 1800     		movs	r0, r3
+ 297              	.LVL19:
+ 298              		@ sp needed
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 10
+
+
+ 299 0014 7047     		bx	lr
+ 300              	.L31:
+ 301 0016 C046     		.align	2
+ 302              	.L30:
+ 303 0018 00000000 		.word	TaskHead
+ 304              		.cfi_endproc
+ 305              	.LFE43:
+ 307              		.section	.text.osal_set_event,"ax",%progbits
+ 308              		.align	1
+ 309              		.global	osal_set_event
+ 310              		.syntax unified
+ 311              		.code	16
+ 312              		.thumb_func
+ 313              		.fpu softvfp
+ 315              	osal_set_event:
+ 316              	.LFB37:
+  24:OSAL/osal/osal_event.c ****   	OsalTadkREC_t *srchTask;
+ 317              		.loc 1 24 0
+ 318              		.cfi_startproc
+ 319              		@ args = 0, pretend = 0, frame = 0
+ 320              		@ frame_needed = 0, uses_anonymous_args = 0
+ 321              	.LVL20:
+ 322 0000 10B5     		push	{r4, lr}
+ 323              	.LCFI2:
+ 324              		.cfi_def_cfa_offset 8
+ 325              		.cfi_offset 4, -8
+ 326              		.cfi_offset 14, -4
+ 327 0002 0C00     		movs	r4, r1
+  27:OSAL/osal/osal_event.c ****   	if ( srchTask ) 
+ 328              		.loc 1 27 0
+ 329 0004 FFF7FEFF 		bl	osalFindTask
+ 330              	.LVL21:
+  28:OSAL/osal/osal_event.c **** 	{
+ 331              		.loc 1 28 0
+ 332 0008 0028     		cmp	r0, #0
+ 333 000a 04D0     		beq	.L34
+  33:OSAL/osal/osal_event.c **** 	    // Release interrupts
+ 334              		.loc 1 33 0
+ 335 000c C389     		ldrh	r3, [r0, #14]
+ 336 000e 1C43     		orrs	r4, r3
+ 337 0010 C481     		strh	r4, [r0, #14]
+  40:OSAL/osal/osal_event.c **** }
+ 338              		.loc 1 40 0
+ 339 0012 0120     		movs	r0, #1
+ 340              	.LVL22:
+ 341              	.L33:
+  41:OSAL/osal/osal_event.c **** 
+ 342              		.loc 1 41 0
+ 343              		@ sp needed
+ 344 0014 10BD     		pop	{r4, pc}
+ 345              	.LVL23:
+ 346              	.L34:
+  38:OSAL/osal/osal_event.c **** 
+ 347              		.loc 1 38 0
+ 348 0016 0220     		movs	r0, #2
+ 349              	.LVL24:
+ 350 0018 FCE7     		b	.L33
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 11
+
+
+ 351              		.cfi_endproc
+ 352              	.LFE37:
+ 354              		.section	.text.osal_clear_event,"ax",%progbits
+ 355              		.align	1
+ 356              		.global	osal_clear_event
+ 357              		.syntax unified
+ 358              		.code	16
+ 359              		.thumb_func
+ 360              		.fpu softvfp
+ 362              	osal_clear_event:
+ 363              	.LFB38:
+  57:OSAL/osal/osal_event.c ****   	OsalTadkREC_t *srchTask;
+ 364              		.loc 1 57 0
+ 365              		.cfi_startproc
+ 366              		@ args = 0, pretend = 0, frame = 0
+ 367              		@ frame_needed = 0, uses_anonymous_args = 0
+ 368              	.LVL25:
+ 369 0000 10B5     		push	{r4, lr}
+ 370              	.LCFI3:
+ 371              		.cfi_def_cfa_offset 8
+ 372              		.cfi_offset 4, -8
+ 373              		.cfi_offset 14, -4
+ 374 0002 0C00     		movs	r4, r1
+  60:OSAL/osal/osal_event.c ****   	if ( srchTask ) 
+ 375              		.loc 1 60 0
+ 376 0004 FFF7FEFF 		bl	osalFindTask
+ 377              	.LVL26:
+  61:OSAL/osal/osal_event.c **** 	{
+ 378              		.loc 1 61 0
+ 379 0008 0028     		cmp	r0, #0
+ 380 000a 04D0     		beq	.L37
+  66:OSAL/osal/osal_event.c **** 	    // Release interrupts
+ 381              		.loc 1 66 0
+ 382 000c C389     		ldrh	r3, [r0, #14]
+ 383 000e A343     		bics	r3, r4
+ 384 0010 C381     		strh	r3, [r0, #14]
+  73:OSAL/osal/osal_event.c **** }
+ 385              		.loc 1 73 0
+ 386 0012 0120     		movs	r0, #1
+ 387              	.LVL27:
+ 388              	.L36:
+  74:OSAL/osal/osal_event.c **** /***************************************************************************
+ 389              		.loc 1 74 0
+ 390              		@ sp needed
+ 391 0014 10BD     		pop	{r4, pc}
+ 392              	.LVL28:
+ 393              	.L37:
+  71:OSAL/osal/osal_event.c **** 
+ 394              		.loc 1 71 0
+ 395 0016 0220     		movs	r0, #2
+ 396              	.LVL29:
+ 397 0018 FCE7     		b	.L36
+ 398              		.cfi_endproc
+ 399              	.LFE38:
+ 401              		.comm	tasksCnt,1,1
+ 402              		.comm	Task_id,1,1
+ 403              		.comm	TaskActive,4,4
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 12
+
+
+ 404              		.comm	TaskHead,4,4
+ 405              		.text
+ 406              	.Letext0:
+ 407              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 408              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 409              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 410              		.file 5 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 411              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 412              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 413              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 414              		.file 9 "OSAL/include/type.h"
+ 415              		.file 10 "OSAL/include/osal_event.h"
+ 416              		.file 11 "OSAL/include/osal_memory.h"
+ARM GAS  E:\cygwin64\tmp\ccvM4bGg.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 osal_event.c
+E:\cygwin64\tmp\ccvM4bGg.s:16     .text.osal_init_TaskHead:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:23     .text.osal_init_TaskHead:00000000 osal_init_TaskHead
+E:\cygwin64\tmp\ccvM4bGg.s:47     .text.osal_init_TaskHead:00000010 $d
+                            *COM*:00000004 TaskHead
+                            *COM*:00000004 TaskActive
+                            *COM*:00000001 Task_id
+E:\cygwin64\tmp\ccvM4bGg.s:54     .text.osal_Task_init:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:61     .text.osal_Task_init:00000000 osal_Task_init
+E:\cygwin64\tmp\ccvM4bGg.s:111    .text.osal_Task_init:00000030 $d
+E:\cygwin64\tmp\ccvM4bGg.s:117    .text.osal_add_Task:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:124    .text.osal_add_Task:00000000 osal_add_Task
+E:\cygwin64\tmp\ccvM4bGg.s:214    .text.osal_add_Task:00000050 $d
+                            *COM*:00000001 tasksCnt
+E:\cygwin64\tmp\ccvM4bGg.s:221    .text.osalNextActiveTask:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:228    .text.osalNextActiveTask:00000000 osalNextActiveTask
+E:\cygwin64\tmp\ccvM4bGg.s:258    .text.osalNextActiveTask:00000014 $d
+E:\cygwin64\tmp\ccvM4bGg.s:263    .text.osalFindTask:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:270    .text.osalFindTask:00000000 osalFindTask
+E:\cygwin64\tmp\ccvM4bGg.s:303    .text.osalFindTask:00000018 $d
+E:\cygwin64\tmp\ccvM4bGg.s:308    .text.osal_set_event:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:315    .text.osal_set_event:00000000 osal_set_event
+E:\cygwin64\tmp\ccvM4bGg.s:355    .text.osal_clear_event:00000000 $t
+E:\cygwin64\tmp\ccvM4bGg.s:362    .text.osal_clear_event:00000000 osal_clear_event
+
+UNDEFINED SYMBOLS
+osal_mem_alloc

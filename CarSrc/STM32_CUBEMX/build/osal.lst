@@ -1,0 +1,679 @@
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 1
+
+
+   1              		.cpu cortex-m0
+   2              		.eabi_attribute 20, 1
+   3              		.eabi_attribute 21, 1
+   4              		.eabi_attribute 23, 3
+   5              		.eabi_attribute 24, 1
+   6              		.eabi_attribute 25, 1
+   7              		.eabi_attribute 26, 1
+   8              		.eabi_attribute 30, 1
+   9              		.eabi_attribute 34, 0
+  10              		.eabi_attribute 18, 4
+  11              		.file	"osal.c"
+  12              		.text
+  13              	.Ltext0:
+  14              		.cfi_sections	.debug_frame
+  15              		.section	.text.osal_init_system,"ax",%progbits
+  16              		.align	1
+  17              		.global	osal_init_system
+  18              		.syntax unified
+  19              		.code	16
+  20              		.thumb_func
+  21              		.fpu softvfp
+  23              	osal_init_system:
+  24              	.LFB37:
+  25              		.file 1 "OSAL/osal/osal.c"
+   1:OSAL/osal/osal.c **** #include "osal.h"
+   2:OSAL/osal/osal.c **** #include "osal_event.h"
+   3:OSAL/osal/osal.c **** #include "osal_memory.h"
+   4:OSAL/osal/osal.c **** 
+   5:OSAL/osal/osal.c **** #include <string.h>
+   6:OSAL/osal/osal.c **** 
+   7:OSAL/osal/osal.c **** osal_msg_q_t osal_qHead;
+   8:OSAL/osal/osal.c **** 
+   9:OSAL/osal/osal.c **** /*********************************************************************
+  10:OSAL/osal/osal.c ****  * @fn      osal_init_system
+  11:OSAL/osal/osal.c ****  *
+  12:OSAL/osal/osal.c ****  * @brief
+  13:OSAL/osal/osal.c ****  *
+  14:OSAL/osal/osal.c ****  *   This function initializes the "task" system by creating the
+  15:OSAL/osal/osal.c ****  *   tasks defined in the task table (OSAL_Tasks.h).
+  16:OSAL/osal/osal.c ****  *
+  17:OSAL/osal/osal.c ****  * @param   void
+  18:OSAL/osal/osal.c ****  *
+  19:OSAL/osal/osal.c ****  * @return  ZSUCCESS
+  20:OSAL/osal/osal.c ****  */
+  21:OSAL/osal/osal.c **** uint8 osal_init_system( void )
+  22:OSAL/osal/osal.c **** {
+  26              		.loc 1 22 0
+  27              		.cfi_startproc
+  28              		@ args = 0, pretend = 0, frame = 0
+  29              		@ frame_needed = 0, uses_anonymous_args = 0
+  30 0000 10B5     		push	{r4, lr}
+  31              	.LCFI0:
+  32              		.cfi_def_cfa_offset 8
+  33              		.cfi_offset 4, -8
+  34              		.cfi_offset 14, -4
+  23:OSAL/osal/osal.c ****   // Initialize the Memory Allocation System
+  24:OSAL/osal/osal.c ****   osal_mem_init();
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 2
+
+
+  35              		.loc 1 24 0
+  36 0002 FFF7FEFF 		bl	osal_mem_init
+  37              	.LVL0:
+  25:OSAL/osal/osal.c **** 
+  26:OSAL/osal/osal.c ****   // Initialize the message queue
+  27:OSAL/osal/osal.c ****   osal_qHead = NULL;
+  38              		.loc 1 27 0
+  39 0006 044B     		ldr	r3, .L2
+  40 0008 0022     		movs	r2, #0
+  41 000a 1A60     		str	r2, [r3]
+  28:OSAL/osal/osal.c **** 
+  29:OSAL/osal/osal.c **** #if defined( OSAL_TOTAL_MEM )
+  30:OSAL/osal/osal.c ****   osal_msg_cnt = 0;
+  31:OSAL/osal/osal.c **** #endif
+  32:OSAL/osal/osal.c **** 
+  33:OSAL/osal/osal.c ****   osalTimerInit();
+  42              		.loc 1 33 0
+  43 000c FFF7FEFF 		bl	osalTimerInit
+  44              	.LVL1:
+  34:OSAL/osal/osal.c ****   osal_init_TaskHead();  
+  45              		.loc 1 34 0
+  46 0010 FFF7FEFF 		bl	osal_init_TaskHead
+  47              	.LVL2:
+  35:OSAL/osal/osal.c **** 
+  36:OSAL/osal/osal.c ****   return ( ZSUCCESS );
+  37:OSAL/osal/osal.c **** }
+  48              		.loc 1 37 0
+  49 0014 0120     		movs	r0, #1
+  50              		@ sp needed
+  51 0016 10BD     		pop	{r4, pc}
+  52              	.L3:
+  53              		.align	2
+  54              	.L2:
+  55 0018 00000000 		.word	osal_qHead
+  56              		.cfi_endproc
+  57              	.LFE37:
+  59              		.section	.text.osal_start_system,"ax",%progbits
+  60              		.align	1
+  61              		.global	osal_start_system
+  62              		.syntax unified
+  63              		.code	16
+  64              		.thumb_func
+  65              		.fpu softvfp
+  67              	osal_start_system:
+  68              	.LFB38:
+  38:OSAL/osal/osal.c **** 
+  39:OSAL/osal/osal.c **** /*********************************************************************
+  40:OSAL/osal/osal.c ****  * @fn      osal_start_system
+  41:OSAL/osal/osal.c ****  *
+  42:OSAL/osal/osal.c ****  * @brief
+  43:OSAL/osal/osal.c ****  *
+  44:OSAL/osal/osal.c ****  *   This function is the main loop function of the task system.  It
+  45:OSAL/osal/osal.c ****  *   will look through all task events and call the task_event_processor()
+  46:OSAL/osal/osal.c ****  *   function for the task with the event.  If there are no events (for
+  47:OSAL/osal/osal.c ****  *   all tasks), this function puts the processor into Sleep.
+  48:OSAL/osal/osal.c ****  *   This Function doesn't return.
+  49:OSAL/osal/osal.c ****  *
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 3
+
+
+  50:OSAL/osal/osal.c ****  * @param   void
+  51:OSAL/osal/osal.c ****  *
+  52:OSAL/osal/osal.c ****  * @return  none
+  53:OSAL/osal/osal.c ****  */
+  54:OSAL/osal/osal.c **** void osal_start_system( void )
+  55:OSAL/osal/osal.c **** {
+  69              		.loc 1 55 0
+  70              		.cfi_startproc
+  71              		@ args = 0, pretend = 0, frame = 0
+  72              		@ frame_needed = 0, uses_anonymous_args = 0
+  73 0000 10B5     		push	{r4, lr}
+  74              	.LCFI1:
+  75              		.cfi_def_cfa_offset 8
+  76              		.cfi_offset 4, -8
+  77              		.cfi_offset 14, -4
+  78              	.L6:
+  56:OSAL/osal/osal.c ****   uint16 events;
+  57:OSAL/osal/osal.c ****   uint16 retEvents;
+  58:OSAL/osal/osal.c **** 
+  59:OSAL/osal/osal.c ****   while(1)
+  60:OSAL/osal/osal.c ****   {
+  61:OSAL/osal/osal.c ****     TaskActive = osalNextActiveTask();
+  79              		.loc 1 61 0
+  80 0002 FFF7FEFF 		bl	osalNextActiveTask
+  81              	.LVL3:
+  82 0006 0A4B     		ldr	r3, .L8
+  83 0008 1860     		str	r0, [r3]
+  62:OSAL/osal/osal.c ****     if ( TaskActive )
+  84              		.loc 1 62 0
+  85 000a 0028     		cmp	r0, #0
+  86 000c F9D0     		beq	.L6
+  63:OSAL/osal/osal.c ****     {
+  64:OSAL/osal/osal.c ****       HAL_ENTER_CRITICAL_SECTION();
+  65:OSAL/osal/osal.c ****       events = TaskActive->events;
+  87              		.loc 1 65 0
+  88 000e C189     		ldrh	r1, [r0, #14]
+  89              	.LVL4:
+  66:OSAL/osal/osal.c ****       // Clear the Events for this task
+  67:OSAL/osal/osal.c ****       TaskActive->events = 0;
+  90              		.loc 1 67 0
+  91 0010 0023     		movs	r3, #0
+  92 0012 C381     		strh	r3, [r0, #14]
+  68:OSAL/osal/osal.c ****       HAL_EXIT_CRITICAL_SECTION();
+  69:OSAL/osal/osal.c **** 
+  70:OSAL/osal/osal.c ****       if ( events != 0 )
+  93              		.loc 1 70 0
+  94 0014 0029     		cmp	r1, #0
+  95 0016 F4D0     		beq	.L6
+  71:OSAL/osal/osal.c ****       {
+  72:OSAL/osal/osal.c ****         // Call the task to process the event(s)
+  73:OSAL/osal/osal.c ****         if ( TaskActive->pfnEventProcessor )
+  96              		.loc 1 73 0
+  97 0018 8368     		ldr	r3, [r0, #8]
+  98 001a 002B     		cmp	r3, #0
+  99 001c F1D0     		beq	.L6
+  74:OSAL/osal/osal.c ****         {
+  75:OSAL/osal/osal.c ****           retEvents = (TaskActive->pfnEventProcessor)( TaskActive->taskID, events );
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 4
+
+
+ 100              		.loc 1 75 0
+ 101 001e 007B     		ldrb	r0, [r0, #12]
+ 102 0020 9847     		blx	r3
+ 103              	.LVL5:
+  76:OSAL/osal/osal.c **** 
+  77:OSAL/osal/osal.c ****           // Add back unprocessed events to the current task
+  78:OSAL/osal/osal.c ****           HAL_ENTER_CRITICAL_SECTION();
+  79:OSAL/osal/osal.c ****           TaskActive->events |= retEvents;
+ 104              		.loc 1 79 0
+ 105 0022 034B     		ldr	r3, .L8
+ 106 0024 1B68     		ldr	r3, [r3]
+ 107 0026 DA89     		ldrh	r2, [r3, #14]
+ 108 0028 1043     		orrs	r0, r2
+ 109              	.LVL6:
+ 110 002a D881     		strh	r0, [r3, #14]
+ 111 002c E9E7     		b	.L6
+ 112              	.L9:
+ 113 002e C046     		.align	2
+ 114              	.L8:
+ 115 0030 00000000 		.word	TaskActive
+ 116              		.cfi_endproc
+ 117              	.LFE38:
+ 119              		.section	.text.osal_strlen,"ax",%progbits
+ 120              		.align	1
+ 121              		.global	osal_strlen
+ 122              		.syntax unified
+ 123              		.code	16
+ 124              		.thumb_func
+ 125              		.fpu softvfp
+ 127              	osal_strlen:
+ 128              	.LFB39:
+  80:OSAL/osal/osal.c ****           HAL_EXIT_CRITICAL_SECTION();
+  81:OSAL/osal/osal.c ****         }
+  82:OSAL/osal/osal.c ****       }
+  83:OSAL/osal/osal.c ****     }
+  84:OSAL/osal/osal.c ****   }
+  85:OSAL/osal/osal.c **** }
+  86:OSAL/osal/osal.c **** 
+  87:OSAL/osal/osal.c **** /*********************************************************************
+  88:OSAL/osal/osal.c ****  * @fn      osal_strlen
+  89:OSAL/osal/osal.c ****  *
+  90:OSAL/osal/osal.c ****  * @brief
+  91:OSAL/osal/osal.c ****  *
+  92:OSAL/osal/osal.c ****  *   Calculates the length of a string.  The string must be null
+  93:OSAL/osal/osal.c ****  *   terminated.
+  94:OSAL/osal/osal.c ****  *
+  95:OSAL/osal/osal.c ****  * @param   char *pString - pointer to text string
+  96:OSAL/osal/osal.c ****  *
+  97:OSAL/osal/osal.c ****  * @return  int - number of characters
+  98:OSAL/osal/osal.c ****  */
+  99:OSAL/osal/osal.c **** int osal_strlen( char *pString )
+ 100:OSAL/osal/osal.c **** {
+ 129              		.loc 1 100 0
+ 130              		.cfi_startproc
+ 131              		@ args = 0, pretend = 0, frame = 0
+ 132              		@ frame_needed = 0, uses_anonymous_args = 0
+ 133              	.LVL7:
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 5
+
+
+ 134 0000 10B5     		push	{r4, lr}
+ 135              	.LCFI2:
+ 136              		.cfi_def_cfa_offset 8
+ 137              		.cfi_offset 4, -8
+ 138              		.cfi_offset 14, -4
+ 101:OSAL/osal/osal.c ****   return (int)( strlen( pString ) );
+ 139              		.loc 1 101 0
+ 140 0002 FFF7FEFF 		bl	strlen
+ 141              	.LVL8:
+ 102:OSAL/osal/osal.c **** }
+ 142              		.loc 1 102 0
+ 143              		@ sp needed
+ 144 0006 10BD     		pop	{r4, pc}
+ 145              		.cfi_endproc
+ 146              	.LFE39:
+ 148              		.section	.text.osal_memcpy,"ax",%progbits
+ 149              		.align	1
+ 150              		.global	osal_memcpy
+ 151              		.syntax unified
+ 152              		.code	16
+ 153              		.thumb_func
+ 154              		.fpu softvfp
+ 156              	osal_memcpy:
+ 157              	.LFB40:
+ 103:OSAL/osal/osal.c **** 
+ 104:OSAL/osal/osal.c **** /*********************************************************************
+ 105:OSAL/osal/osal.c ****  * @fn      osal_memcpy
+ 106:OSAL/osal/osal.c ****  *
+ 107:OSAL/osal/osal.c ****  * @brief
+ 108:OSAL/osal/osal.c ****  *
+ 109:OSAL/osal/osal.c ****  *   Generic memory copy.
+ 110:OSAL/osal/osal.c ****  *
+ 111:OSAL/osal/osal.c ****  *   Note: This function differs from the standard memcpy(), since
+ 112:OSAL/osal/osal.c ****  *         it returns the pointer to the next destination uint8. The
+ 113:OSAL/osal/osal.c ****  *         standard memcpy() returns the original destination address.
+ 114:OSAL/osal/osal.c ****  *
+ 115:OSAL/osal/osal.c ****  * @param   dst - destination address
+ 116:OSAL/osal/osal.c ****  * @param   src - source address
+ 117:OSAL/osal/osal.c ****  * @param   len - number of bytes to copy
+ 118:OSAL/osal/osal.c ****  *
+ 119:OSAL/osal/osal.c ****  * @return  pointer to end of destination buffer
+ 120:OSAL/osal/osal.c ****  */
+ 121:OSAL/osal/osal.c **** void *osal_memcpy( void *dst, const void *src, unsigned int len )
+ 122:OSAL/osal/osal.c **** {
+ 158              		.loc 1 122 0
+ 159              		.cfi_startproc
+ 160              		@ args = 0, pretend = 0, frame = 0
+ 161              		@ frame_needed = 0, uses_anonymous_args = 0
+ 162              		@ link register save eliminated.
+ 163              	.LVL9:
+ 123:OSAL/osal/osal.c ****   uint8 *pDst;
+ 124:OSAL/osal/osal.c ****   const uint8 *pSrc;
+ 125:OSAL/osal/osal.c **** 
+ 126:OSAL/osal/osal.c ****   pSrc = src;
+ 127:OSAL/osal/osal.c ****   pDst = dst;
+ 128:OSAL/osal/osal.c **** 
+ 129:OSAL/osal/osal.c ****   while ( len-- )
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 6
+
+
+ 164              		.loc 1 129 0
+ 165 0000 04E0     		b	.L12
+ 166              	.LVL10:
+ 167              	.L13:
+ 130:OSAL/osal/osal.c ****     *pDst++ = *pSrc++;
+ 168              		.loc 1 130 0
+ 169 0002 0A78     		ldrb	r2, [r1]
+ 170 0004 0270     		strb	r2, [r0]
+ 171 0006 0131     		adds	r1, r1, #1
+ 172              	.LVL11:
+ 173 0008 0130     		adds	r0, r0, #1
+ 174              	.LVL12:
+ 129:OSAL/osal/osal.c ****     *pDst++ = *pSrc++;
+ 175              		.loc 1 129 0
+ 176 000a 1A00     		movs	r2, r3
+ 177              	.LVL13:
+ 178              	.L12:
+ 179 000c 531E     		subs	r3, r2, #1
+ 180              	.LVL14:
+ 181 000e 002A     		cmp	r2, #0
+ 182 0010 F7D1     		bne	.L13
+ 131:OSAL/osal/osal.c **** 
+ 132:OSAL/osal/osal.c ****   return ( pDst );
+ 133:OSAL/osal/osal.c **** }
+ 183              		.loc 1 133 0
+ 184              		@ sp needed
+ 185 0012 7047     		bx	lr
+ 186              		.cfi_endproc
+ 187              	.LFE40:
+ 189              		.section	.text.osal_revmemcpy,"ax",%progbits
+ 190              		.align	1
+ 191              		.global	osal_revmemcpy
+ 192              		.syntax unified
+ 193              		.code	16
+ 194              		.thumb_func
+ 195              		.fpu softvfp
+ 197              	osal_revmemcpy:
+ 198              	.LFB41:
+ 134:OSAL/osal/osal.c **** 
+ 135:OSAL/osal/osal.c **** /*********************************************************************
+ 136:OSAL/osal/osal.c ****  * @fn      osal_revmemcpy
+ 137:OSAL/osal/osal.c ****  *
+ 138:OSAL/osal/osal.c ****  * @brief   Generic reverse memory copy.  Starts at the end of the
+ 139:OSAL/osal/osal.c ****  *   source buffer, by taking the source address pointer and moving
+ 140:OSAL/osal/osal.c ****  *   pointer ahead "len" bytes, then decrementing the pointer.
+ 141:OSAL/osal/osal.c ****  *
+ 142:OSAL/osal/osal.c ****  *   Note: This function differs from the standard memcpy(), since
+ 143:OSAL/osal/osal.c ****  *         it returns the pointer to the next destination uint8. The
+ 144:OSAL/osal/osal.c ****  *         standard memcpy() returns the original destination address.
+ 145:OSAL/osal/osal.c ****  *
+ 146:OSAL/osal/osal.c ****  * @param   dst - destination address
+ 147:OSAL/osal/osal.c ****  * @param   src - source address
+ 148:OSAL/osal/osal.c ****  * @param   len - number of bytes to copy
+ 149:OSAL/osal/osal.c ****  *
+ 150:OSAL/osal/osal.c ****  * @return  pointer to end of destination buffer
+ 151:OSAL/osal/osal.c ****  */
+ 152:OSAL/osal/osal.c **** void *osal_revmemcpy( void *dst, const void *src, unsigned int len )
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 7
+
+
+ 153:OSAL/osal/osal.c **** {
+ 199              		.loc 1 153 0
+ 200              		.cfi_startproc
+ 201              		@ args = 0, pretend = 0, frame = 0
+ 202              		@ frame_needed = 0, uses_anonymous_args = 0
+ 203              		@ link register save eliminated.
+ 204              	.LVL15:
+ 154:OSAL/osal/osal.c ****   uint8 *pDst;
+ 155:OSAL/osal/osal.c ****   const uint8 *pSrc;
+ 156:OSAL/osal/osal.c **** 
+ 157:OSAL/osal/osal.c ****   pSrc = src;
+ 158:OSAL/osal/osal.c ****   pSrc += (len-1);
+ 205              		.loc 1 158 0
+ 206 0000 531E     		subs	r3, r2, #1
+ 207 0002 C918     		adds	r1, r1, r3
+ 208              	.LVL16:
+ 159:OSAL/osal/osal.c ****   pDst = dst;
+ 160:OSAL/osal/osal.c **** 
+ 161:OSAL/osal/osal.c ****   while ( len-- )
+ 209              		.loc 1 161 0
+ 210 0004 04E0     		b	.L15
+ 211              	.LVL17:
+ 212              	.L16:
+ 162:OSAL/osal/osal.c ****     *pDst++ = *pSrc--;
+ 213              		.loc 1 162 0
+ 214 0006 0A78     		ldrb	r2, [r1]
+ 215 0008 0270     		strb	r2, [r0]
+ 216 000a 0139     		subs	r1, r1, #1
+ 217              	.LVL18:
+ 218 000c 0130     		adds	r0, r0, #1
+ 219              	.LVL19:
+ 161:OSAL/osal/osal.c ****     *pDst++ = *pSrc--;
+ 220              		.loc 1 161 0
+ 221 000e 1A00     		movs	r2, r3
+ 222              	.LVL20:
+ 223              	.L15:
+ 224 0010 531E     		subs	r3, r2, #1
+ 225              	.LVL21:
+ 226 0012 002A     		cmp	r2, #0
+ 227 0014 F7D1     		bne	.L16
+ 163:OSAL/osal/osal.c **** 
+ 164:OSAL/osal/osal.c ****   return ( pDst );
+ 165:OSAL/osal/osal.c **** }
+ 228              		.loc 1 165 0
+ 229              		@ sp needed
+ 230 0016 7047     		bx	lr
+ 231              		.cfi_endproc
+ 232              	.LFE41:
+ 234              		.section	.text.osal_memdup,"ax",%progbits
+ 235              		.align	1
+ 236              		.global	osal_memdup
+ 237              		.syntax unified
+ 238              		.code	16
+ 239              		.thumb_func
+ 240              		.fpu softvfp
+ 242              	osal_memdup:
+ 243              	.LFB42:
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 8
+
+
+ 166:OSAL/osal/osal.c **** 
+ 167:OSAL/osal/osal.c **** /*********************************************************************
+ 168:OSAL/osal/osal.c ****  * @fn      osal_memdup
+ 169:OSAL/osal/osal.c ****  *
+ 170:OSAL/osal/osal.c ****  * @brief   Allocates a buffer [with osal_mem_alloc()] and copies
+ 171:OSAL/osal/osal.c ****  *          the src buffer into the newly allocated space.
+ 172:OSAL/osal/osal.c ****  *
+ 173:OSAL/osal/osal.c ****  * @param   src - source address
+ 174:OSAL/osal/osal.c ****  * @param   len - number of bytes to copy
+ 175:OSAL/osal/osal.c ****  *
+ 176:OSAL/osal/osal.c ****  * @return  pointer to the new allocated buffer, or NULL if
+ 177:OSAL/osal/osal.c ****  *          allocation problem.
+ 178:OSAL/osal/osal.c ****  */
+ 179:OSAL/osal/osal.c **** void *osal_memdup( const void *src, unsigned int len )
+ 180:OSAL/osal/osal.c **** {
+ 244              		.loc 1 180 0
+ 245              		.cfi_startproc
+ 246              		@ args = 0, pretend = 0, frame = 0
+ 247              		@ frame_needed = 0, uses_anonymous_args = 0
+ 248              	.LVL22:
+ 249 0000 70B5     		push	{r4, r5, r6, lr}
+ 250              	.LCFI3:
+ 251              		.cfi_def_cfa_offset 16
+ 252              		.cfi_offset 4, -16
+ 253              		.cfi_offset 5, -12
+ 254              		.cfi_offset 6, -8
+ 255              		.cfi_offset 14, -4
+ 256 0002 0600     		movs	r6, r0
+ 257 0004 0D00     		movs	r5, r1
+ 181:OSAL/osal/osal.c ****   uint8 *pDst;
+ 182:OSAL/osal/osal.c **** 
+ 183:OSAL/osal/osal.c ****   pDst = osal_mem_alloc( len );
+ 258              		.loc 1 183 0
+ 259 0006 88B2     		uxth	r0, r1
+ 260              	.LVL23:
+ 261 0008 FFF7FEFF 		bl	osal_mem_alloc
+ 262              	.LVL24:
+ 263 000c 041E     		subs	r4, r0, #0
+ 264              	.LVL25:
+ 184:OSAL/osal/osal.c ****   if ( pDst )
+ 265              		.loc 1 184 0
+ 266 000e 03D0     		beq	.L17
+ 185:OSAL/osal/osal.c ****   {
+ 186:OSAL/osal/osal.c ****     osal_memcpy( pDst, src, len );
+ 267              		.loc 1 186 0
+ 268 0010 2A00     		movs	r2, r5
+ 269 0012 3100     		movs	r1, r6
+ 270 0014 FFF7FEFF 		bl	osal_memcpy
+ 271              	.LVL26:
+ 272              	.L17:
+ 187:OSAL/osal/osal.c ****   }
+ 188:OSAL/osal/osal.c **** 
+ 189:OSAL/osal/osal.c ****   return ( (void *)pDst );
+ 190:OSAL/osal/osal.c **** }
+ 273              		.loc 1 190 0
+ 274 0018 2000     		movs	r0, r4
+ 275              		@ sp needed
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 9
+
+
+ 276              	.LVL27:
+ 277              	.LVL28:
+ 278              	.LVL29:
+ 279 001a 70BD     		pop	{r4, r5, r6, pc}
+ 280              		.cfi_endproc
+ 281              	.LFE42:
+ 283              		.section	.text.osal_memcmp,"ax",%progbits
+ 284              		.align	1
+ 285              		.global	osal_memcmp
+ 286              		.syntax unified
+ 287              		.code	16
+ 288              		.thumb_func
+ 289              		.fpu softvfp
+ 291              	osal_memcmp:
+ 292              	.LFB43:
+ 191:OSAL/osal/osal.c **** 
+ 192:OSAL/osal/osal.c **** /*********************************************************************
+ 193:OSAL/osal/osal.c ****  * @fn      osal_memcmp
+ 194:OSAL/osal/osal.c ****  *
+ 195:OSAL/osal/osal.c ****  * @brief
+ 196:OSAL/osal/osal.c ****  *
+ 197:OSAL/osal/osal.c ****  *   Generic memory compare.
+ 198:OSAL/osal/osal.c ****  *
+ 199:OSAL/osal/osal.c ****  * @param   src1 - source 1 addrexx
+ 200:OSAL/osal/osal.c ****  * @param   src2 - source 2 address
+ 201:OSAL/osal/osal.c ****  * @param   len - number of bytes to compare
+ 202:OSAL/osal/osal.c ****  *
+ 203:OSAL/osal/osal.c ****  * @return  TRUE - same, FALSE - different
+ 204:OSAL/osal/osal.c ****  */
+ 205:OSAL/osal/osal.c **** uint8 osal_memcmp( const void *src1, const void *src2, unsigned int len )
+ 206:OSAL/osal/osal.c **** {
+ 293              		.loc 1 206 0
+ 294              		.cfi_startproc
+ 295              		@ args = 0, pretend = 0, frame = 0
+ 296              		@ frame_needed = 0, uses_anonymous_args = 0
+ 297              	.LVL30:
+ 298 0000 30B5     		push	{r4, r5, lr}
+ 299              	.LCFI4:
+ 300              		.cfi_def_cfa_offset 12
+ 301              		.cfi_offset 4, -12
+ 302              		.cfi_offset 5, -8
+ 303              		.cfi_offset 14, -4
+ 304              	.LVL31:
+ 305              	.L20:
+ 207:OSAL/osal/osal.c ****   const uint8 *pSrc1;
+ 208:OSAL/osal/osal.c ****   const uint8 *pSrc2;
+ 209:OSAL/osal/osal.c **** 
+ 210:OSAL/osal/osal.c ****   pSrc1 = src1;
+ 211:OSAL/osal/osal.c ****   pSrc2 = src2;
+ 212:OSAL/osal/osal.c **** 
+ 213:OSAL/osal/osal.c ****   while ( len-- )
+ 306              		.loc 1 213 0
+ 307 0002 531E     		subs	r3, r2, #1
+ 308              	.LVL32:
+ 309 0004 002A     		cmp	r2, #0
+ 310 0006 09D0     		beq	.L24
+ 214:OSAL/osal/osal.c ****   {
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 10
+
+
+ 215:OSAL/osal/osal.c ****     if( *pSrc1++ != *pSrc2++ )
+ 311              		.loc 1 215 0
+ 312 0008 441C     		adds	r4, r0, #1
+ 313              	.LVL33:
+ 314 000a 0078     		ldrb	r0, [r0]
+ 315 000c 4D1C     		adds	r5, r1, #1
+ 316              	.LVL34:
+ 317 000e 0978     		ldrb	r1, [r1]
+ 213:OSAL/osal/osal.c ****   {
+ 318              		.loc 1 213 0
+ 319 0010 1A00     		movs	r2, r3
+ 320              		.loc 1 215 0
+ 321 0012 8842     		cmp	r0, r1
+ 322 0014 04D1     		bne	.L23
+ 323 0016 2900     		movs	r1, r5
+ 324 0018 2000     		movs	r0, r4
+ 325 001a F2E7     		b	.L20
+ 326              	.LVL35:
+ 327              	.L24:
+ 216:OSAL/osal/osal.c ****       return FALSE;
+ 217:OSAL/osal/osal.c ****   }
+ 218:OSAL/osal/osal.c ****   return TRUE;
+ 328              		.loc 1 218 0
+ 329 001c 0120     		movs	r0, #1
+ 330              	.LVL36:
+ 331              	.L21:
+ 219:OSAL/osal/osal.c **** }
+ 332              		.loc 1 219 0
+ 333              		@ sp needed
+ 334 001e 30BD     		pop	{r4, r5, pc}
+ 335              	.LVL37:
+ 336              	.L23:
+ 216:OSAL/osal/osal.c ****       return FALSE;
+ 337              		.loc 1 216 0
+ 338 0020 0020     		movs	r0, #0
+ 339 0022 FCE7     		b	.L21
+ 340              		.cfi_endproc
+ 341              	.LFE43:
+ 343              		.section	.text.osal_memset,"ax",%progbits
+ 344              		.align	1
+ 345              		.global	osal_memset
+ 346              		.syntax unified
+ 347              		.code	16
+ 348              		.thumb_func
+ 349              		.fpu softvfp
+ 351              	osal_memset:
+ 352              	.LFB44:
+ 220:OSAL/osal/osal.c **** 
+ 221:OSAL/osal/osal.c **** /*********************************************************************
+ 222:OSAL/osal/osal.c ****  * @fn      osal_memset
+ 223:OSAL/osal/osal.c ****  *
+ 224:OSAL/osal/osal.c ****  * @brief
+ 225:OSAL/osal/osal.c ****  *
+ 226:OSAL/osal/osal.c ****  *   Set memory buffer to value.
+ 227:OSAL/osal/osal.c ****  *
+ 228:OSAL/osal/osal.c ****  * @param   dest - pointer to buffer
+ 229:OSAL/osal/osal.c ****  * @param   value - what to set each uint8 of the message
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 11
+
+
+ 230:OSAL/osal/osal.c ****  * @param   size - how big
+ 231:OSAL/osal/osal.c ****  *
+ 232:OSAL/osal/osal.c ****  * @return  pointer to destination buffer
+ 233:OSAL/osal/osal.c ****  */
+ 234:OSAL/osal/osal.c **** void *osal_memset( void *dest, uint8 value, int len )
+ 235:OSAL/osal/osal.c **** {
+ 353              		.loc 1 235 0
+ 354              		.cfi_startproc
+ 355              		@ args = 0, pretend = 0, frame = 0
+ 356              		@ frame_needed = 0, uses_anonymous_args = 0
+ 357              	.LVL38:
+ 358 0000 10B5     		push	{r4, lr}
+ 359              	.LCFI5:
+ 360              		.cfi_def_cfa_offset 8
+ 361              		.cfi_offset 4, -8
+ 362              		.cfi_offset 14, -4
+ 236:OSAL/osal/osal.c ****   return memset( dest, value, len );
+ 363              		.loc 1 236 0
+ 364 0002 FFF7FEFF 		bl	memset
+ 365              	.LVL39:
+ 237:OSAL/osal/osal.c **** }
+ 366              		.loc 1 237 0
+ 367              		@ sp needed
+ 368 0006 10BD     		pop	{r4, pc}
+ 369              		.cfi_endproc
+ 370              	.LFE44:
+ 372              		.comm	osal_qHead,4,4
+ 373              		.text
+ 374              	.Letext0:
+ 375              		.file 2 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 376              		.file 3 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 377              		.file 4 "Drivers/CMSIS/Device/ST/STM32F0xx/Include/system_stm32f0xx.h"
+ 378              		.file 5 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 379              		.file 6 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 380              		.file 7 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\lib\\gcc\\arm-none-eab
+ 381              		.file 8 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\include
+ 382              		.file 9 "OSAL/include/type.h"
+ 383              		.file 10 "OSAL/include/osal.h"
+ 384              		.file 11 "OSAL/include/osal_event.h"
+ 385              		.file 12 "d:\\program files (x86)\\gnu tools arm embedded\\7 2018-q2-update\\arm-none-eabi\\includ
+ 386              		.file 13 "OSAL/include/osal_memory.h"
+ 387              		.file 14 "OSAL/include/osal_timer.h"
+ARM GAS  E:\cygwin64\tmp\ccst403p.s 			page 12
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 osal.c
+E:\cygwin64\tmp\ccst403p.s:16     .text.osal_init_system:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:23     .text.osal_init_system:00000000 osal_init_system
+E:\cygwin64\tmp\ccst403p.s:55     .text.osal_init_system:00000018 $d
+                            *COM*:00000004 osal_qHead
+E:\cygwin64\tmp\ccst403p.s:60     .text.osal_start_system:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:67     .text.osal_start_system:00000000 osal_start_system
+E:\cygwin64\tmp\ccst403p.s:115    .text.osal_start_system:00000030 $d
+E:\cygwin64\tmp\ccst403p.s:120    .text.osal_strlen:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:127    .text.osal_strlen:00000000 osal_strlen
+E:\cygwin64\tmp\ccst403p.s:149    .text.osal_memcpy:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:156    .text.osal_memcpy:00000000 osal_memcpy
+E:\cygwin64\tmp\ccst403p.s:190    .text.osal_revmemcpy:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:197    .text.osal_revmemcpy:00000000 osal_revmemcpy
+E:\cygwin64\tmp\ccst403p.s:235    .text.osal_memdup:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:242    .text.osal_memdup:00000000 osal_memdup
+E:\cygwin64\tmp\ccst403p.s:284    .text.osal_memcmp:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:291    .text.osal_memcmp:00000000 osal_memcmp
+E:\cygwin64\tmp\ccst403p.s:344    .text.osal_memset:00000000 $t
+E:\cygwin64\tmp\ccst403p.s:351    .text.osal_memset:00000000 osal_memset
+
+UNDEFINED SYMBOLS
+osal_mem_init
+osalTimerInit
+osal_init_TaskHead
+osalNextActiveTask
+TaskActive
+strlen
+osal_mem_alloc
+memset
