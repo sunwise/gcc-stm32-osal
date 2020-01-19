@@ -9,72 +9,63 @@
 #define WIRELESS_CDD_DEBUG    1
 Wirless_Data_t Wireless_data;
 
+#define C_MESSAGE_TYPE   2
+#define C_RIGHT_X_DIR    3
+#define C_RIGHT_X_VAL    4
+#define C_RIGHT_Y_DIR    5
+#define C_RIGHT_Y_VAL    6
+#define C_LEFT_X_DIR    7
+#define C_LEFT_X_VAL    8
+#define C_LEFT_Y_DIR    9
+#define C_LEFT_Y_VAL    10
+
 void Wireless_Init(void)
 {
-  HAL_UART_Receive_DMA(&huart1, Wireless_data.rxdata, RXBUFSIZE);
+  Start_Wireless_Uart();
   
 }
 
-uint8 Get_CommandData(void)
+uint8 Check_CommandData(void)
 {
-  uint8 i;
-  for(i=0;i < (RXBUFSIZE-1);i ++)
+  uint8 res = 1;
+  
+  if((Wireless_data.rxdata[0] == HEADMASK1) && (Wireless_data.rxdata[1] == HEADMASK2))
   {
-    if((Wireless_data.rxdata[i] == HEADMASK1) && (Wireless_data.rxdata[i+1] == HEADMASK2))
+    if((Wireless_data.rxdata[MESLENGTH-2] == TAILMASK1) && (Wireless_data.rxdata[MESLENGTH-1] == TAILMASK2))
     {
-      if(i > 1)
-      {
-        if((Wireless_data.rxdata[i-2] == TAILMASK1) && (Wireless_data.rxdata[i-1] == TAILMASK2))
-        {
-          return i;
-        }
-      }
-      else if(i == 0)
-      {
-        if((Wireless_data.rxdata[MESLENGTH-2] == TAILMASK1) && (Wireless_data.rxdata[MESLENGTH-1] == TAILMASK2))
-        {
-          return i;
-        }
-        
-      }
-      memset(Wireless_data.rxdata,0,MESLENGTH);
-#if(WIRELESS_CDD_DEBUG)
-      DPrint("command error!\r\n");
-#endif
+      res = 0;
+      return res;
     }
   }
-
-  return 0xFF;
+  Dprintf("command error!\r\n");
+  
+  return res;
 }
 
-uint8 Analysis_Command(uint8 datan)
+void Handle_Rocker_Command(void)
 {
-  if(datan == 0)
-  {
-    memcpy(Wireless_data.commanddata,&Wireless_data.rxdata[2],(MESLENGTH-4));
-  }
-  else if(datan < (MESLENGTH-2))
-  {
-    memcpy(Wireless_data.commanddata,&Wireless_data.rxdata[datan+2],(RXBUFSIZE-2-datan));
-    memcpy(&Wireless_data.commanddata[RXBUFSIZE-2-datan],&Wireless_data.rxdata[0],(datan-1));
-  }
-  else
-  {
-    return 0;
-  }
-  if(Wireless_data.commanddata[0] == ROCKERMES)
+  Set_Driver_M((MOTOR_DIR_n)Wireless_data.rxdata[C_RIGHT_X_DIR],C_LEFT_Y_VAL);
+}
+
+uint8 Analysis_Command(void)
+{
+  uint8 res = 1;
+  
+  if(Wireless_data.rxdata[C_MESSAGE_TYPE] == ROCKERMES)
   {
 #if(WIRELESS_CDD_DEBUG)
-    DPrint("rocker message %d !\r\n",datan);
+    Dprintf("rocker message !\r\n");
 #endif
     //HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
+    Handle_Rocker_Command();
   }
-  if(Wireless_data.commanddata[0] == KEYMES)
+  if(Wireless_data.rxdata[C_MESSAGE_TYPE] == KEYMES)
   {
 #if(WIRELESS_CDD_DEBUG)
-    DPrint("key message %d !\r\n",datan);
+    Dprintf("key message !\r\n");
 #endif
     //HB HB KEYMES R_UP_UP R_UP_DOWN L_UP_UP L_UP_DOWN C_R_UP C_R_DOWN C_L_UP C_L_DOWN TB TB
+    
   }
   
   return 0;
@@ -82,13 +73,22 @@ uint8 Analysis_Command(uint8 datan)
 
 uint8 Wireless_MainFunction()
 {
-  uint8 datanum;
-  datanum = Get_CommandData();
-  if(datanum != 0xFF)
+  uint8 rest;
+  
+  if(Wireless_data.inuse_flag == RECEIVED)
   {
-    Analysis_Command(datanum);
-    memset(Wireless_data.rxdata,0,MESLENGTH);
+    Wireless_data.inuse_flag = ANALYSING;
+    rest = Check_CommandData();
+    if(!rest)
+    {
+      Analysis_Command();
+    }
+    Wireless_data.rxdata[0] = 0x00;
+    Wireless_data.rxdata[MESLENGTH-2] = 0x00;
+    
+    Wireless_data.inuse_flag = BUFIDLE;
   }
+  
   return 0;
 }
 

@@ -24,6 +24,8 @@ static void SetDirM(DMOTOR_DIR_n direction,uint8_t speed);
 #define F_MOTOR_DEAD     5
 #define R_MOTOR_DEAD     20
 
+#define PWM_DUTY_MAX     400
+
 
 void Motor_Control_Init(void)
 {
@@ -75,6 +77,16 @@ uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed)
   {
     FrontMotor.MSpeed = speed + F_MOTOR_DEAD;
     RearMotor.MSpeed = speed + R_MOTOR_DEAD;
+  }
+  
+  if(FrontMotor.MSpeed > PWM_DUTY_MAX)
+  {
+    FrontMotor.MSpeed = PWM_DUTY_MAX;
+  }
+  
+  if(RearMotor.MSpeed > PWM_DUTY_MAX)
+  {
+    RearMotor.MSpeed = PWM_DUTY_MAX;
   }
 
   return 0;

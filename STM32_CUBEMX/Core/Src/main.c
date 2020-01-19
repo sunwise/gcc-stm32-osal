@@ -174,12 +174,6 @@ static void MX_NVIC_Init(void)
   /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
-  /* DMA1_Channel2_3_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
-  /* DMA1_Channel4_5_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(DMA1_Channel4_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(DMA1_Channel4_5_IRQn);
   /* ADC1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(ADC1_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(ADC1_IRQn);
@@ -187,11 +181,11 @@ static void MX_NVIC_Init(void)
   HAL_NVIC_SetPriority(TIM1_BRK_UP_TRG_COM_IRQn, 0, 0);
   HAL_NVIC_EnableIRQ(TIM1_BRK_UP_TRG_COM_IRQn);
   /* USART1_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART1_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(USART1_IRQn);
+  NVIC_SetPriority(USART1_IRQn, 0);
+  NVIC_EnableIRQ(USART1_IRQn);
   /* USART2_IRQn interrupt configuration */
-  HAL_NVIC_SetPriority(USART2_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(USART2_IRQn);
+  NVIC_SetPriority(USART2_IRQn, 0);
+  NVIC_EnableIRQ(USART2_IRQn);
 }
 
 /* USER CODE BEGIN 4 */

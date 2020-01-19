@@ -1361,10 +1361,10 @@
                 <name>$PROJ_DIR$\..\OSAL\application\CDD_adc.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\OSAL\application\CDD_Debug_Uart.c</name>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_motor.c</name>
             </file>
             <file>
-                <name>$PROJ_DIR$\..\OSAL\application\CDD_motor.c</name>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_Uart.c</name>
             </file>
             <file>
                 <name>$PROJ_DIR$\..\OSAL\application\CDD_wireless.c</name>

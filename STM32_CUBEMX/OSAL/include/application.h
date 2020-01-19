@@ -104,10 +104,12 @@ extern void Test_Motor_Driver(void);
 /**********************WIRELESS CDD field start*************************************/
 #define MESLENGTH   13
 #define RXBUFSIZE   (MESLENGTH)
-#define HEADMASK1   0xAA
-#define HEADMASK2   0xBB
-#define TAILMASK1   0xCC
-#define TAILMASK2   0xDD
+#define TXBUFSIZE   (13)
+
+#define HEADMASK1   0xFD
+#define HEADMASK2   0xFE
+#define TAILMASK1   0xFE
+#define TAILMASK2   0xFF
 #define ROCKERMES   0x01
 #define KEYMES      0x02
 //HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
@@ -133,7 +135,8 @@ typedef struct{
 
 typedef struct{
   uint8_t rxdata[RXBUFSIZE];
-  uint8_t commanddata[MESLENGTH-4];
+  uint8_t txdata[TXBUFSIZE];
+  uint8_t inuse_flag;
 }Wirless_Data_t;
 
 extern Wirless_Data_t Wireless_data;
@@ -141,6 +144,31 @@ extern uint8 Wireless_MainFunction();
 extern void Wireless_Init(void);
 
 /**********************WIRELESS CDD field end*************************************/
+
+/**********************Debug uart CDD field start*************************************/
+#define ENABLE_Debug    1
+
+#if (ENABLE_Debug == 1)
+  #define Dprintf(format, ...)   printf(format, ##__VA_ARGS__)
+#else
+  #define Dprintf(format, ...)
+#endif
+
+typedef enum{
+  BUFIDLE = 0,
+  RECEIVING ,
+  ANALYSING,
+  RECEIVED ,
+  BUFSTATE_NUM,
+}RXBUF_STATUS_n;
+
+extern void Start_Debug_Uart(void);
+extern void Start_Wireless_Uart(void);
+extern uint8_t Start_Send_Wireless(uint8_t *data,uint8_t length);
+extern void Debug_Uart_IRQHandler(void);
+extern void Wireless_Uart_IRQHandler(void);
+
+/**********************Debug uart CDD field end*************************************/
 
 /*****************************************************************************/
 

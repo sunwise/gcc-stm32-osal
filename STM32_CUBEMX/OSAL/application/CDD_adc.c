@@ -1,8 +1,8 @@
 /****************************************************************************************
- * ÎÄ¼şÃû  £º
- * ÃèÊö    
- * ¿ª·¢Æ½Ì¨£º
- * ¿â°æ±¾  £º
+ * æ–‡ä»¶å  ï¼š
+ * æè¿°    
+ * å¼€å‘å¹³å°ï¼š
+ * åº“ç‰ˆæœ¬  ï¼š
  ***************************************************************************************/
 #include "application.h"
 
@@ -19,10 +19,10 @@ HAL_StatusTypeDef Start_ADC_Scan(void)
   res = HAL_ADC_Start_DMA(&hadc, ADCData.adcvalue, ADC_CHANNEL_NUM);
   if(res != HAL_OK)
   {
-    DPrint("adc start error = %d !\r\n",res);
+    Dprintf("adc start error = %d !\r\n",res);
   }
 #if(ADC_CDD_DEBUG)
-  DPrint("adcvaue = %d %d %d %d !\r\n",ADCData.adcvalue[0],ADCData.adcvalue[1],ADCData.adcvalue[2],ADCData.adcvalue[3]);
+  Dprintf("adcvaue = %d %d %d %d !\r\n",ADCData.adcvalue[0],ADCData.adcvalue[1],ADCData.adcvalue[2],ADCData.adcvalue[3]);
 #endif
   return res ;
 }
