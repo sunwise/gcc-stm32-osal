@@ -21,8 +21,10 @@ static void SetDirM(DMOTOR_DIR_n direction,uint8_t speed);
 #define OLD_D  0
 #define NEW_D  1
 
-#define F_MOTOR_DEAD     5
-#define R_MOTOR_DEAD     20
+#define F_MOTOR_DEAD     1
+#define R_MOTOR_DEAD     2
+
+#define PWM_DUTY_MAX     220  //1/2 full duty
 
 
 void Motor_Control_Init(void)
@@ -76,6 +78,16 @@ uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed)
     FrontMotor.MSpeed = speed + F_MOTOR_DEAD;
     RearMotor.MSpeed = speed + R_MOTOR_DEAD;
   }
+  
+  if(FrontMotor.MSpeed > PWM_DUTY_MAX)
+  {
+    FrontMotor.MSpeed = PWM_DUTY_MAX;
+  }
+  
+  if(RearMotor.MSpeed > PWM_DUTY_MAX)
+  {
+    RearMotor.MSpeed = PWM_DUTY_MAX;
+  }
 
   return 0;
 }
@@ -114,8 +126,8 @@ static uint8_t Driver_Motor_Control(void)
 
 static uint8_t Dir_Motor_Control(void)
 {
-  #define LOCK_P   5
-  #define RUN_P    30
+  #define LOCK_P   10
+  #define RUN_P    80
   #define FREE_P   0
   
   uint8_t Speed_t = FREE_P;
@@ -159,7 +171,7 @@ static void SetFrontM(MOTOR_DIR_n direction,uint8_t speed)
     HAL_GPIO_WritePin(MN2_GPIO_Port, MN2_Pin, GPIO_PIN_RESET);
   }
   
-  sConfigOC.Pulse = speed;
+  sConfigOC.Pulse = (uint32_t)speed * 2;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
@@ -185,7 +197,7 @@ static void SetRearM(MOTOR_DIR_n direction,uint8_t speed)
     HAL_GPIO_WritePin(MN4_GPIO_Port, MN4_Pin, GPIO_PIN_RESET);
   }
   
-  sConfigOC.Pulse = speed;
+  sConfigOC.Pulse = (uint32_t)speed * 2;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
@@ -195,12 +207,12 @@ static void SetRearM(MOTOR_DIR_n direction,uint8_t speed)
 
 static void SetDirM(DMOTOR_DIR_n direction,uint8_t speed)
 {
-  if(direction == POSITIVE)
+  if(direction == RIGHT)
   {
     HAL_GPIO_WritePin(MN5_GPIO_Port, MN5_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(MN6_GPIO_Port, MN6_Pin, GPIO_PIN_RESET);
   }
-  else if(direction == NAGETIVE)
+  else if(direction == LEFT)
   {
     HAL_GPIO_WritePin(MN5_GPIO_Port, MN5_Pin, GPIO_PIN_RESET);
     HAL_GPIO_WritePin(MN6_GPIO_Port, MN6_Pin, GPIO_PIN_SET);

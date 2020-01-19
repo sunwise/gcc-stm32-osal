@@ -10,7 +10,7 @@
 //硬件定时器初始化，设定系统时钟
 void OSAL_TIMER_TICKINIT(void)
 {
-	SysTick_Config(SystemCoreClock / 1000);
+//	SysTick_Config(SystemCoreClock / 1000);
 }
 
 //开启硬件定时器

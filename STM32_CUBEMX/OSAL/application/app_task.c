@@ -36,33 +36,21 @@ void System_Startup(void)
   osal_Task_init();
   osal_mem_kick();
   HAL_ENABLE_INTERRUPTS();
-//  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
+  osal_start_reload_timer( Serial_TaskID, PRINTF_STR, 1000);
   osal_start_reload_timer( AppPeriod_TaskID, LED_FLASH, LED_EVENT_PRIEOD);
   osal_start_reload_timer( AppPeriod_TaskID, ADC_HANDLE, ADC_EVENT_PRIEOD);
   osal_start_reload_timer( AppPeriod_TaskID, COMMAND_HANDLE, COMMAND_EVENT_PRIEOD);
   osal_start_reload_timer( AppPeriod_TaskID, MOTOR_HANDLE, MOTOR_EVENT_PRIEOD);
   
   osal_start_system();
-}
-
-#define PRINT_MAX   50
-void DPrint ( const char * format, ... )
-{
-  uint32_t length;
-  static char buffer[PRINT_MAX];
-
-  va_list args;
-  va_start (args, format);
-  length = vsnprintf (&buffer[0],PRINT_MAX,format, args);
-  va_end (args);
-  HAL_UART_Transmit_DMA(&huart2, (uint8_t *)&buffer[0], length);
+  Dprintf("OSAL System init finish! \r\n");
 }
 
 //串口通信任务初始化
 void Serial_Task_Init(uint8 task_id)
 {
   Serial_TaskID = task_id;
-
+  Start_Debug_Uart();
 }
 
 //串口通信任务事件处理
@@ -99,7 +87,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-
+      
       return task_event ^ PRINTF_STR;
     }
   return 0;
@@ -110,6 +98,7 @@ void AppPeriod_Task_Init(uint8 task_id)
   AppPeriod_TaskID = task_id;
   Start_ADC_Scan();
   Motor_Control_Init();
+  Wireless_Init();
 }
 
 uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -149,15 +138,18 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
       if ( dir )
         {
           dir = 0;
+          
         }
       else
         {
+//          Dprintf("500ms second event! \r\n");
+          
           dir = 1;
         }
 
       HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
       
-      Test_Motor_Driver();
+//      Test_Motor_Driver();
       
       return task_event ^ LED_FLASH;
     }
@@ -170,6 +162,8 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & COMMAND_HANDLE )
     {
+      Wireless_MainFunction();
+      
       return task_event ^ COMMAND_HANDLE;
     }
   if ( task_event & MOTOR_HANDLE )
