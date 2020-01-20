@@ -78,7 +78,7 @@
                 </option>
                 <option>
                     <name>OGChipSelectEditMenu</name>
-                    <state>GD32F130x8	GD GD32F130x8</state>
+                    <state>GD32F130x6	GD GD32F130x6</state>
                 </option>
                 <option>
                     <name>GenLowLevelInterface</name>
@@ -138,7 +138,7 @@
                 </option>
                 <option>
                     <name>GFPUDeviceSlave</name>
-                    <state>GD32F130x8	GD GD32F130x8</state>
+                    <state>GD32F130x6	GD GD32F130x6</state>
                 </option>
                 <option>
                     <name>FPU2</name>

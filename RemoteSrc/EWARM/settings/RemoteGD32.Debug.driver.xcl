@@ -12,7 +12,7 @@
 
 "--semihosting" 
 
-"--device=GD32F130x8" 
+"--device=GD32F130x6" 
 
 "--drv_communication=USB0" 
 
