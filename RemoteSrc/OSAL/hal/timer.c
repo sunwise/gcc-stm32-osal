@@ -33,5 +33,5 @@ void OSAL_TIMER_TICKSTOP(void )
   */
 void SysTick_CallBack(void)
 {
-	osal_update_timers();
+  osal_update_timers();
 }

@@ -764,7 +764,7 @@
                 </option>
                 <option>
                     <name>IlinkIcfFile</name>
-                    <state>$TOOLKIT_DIR$\config\linker\GD\GD32F130x8.icf</state>
+                    <state>$TOOLKIT_DIR$\config\linker\GD\GD32F130x6.icf</state>
                 </option>
                 <option>
                     <name>IlinkIcfFileSlave</name>
@@ -2058,7 +2058,13 @@
                     <name>$PROJ_DIR$\..\Core\Src\gd32f1x0_it.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Src\gpio.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Src\main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\systick.c</name>
                 </file>
             </group>
         </group>
@@ -2157,6 +2163,9 @@
         <name>OSAL</name>
         <group>
             <name>application</name>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\app_task.c</name>
+            </file>
         </group>
         <group>
             <name>hal</name>

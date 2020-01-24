@@ -8,7 +8,7 @@
 
 --device_macro "D:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\config\debugger\GD\GD32F1x0.dmac" 
 
---flash_loader "D:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\config\flashloader\GD\FlashGD32F130x8.board" 
+--flash_loader "D:\Program Files (x86)\IAR Systems\Embedded Workbench 8.0\arm\config\flashloader\GD\FlashGD32F130x6.board" 
 
 
 

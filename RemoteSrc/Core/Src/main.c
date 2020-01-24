@@ -23,6 +23,23 @@
 
 int main(void)
 {
+  systick_config();
+  
+  gd_eval_led_init (LED1);
+  gd_eval_led_init (LED2);
+  gd_eval_led_init (LED3);
+  gd_eval_led_init (LED_GROUP1);
+  gd_eval_led_init (LED_GROUP2);
+
+  gd_eval_com_init(EVAL_COM1);
+  
+  gd_eval_led_on (LED_GROUP1);
+  gd_eval_led_on (LED_GROUP2);
+  gd_eval_led_on (LED1);
+  gd_eval_led_on (LED2);
+  gd_eval_led_on (LED3);
+  
+  System_Startup();
   
   while (1)
   {

@@ -5,6 +5,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "gd32f1x0_libopt.h"
+#include "systick.h"
+#include "gpio.h"
+
 #include "osal.h"
 #include "osal_timer.h"
 #include "osal_event.h"
