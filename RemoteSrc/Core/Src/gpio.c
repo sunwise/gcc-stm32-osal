@@ -31,15 +31,6 @@ static uint32_t GPIO_PIN[LEDn] = {LED1_PIN,
                            LED_GROUP2_PIN
 };
 
-static rcu_periph_enum COM_CLK[COMn] = {EVAL_COM1_CLK,
-                                       };
-
-static uint32_t COM_TX_PIN[COMn] = {EVAL_COM1_TX_PIN,
-                                   };
-
-static uint32_t COM_RX_PIN[COMn] = {EVAL_COM1_RX_PIN,
-                                   };
-
 static rcu_periph_enum GPIO_CLK[LEDn] = {LED1_GPIO_CLK,
                                          LED2_GPIO_CLK, 
                                          LED3_GPIO_CLK, 
@@ -201,46 +192,4 @@ uint8_t gd_eval_key_state_get(key_typedef_enum keynum)
     return gpio_input_bit_get(KEY_PORT[keynum], KEY_PIN[keynum]);
 }
 
-/*!
-    \brief      configure COM port
-    \param[in]  COM: COM on the board
-      \arg        EVAL_COM1: COM1 on the board
-      \arg        EVAL_COM2: COM2 on the board
-    \param[out] none
-    \retval     none
-*/
-void gd_eval_com_init(uint32_t COM)
-{
-    /* enable GPIO clock */
-    uint32_t COM_ID = 0U;
-    if(EVAL_COM1==COM){
-    COM_ID = 0U;
-    }
 
-    rcu_periph_clock_enable( EVAL_COM_GPIO_CLK);
-
-    /* enable USART clock */
-    rcu_periph_clock_enable(COM_CLK[COM_ID]);
-
-    /* connect port to USARTx_Tx */
-    gpio_af_set(EVAL_COM_GPIO_PORT, EVAL_COM_AF, COM_TX_PIN[COM_ID]);
-
-    /* connect port to USARTx_Rx */
-    gpio_af_set(EVAL_COM_GPIO_PORT, EVAL_COM_AF, COM_RX_PIN[COM_ID]);
-
-    /* configure USART Tx as alternate function push-pull */
-    gpio_mode_set(EVAL_COM_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_PULLUP,COM_TX_PIN[COM_ID]);
-    gpio_output_options_set(EVAL_COM_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_10MHZ,COM_TX_PIN[COM_ID]);
-
-    /* configure USART Rx as alternate function push-pull */
-    gpio_mode_set(EVAL_COM_GPIO_PORT, GPIO_MODE_AF, GPIO_PUPD_PULLUP,COM_RX_PIN[COM_ID]);
-    gpio_output_options_set(EVAL_COM_GPIO_PORT, GPIO_OTYPE_PP, GPIO_OSPEED_10MHZ,COM_RX_PIN[COM_ID]);
-
-    /* USART configure */
-    usart_deinit(COM);
-    usart_baudrate_set(COM,115200U);
-    usart_transmit_config(COM, USART_TRANSMIT_ENABLE);
-    usart_receive_config(COM, USART_RECEIVE_ENABLE);
-    usart_enable(COM);
-
-}

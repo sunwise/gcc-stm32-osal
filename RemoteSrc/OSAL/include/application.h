@@ -8,6 +8,8 @@
 #include "gd32f1x0_libopt.h"
 #include "systick.h"
 #include "gpio.h"
+#include "uart.h"
+#include "adc.h"
 
 #include "osal.h"
 #include "osal_timer.h"
@@ -25,6 +27,75 @@ typedef struct
 } General_SerialData_t;             //OSAL中通用串口打印消息的格式结构体
 
 /*****************************************************************************/
+
+/**********************WIRELESS CDD field start*************************************/
+#define MESLENGTH   13
+#define RXBUFSIZE   (MESLENGTH)
+#define TXBUFSIZE   (13)
+
+#define HEADMASK1   0xFD
+#define HEADMASK2   0xFE
+#define TAILMASK1   0xFE
+#define TAILMASK2   0xFF
+#define ROCKERMES   0x01
+#define KEYMES      0x02
+//HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
+//HB HB KEYMES R_UP_UP R_UP_DOWN L_UP_UP L_UP_DOWN C_R_UP C_R_DOWN C_L_UP C_L_DOWN TB TB
+
+typedef struct{
+  uint16_t R_rocker_X;
+  uint16_t R_rocker_Y;
+  uint16_t L_rocker_X;
+  uint16_t L_rocker_Y;
+}command_rocker_t;
+
+typedef struct{
+  uint8_t R_UP_UP;
+  uint8_t R_UP_DOWN;
+  uint8_t L_UP_UP;
+  uint8_t L_UP_DOWN;
+  uint8_t C_R_UP;
+  uint8_t C_R_DOWN;
+  uint8_t C_L_UP;
+  uint8_t C_L_DOWN;
+}command_key_t;
+
+typedef struct{
+  uint8_t rxdata[RXBUFSIZE];
+  uint8_t txdata[TXBUFSIZE];
+  uint8_t inuse_flag;
+}Wirless_Data_t;
+
+extern Wirless_Data_t Wireless_data;
+extern uint8 Wireless_MainFunction();
+extern void Wireless_Init(void);
+
+/**********************WIRELESS CDD field end*************************************/
+
+/**********************Debug uart CDD field start*************************************/
+#define ENABLE_Debug    1
+
+#if (ENABLE_Debug == 1)
+  #define Dprintf(format, ...)   printf(format, ##__VA_ARGS__)
+#else
+  #define Dprintf(format, ...)
+#endif
+
+typedef enum{
+  BUFIDLE = 0,
+  RECEIVING ,
+  ANALYSING,
+  RECEIVED ,
+  BUFSTATE_NUM,
+}RXBUF_STATUS_n;
+
+extern void Start_Debug_Uart(void);
+extern void Start_Wireless_Uart(void);
+extern uint8_t Start_Send_Wireless(uint8_t *data,uint8_t length);
+extern void Debug_Uart_IRQHandler(void);
+extern void Wireless_Uart_IRQHandler(void);
+
+/**********************Debug uart CDD field end*************************************/
 
 //所有任务的任务ID、初始化函数、事件处理函数、任务事件都统一在此文件声明或定义
 /*****************************************************************************/

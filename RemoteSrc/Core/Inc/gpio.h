@@ -103,20 +103,6 @@ typedef enum
 #define USER_KEY_EXTI_PIN_SOURCE         EXTI_SOURCE_PIN7
 #define USER_KEY_EXTI_IRQn               EXTI4_15_IRQn
 
-/* GD32130_150 eval low layer COM */
-#define COMn                             1
-
-/* definition for COM 1, connected to USART0 */
-#define EVAL_COM1                        USART0
-#define EVAL_COM1_CLK                    RCU_USART0
-
-#define EVAL_COM1_TX_PIN                 GPIO_PIN_9
-#define EVAL_COM1_RX_PIN                 GPIO_PIN_10
-
-#define EVAL_COM_GPIO_PORT               GPIOA
-#define EVAL_COM_GPIO_CLK                RCU_GPIOA
-#define EVAL_COM_AF                      GPIO_AF_1
-
 /* function declarations */
 /* configures led GPIO */
 void gd_eval_led_init          (led_typedef_enum lednum);
@@ -130,8 +116,7 @@ void gd_eval_led_toggle        (led_typedef_enum lednum);
 void gd_eval_key_init          (key_typedef_enum keynum, keymode_typedef_enum key_mode);
 /* return the selected button state */
 uint8_t gd_eval_key_state_get   (key_typedef_enum keynum);
-/* configure COM port */
-void gd_eval_com_init(uint32_t COM);
+
 
 #ifdef cplusplus
 }

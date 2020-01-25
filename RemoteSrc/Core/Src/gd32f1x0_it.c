@@ -115,6 +115,26 @@ void SysTick_Handler(void)
     SysTick_CallBack();
 }
 
+/*!
+    \brief      this function handles USART RBNE interrupt request and TBE interrupt request
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void USART0_IRQHandler(void)
+{
+    Wireless_Uart_IRQHandler();
+}
+/*!
+    \brief      this function handles USART RBNE interrupt request and TBE interrupt request
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void USART1_IRQHandler(void)
+{
+    Debug_Uart_IRQHandler();
+}
 
 
 

@@ -86,7 +86,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-      
+      adc_software_trigger_enable(ADC_REGULAR_CHANNEL);
       return task_event ^ PRINTF_STR;
     }
   return 0;
@@ -95,6 +95,10 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 void AppPeriod_Task_Init(uint8 task_id)
 {
   AppPeriod_TaskID = task_id;
+  
+  Start_Debug_Uart();
+  Wireless_Init();
+  
 }
 
 uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -142,6 +146,7 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & COMMAND_HANDLE )
     {
+      Wireless_MainFunction();
       
       return task_event ^ COMMAND_HANDLE;
     }
