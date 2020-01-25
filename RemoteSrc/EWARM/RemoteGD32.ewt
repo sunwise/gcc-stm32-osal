@@ -2382,10 +2382,22 @@
             <group>
                 <name>Core</name>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Src\adc.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Src\gd32f1x0_it.c</name>
                 </file>
                 <file>
+                    <name>$PROJ_DIR$\..\Core\Src\gpio.c</name>
+                </file>
+                <file>
                     <name>$PROJ_DIR$\..\Core\Src\main.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\systick.c</name>
+                </file>
+                <file>
+                    <name>$PROJ_DIR$\..\Core\Src\uart.c</name>
                 </file>
             </group>
         </group>
@@ -2484,6 +2496,15 @@
         <name>OSAL</name>
         <group>
             <name>application</name>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\app_task.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_Uart.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_wireless.c</name>
+            </file>
         </group>
         <group>
             <name>hal</name>

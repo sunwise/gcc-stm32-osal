@@ -20,9 +20,34 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+    
+void nvic_Irq_init(void);
+void rcu_init(void);
 
 int main(void)
 {
+  systick_config();
+  
+  nvic_Irq_init();
+  
+  gd_eval_led_init (LED1);
+  gd_eval_led_init (LED2);
+  gd_eval_led_init (LED3);
+  gd_eval_led_init (LED_GROUP1);
+  gd_eval_led_init (LED_GROUP2);
+
+  gd_eval_com1_init();
+  gd_eval_com2_init();
+  ADC_Init();
+  
+  
+  gd_eval_led_on (LED_GROUP1);
+  gd_eval_led_on (LED_GROUP2);
+  gd_eval_led_on (LED1);
+  gd_eval_led_on (LED2);
+  gd_eval_led_on (LED3);
+  
+  System_Startup();
   
   while (1)
   {
@@ -30,4 +55,11 @@ int main(void)
   }
   
 }
+
+void nvic_Irq_init(void)
+{
+  /* USART interrupt configuration */
+  nvic_irq_enable(USART0_IRQn, 0, 0);
+}
+
 
