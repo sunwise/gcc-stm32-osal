@@ -65,15 +65,16 @@ typedef enum{
 typedef enum{
   INIT = 0,
   POSITIVE ,
+  STOP,
   NAGETIVE ,
   MDIR_NUM,
 }MOTOR_DIR_n;
 
 typedef enum{
   DINIT = 0,
+  LEFT ,
   CENTER ,
   RIGHT ,
-  LEFT ,
   DMDIR_NUM,
 }DMOTOR_DIR_n;
 
@@ -115,11 +116,29 @@ extern void Test_Motor_Driver(void);
 //HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
 //HB HB KEYMES R_UP_UP R_UP_DOWN L_UP_UP L_UP_DOWN C_R_UP C_R_DOWN C_L_UP C_L_DOWN TB TB
 
+//typedef enum{
+//  DIRINIT = 0,
+//  UP_RIGHT ,
+//  FREE ,
+//  DOWN_LEFT 
+//}rocker_dir_n;
+
+typedef enum{
+  KEYFREE = 0,
+  KEYPUSH ,
+  KEYKEEP ,
+  KEYREL
+}keystate_n;
+
 typedef struct{
-  uint16_t R_rocker_X;
-  uint16_t R_rocker_Y;
-  uint16_t L_rocker_X;
-  uint16_t L_rocker_Y;
+  uint8_t R_rocker_X_D;
+  uint8_t R_rocker_X;
+  uint8_t R_rocker_Y_D;
+  uint8_t R_rocker_Y;
+  uint8_t L_rocker_X_D;
+  uint8_t L_rocker_X;
+  uint8_t L_rocker_Y_D;
+  uint8_t L_rocker_Y;
 }command_rocker_t;
 
 typedef struct{

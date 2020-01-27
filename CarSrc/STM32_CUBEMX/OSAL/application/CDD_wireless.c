@@ -44,8 +44,12 @@ uint8 Check_CommandData(void)
 
 void Handle_Rocker_Command(void)
 {
-  Set_Driver_M((MOTOR_DIR_n)Wireless_data.rxdata[C_LEFT_Y_DIR],Wireless_data.rxdata[C_LEFT_Y_VAL]);
-  Set_Dir_M((DMOTOR_DIR_n)Wireless_data.rxdata[C_RIGHT_X_DIR]);
+  command_rocker_t *rockerdata_p;
+  
+  rockerdata_p = (command_rocker_t *)&Wireless_data.rxdata[3];
+  
+  Set_Driver_M((MOTOR_DIR_n)rockerdata_p->L_rocker_Y_D,rockerdata_p->L_rocker_Y);
+  Set_Dir_M((DMOTOR_DIR_n)rockerdata_p->R_rocker_X_D);
 }
 
 uint8 Analysis_Command(void)
@@ -71,9 +75,24 @@ uint8 Analysis_Command(void)
   return 0;
 }
 
+void HandleResponse(void)
+{
+  Wireless_data.txdata[0] = HEADMASK1;
+  Wireless_data.txdata[1] = HEADMASK2;
+  
+  memcpy(&Wireless_data.txdata[3],&ADCData.Device_iv[0],8);
+  
+  Wireless_data.txdata[MESLENGTH-2] = TAILMASK1;
+  Wireless_data.txdata[MESLENGTH-1] = TAILMASK2;
+    
+  Start_Send_Wireless(&Wireless_data.txdata[0],MESLENGTH);
+}
+
 uint8 Wireless_MainFunction()
 {
   uint8 rest;
+  static uint8_t responsecount = 0;
+  static uint8_t responseactive = 0;
   
   if(Wireless_data.inuse_flag == RECEIVED)
   {
@@ -82,11 +101,25 @@ uint8 Wireless_MainFunction()
     if(!rest)
     {
       Analysis_Command();
+      responseactive = 1;
     }
     Wireless_data.rxdata[0] = 0x00;
     Wireless_data.rxdata[MESLENGTH-2] = 0x00;
     
     Wireless_data.inuse_flag = BUFIDLE;
+    
+  }
+  
+  if((responseactive > 0)&&(responseactive < 140))
+  {
+    responsecount ++;
+    responseactive ++;
+    
+    if((responsecount > 2))
+    {
+      responsecount = 0;
+      HandleResponse();
+    }
   }
   
   return 0;
