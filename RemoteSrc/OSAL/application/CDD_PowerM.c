@@ -57,27 +57,16 @@ void PowerManager_Mainfunction(void)
   
   switch(power_data.power_state){
     case POW_INIT:
-//      if(read_power_key())
-//      {
-//        keepcount ++;
-//      }
-//      else
-//      {
-//        keepcount = 0;
-//      }
-//      if(keepcount > 9)
-      {
         keepcount = 0;
         power_data.power_state = POW_NOR;
         power_hold_control(TRUE);
-      }
       break;
     case POW_MAX:
       power_hold_control(FALSE);
       break;
     case POW_NOR:
       CalculateBatVoltage();
-      if(read_power_key())
+      if((commandkey.L_UP_DOWN == KEYPUSH)&&(commandkey.R_UP_DOWN == KEYPUSH))
       {
         keepcount ++;
       }
@@ -94,7 +83,7 @@ void PowerManager_Mainfunction(void)
       break;
     case POW_LOW:
       CalculateBatVoltage();
-      if(read_power_key())
+      if((commandkey.L_UP_DOWN == KEYPUSH)&&(commandkey.R_UP_DOWN == KEYPUSH))
       {
         keepcount ++;
       }

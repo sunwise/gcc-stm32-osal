@@ -49,6 +49,13 @@ typedef enum{
   DOWN_LEFT 
 }rocker_dir_n;
 
+typedef enum{
+  KEYFREE = 0,
+  KEYPUSH ,
+  KEYKEEP ,
+  KEYREL
+}keystate_n;
+
 typedef struct{
   uint8_t R_rocker_X_D;
   uint8_t R_rocker_X;
@@ -158,10 +165,13 @@ extern void PowerManager_Mainfunction(void);
 
 /**********************KeyM field start*************************************/
 
+extern command_key_t commandkey;
+
 extern void KeyManager_Mainfunction(void);
 
 /**********************KeyM field end*************************************/
-
+extern void KeyManager_Init(void);
+extern void KeyManager_Mainfunction(void);
 /**********************RockerM field start*************************************/
 
 extern command_rocker_t rockerinf;

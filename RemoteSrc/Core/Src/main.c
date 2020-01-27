@@ -44,10 +44,10 @@ int main(void)
   ADC_Init();
   
   gd_eval_led_on (LED_GROUP1);
-  gd_eval_led_on (LED_GROUP2);
-  gd_eval_led_on (LED1);
-  gd_eval_led_on (LED2);
-  gd_eval_led_on (LED3);
+  gd_eval_led_off (LED_GROUP2);
+  gd_eval_led_off (LED1);
+  gd_eval_led_off (LED2);
+  gd_eval_led_off (LED3);
   
   System_Startup();
   
