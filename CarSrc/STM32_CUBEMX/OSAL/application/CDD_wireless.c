@@ -52,6 +52,12 @@ void Handle_Rocker_Command(void)
   Set_Dir_M((DMOTOR_DIR_n)rockerdata_p->R_rocker_X_D);
 }
 
+void StopMotor(void)
+{
+  Set_Driver_M(INIT,0);
+  Set_Dir_M(CENTER);
+}
+
 uint8 Analysis_Command(void)
 {
   
@@ -120,6 +126,10 @@ uint8 Wireless_MainFunction()
       responsecount = 0;
       HandleResponse();
     }
+  }
+  else
+  {
+    StopMotor();
   }
   
   return 0;
