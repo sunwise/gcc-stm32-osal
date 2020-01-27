@@ -89,8 +89,10 @@ uint8 Wireless_MainFunction()
   #define Send_Command_P    0x03
   uint8 rest;
   static uint8_t PrieodCount = 0;
+  static uint16_t responseactive = 0;
   
   PrieodCount ++;
+  responseactive ++;
   
   if(Wireless_data.inuse_flag == RECEIVED)
   {
@@ -104,6 +106,7 @@ uint8 Wireless_MainFunction()
     Wireless_data.rxdata[MESLENGTH-2] = 0x00;
     
     Wireless_data.inuse_flag = BUFIDLE;
+    responseactive = 0;
   }
   
   if(PrieodCount >= Send_Command_P)
@@ -111,6 +114,11 @@ uint8 Wireless_MainFunction()
     PrieodCount = 0;
     Fill_TXBuffer();
     Start_Send_Wireless(&Wireless_data.txdata[0],TXBUFSIZE);
+  }
+  
+  if(responseactive > 1666)
+  {
+    RequestShutdown();
   }
   
   return 0;

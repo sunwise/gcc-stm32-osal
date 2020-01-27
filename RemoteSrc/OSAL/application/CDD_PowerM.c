@@ -31,6 +31,7 @@ void PowerManager_Init(void)
   
   GPIO_BC(HOLDPOW_GPIO_PORT) = HOLDPOW_PIN;
 }
+
 /***********************************
 *  input 0 close 1 hold
 ***********************************/
@@ -44,6 +45,11 @@ void power_hold_control(uint8_t sw)
   {
     GPIO_BC(HOLDPOW_GPIO_PORT) = HOLDPOW_PIN;
   }
+}
+
+void RequestShutdown(void)
+{
+  power_hold_control(FALSE);
 }
 
 FlagStatus read_power_key(void)

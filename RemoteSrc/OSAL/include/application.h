@@ -160,6 +160,7 @@ extern POW_Data_t power_data;
 
 extern void PowerManager_Init(void);
 extern void PowerManager_Mainfunction(void);
+extern void RequestShutdown(void);
 
 /**********************PowerM field end*************************************/
 
