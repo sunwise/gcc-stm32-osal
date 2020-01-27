@@ -127,7 +127,7 @@ static uint8_t Driver_Motor_Control(void)
 static uint8_t Dir_Motor_Control(void)
 {
   #define LOCK_P   10
-  #define RUN_P    80
+  #define RUN_P    100
   #define FREE_P   0
   
   uint8_t Speed_t = FREE_P;
@@ -171,7 +171,8 @@ static void SetFrontM(MOTOR_DIR_n direction,uint8_t speed)
     HAL_GPIO_WritePin(MN2_GPIO_Port, MN2_Pin, GPIO_PIN_RESET);
   }
   
-  sConfigOC.Pulse = (uint32_t)speed * 2;
+//  sConfigOC.Pulse = (uint32_t)speed * 2;
+  sConfigOC.Pulse = (uint32_t)speed;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
   {
     Error_Handler();
@@ -197,7 +198,8 @@ static void SetRearM(MOTOR_DIR_n direction,uint8_t speed)
     HAL_GPIO_WritePin(MN4_GPIO_Port, MN4_Pin, GPIO_PIN_RESET);
   }
   
-  sConfigOC.Pulse = (uint32_t)speed * 2;
+//  sConfigOC.Pulse = (uint32_t)speed * 2;
+  sConfigOC.Pulse = (uint32_t)speed;
   if (HAL_TIM_PWM_ConfigChannel(&htim1, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
   {
     Error_Handler();
