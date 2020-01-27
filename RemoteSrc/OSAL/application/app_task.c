@@ -100,7 +100,7 @@ void AppPeriod_Task_Init(uint8 task_id)
   Wireless_Init();
   PowerManager_Init();
   RockerManager_Init();
-  
+  KeyManager_Init();
 }
 
 uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -136,8 +136,8 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
   if ( task_event & LED_FLASH )
     {
       gd_eval_led_toggle (LED1);
-      gd_eval_led_toggle (LED2);
-      gd_eval_led_toggle (LED3);
+//      gd_eval_led_toggle (LED2);
+//      gd_eval_led_toggle (LED3);
 
       return task_event ^ LED_FLASH;
     }
@@ -147,6 +147,7 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
       Check_ADC_State();
       PowerManager_Mainfunction();
       RockerManager_Manifunction();
+      KeyManager_Mainfunction();
       
       return task_event ^ ADC_HANDLE;
     }
