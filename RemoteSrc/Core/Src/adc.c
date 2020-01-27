@@ -20,8 +20,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "adc.h"
 
-uint16_t adc_value[7];
+ADC_Data_t adc_value;
 
+void Start_ADC_Scan(void)
+{
+  adc_software_trigger_enable(ADC_REGULAR_CHANNEL);
+}
+void Check_ADC_State(void)
+{
+  if(adc_value.adcdata[AD_BAT_VOL] > 1000)
+  {
+    adc_value.ready_flag = TRUE;
+  }
+}
 /* ADC init function */
 void ADC_Init(void)
 {
@@ -41,19 +52,19 @@ void ADC_Init(void)
   /* ADC_DMA_channel configuration */
   dma_deinit(DMA_CH0);
   dma_periph_address_config(DMA_CH0,(uint32_t)(&ADC_RDATA));
-  dma_memory_address_config(DMA_CH0,(uint32_t)(&adc_value));
+  dma_memory_address_config(DMA_CH0,(uint32_t)(&adc_value.adcdata[0]));
   dma_transfer_direction_config(DMA_CH0,DMA_PERIPHERAL_TO_MEMORY);
   dma_memory_width_config(DMA_CH0,DMA_MEMORY_WIDTH_16BIT);
   dma_periph_width_config(DMA_CH0,DMA_PERIPHERAL_WIDTH_16BIT);
   dma_priority_config(DMA_CH0,DMA_PRIORITY_HIGH);
-  dma_transfer_number_config(DMA_CH0,7);
+  dma_transfer_number_config(DMA_CH0,ADC_CHANNELn);
   dma_periph_increase_disable(DMA_CH0);
   dma_memory_increase_enable(DMA_CH0);
   dma_circulation_enable(DMA_CH0);
   dma_channel_enable(DMA_CH0);
   
   /* ADC channel length config */
-    adc_channel_length_config(ADC_REGULAR_CHANNEL,7);
+    adc_channel_length_config(ADC_REGULAR_CHANNEL,ADC_CHANNELn);
 
   /* ADC regular channel config */
   adc_regular_channel_config(0,ADC_CHANNEL_0,ADC_SAMPLETIME_239POINT5);
@@ -82,6 +93,7 @@ void ADC_Init(void)
   /* ADC software trigger enable */
   adc_software_trigger_enable(ADC_REGULAR_CHANNEL);
 
+  adc_value.ready_flag = FALSE;
 }
 
 

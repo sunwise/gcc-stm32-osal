@@ -42,11 +42,22 @@ typedef struct
 //HB HB ROCKERMES R_rocker_X R_rocker_Y L_rocker_X L_rocker_Y TB TB
 //HB HB KEYMES R_UP_UP R_UP_DOWN L_UP_UP L_UP_DOWN C_R_UP C_R_DOWN C_L_UP C_L_DOWN TB TB
 
+typedef enum{
+  DIRINIT = 0,
+  UP_RIGHT ,
+  FREE ,
+  DOWN_LEFT 
+}rocker_dir_n;
+
 typedef struct{
-  uint16_t R_rocker_X;
-  uint16_t R_rocker_Y;
-  uint16_t L_rocker_X;
-  uint16_t L_rocker_Y;
+  uint8_t R_rocker_X_D;
+  uint8_t R_rocker_X;
+  uint8_t R_rocker_Y_D;
+  uint8_t R_rocker_Y;
+  uint8_t L_rocker_X_D;
+  uint8_t L_rocker_X;
+  uint8_t L_rocker_Y_D;
+  uint8_t L_rocker_Y;
 }command_rocker_t;
 
 typedef struct{
@@ -96,6 +107,69 @@ extern void Debug_Uart_IRQHandler(void);
 extern void Wireless_Uart_IRQHandler(void);
 
 /**********************Debug uart CDD field end*************************************/
+
+/**********************ADC field start*************************************/
+
+#define ADC_CHANNELn      7
+
+typedef struct{
+  uint16_t adcdata[ADC_CHANNELn];
+  uint8_t ready_flag;
+}ADC_Data_t;
+
+typedef enum{
+  AD_ROCKER_R_Y = 0,
+  AD_KEY_R ,
+  AD_ROCKER_L_X ,
+  AD_ROCKER_L_Y ,
+  AD_KEY_L ,
+  AD_BAT_VOL ,
+  AD_ROCKER_R_X ,
+}ADCBUF_ID_n;
+
+extern ADC_Data_t adc_value;
+
+/**********************ADC field end*************************************/
+
+/**********************PowerM field start*************************************/
+#define BAT_VOL_MAX     7200
+#define BAT_VOL_MIN     4000
+#define BAT_VOL_LOW     5000
+
+typedef enum{
+  POW_INIT = 0,
+  POW_NOR,
+  POW_MAX,
+  POW_LOW,
+  POW_MIN,
+}POW_STATE_n;
+
+typedef struct{
+  uint16_t batvoltage;  //mV
+  POW_STATE_n power_state;
+}POW_Data_t;
+
+extern POW_Data_t power_data;
+
+extern void PowerManager_Init(void);
+extern void PowerManager_Mainfunction(void);
+
+/**********************PowerM field end*************************************/
+
+/**********************KeyM field start*************************************/
+
+extern void KeyManager_Mainfunction(void);
+
+/**********************KeyM field end*************************************/
+
+/**********************RockerM field start*************************************/
+
+extern command_rocker_t rockerinf;
+
+extern void RockerManager_Init(void);
+extern void RockerManager_Manifunction(void);
+
+/**********************RockerM field end*************************************/
 
 //所有任务的任务ID、初始化函数、事件处理函数、任务事件都统一在此文件声明或定义
 /*****************************************************************************/

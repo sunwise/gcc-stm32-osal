@@ -25,7 +25,7 @@ void System_Startup(void);
 #define ADC_EVENT_PRIEOD     117
 #define LED_EVENT_PRIEOD     503
 #define COMMAND_EVENT_PRIEOD 36
-#define MOTOR_EVENT_PRIEOD   59
+#define MOTOR_EVENT_PRIEOD   590
 
 void System_Startup(void)
 {
@@ -86,7 +86,7 @@ uint16 Serial_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   if ( task_event & PRINTF_STR )
     {
-      adc_software_trigger_enable(ADC_REGULAR_CHANNEL);
+      
       return task_event ^ PRINTF_STR;
     }
   return 0;
@@ -98,6 +98,8 @@ void AppPeriod_Task_Init(uint8 task_id)
   
   Start_Debug_Uart();
   Wireless_Init();
+  PowerManager_Init();
+  RockerManager_Init();
   
 }
 
@@ -141,6 +143,10 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & ADC_HANDLE )
     {
+      Start_ADC_Scan();
+      Check_ADC_State();
+      PowerManager_Mainfunction();
+      RockerManager_Manifunction();
       
       return task_event ^ ADC_HANDLE;
     }
@@ -152,6 +158,7 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & MOTOR_HANDLE )
     {
+      KeyManager_Mainfunction();
       
       return task_event ^ MOTOR_HANDLE;
     }

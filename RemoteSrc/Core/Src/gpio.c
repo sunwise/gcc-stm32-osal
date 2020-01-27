@@ -39,39 +39,32 @@ static rcu_periph_enum GPIO_CLK[LEDn] = {LED1_GPIO_CLK,
                                          LED_GROUP2_GPIO_CLK
                                         };
 
-static uint32_t KEY_PORT[KEYn] = {WAKEUP_KEY_GPIO_PORT, 
-                                  TAMPER_KEY_GPIO_PORT,
-                                  USER_KEY_GPIO_PORT
+static uint32_t KEY_PORT[KEYn] = {LOCK_KEY_GPIO_PORT, 
+                                  POWER_KEY_GPIO_PORT
                                   };
 
-static uint32_t KEY_PIN[KEYn] = {WAKEUP_KEY_PIN, 
-                                 TAMPER_KEY_PIN,
-                                 USER_KEY_PIN
+static uint32_t KEY_PIN[KEYn] = {LOCK_KEY_PIN, 
+                                 POWER_KEY_PIN
                                  };
 
-static rcu_periph_enum KEY_CLK[KEYn] = {WAKEUP_KEY_GPIO_CLK, 
-                                        TAMPER_KEY_GPIO_CLK,
-                                        USER_KEY_GPIO_CLK
+static rcu_periph_enum KEY_CLK[KEYn] = {LOCK_KEY_GPIO_CLK, 
+                                        POWER_KEY_GPIO_CLK
                                        };
 
-static exti_line_enum KEY_EXTI_LINE[KEYn] = {WAKEUP_KEY_EXTI_LINE,
-                                             TAMPER_KEY_EXTI_LINE,
-                                             USER_KEY_EXTI_LINE
+static exti_line_enum KEY_EXTI_LINE[KEYn] = {LOCK_KEY_EXTI_LINE,
+                                             POWER_KEY_EXTI_LINE
                                             };
 
-static uint8_t KEY_PORT_SOURCE[KEYn] = {WAKEUP_KEY_EXTI_PORT_SOURCE,
-                                        TAMPER_KEY_EXTI_PORT_SOURCE,
-                                        USER_KEY_EXTI_PORT_SOURCE
+static uint8_t KEY_PORT_SOURCE[KEYn] = {LOCK_KEY_EXTI_PORT_SOURCE,
+                                        POWER_KEY_EXTI_PORT_SOURCE
                                         };
 
-static uint8_t KEY_PIN_SOURCE[KEYn] = {WAKEUP_KEY_EXTI_PIN_SOURCE,
-                                       TAMPER_KEY_EXTI_PIN_SOURCE,
-                                       USER_KEY_EXTI_PIN_SOURCE
+static uint8_t KEY_PIN_SOURCE[KEYn] = {LOCK_KEY_EXTI_PIN_SOURCE,
+                                       POWER_KEY_EXTI_PIN_SOURCE
                                        };
 
-static uint8_t KEY_IRQn[KEYn] = {WAKEUP_KEY_EXTI_IRQn, 
-                                 TAMPER_KEY_EXTI_IRQn,
-                                 USER_KEY_EXTI_IRQn
+static uint8_t KEY_IRQn[KEYn] = {LOCK_KEY_EXTI_IRQn, 
+                                 POWER_KEY_EXTI_IRQn
                                  };
 
 

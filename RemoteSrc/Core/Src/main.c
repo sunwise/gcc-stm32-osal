@@ -35,11 +35,13 @@ int main(void)
   gd_eval_led_init (LED3);
   gd_eval_led_init (LED_GROUP1);
   gd_eval_led_init (LED_GROUP2);
+  
+  gd_eval_key_init(KEY_LOCK, KEY_MODE_GPIO);
+  gd_eval_key_init(KEY_POWER, KEY_MODE_GPIO);
 
   gd_eval_com1_init();
   gd_eval_com2_init();
   ADC_Init();
-  
   
   gd_eval_led_on (LED_GROUP1);
   gd_eval_led_on (LED_GROUP2);
