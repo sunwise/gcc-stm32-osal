@@ -25,10 +25,10 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "application.h"
-
-
+   
 void ADC_Init(void);
-
+void Start_ADC_Scan(void);
+void Check_ADC_State(void);
 
 #ifdef __cplusplus
 }

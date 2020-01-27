@@ -76,6 +76,8 @@ uint8 Fill_TXBuffer(void)
   Wireless_data.txdata[1] = HEADMASK2;
   Wireless_data.txdata[2] = ROCKERMES;
   
+  memcpy(&Wireless_data.txdata[3],(uint8_t*)(&rockerinf),8);
+  
   Wireless_data.txdata[TXBUFSIZE-2] = TAILMASK1;
   Wireless_data.txdata[TXBUFSIZE-1] = TAILMASK2;
   

@@ -2174,6 +2174,18 @@
                 <name>$PROJ_DIR$\..\OSAL\application\app_task.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_KeyM.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_LedM.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_PowerM.c</name>
+            </file>
+            <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_Rocker.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\OSAL\application\CDD_Uart.c</name>
             </file>
             <file>
