@@ -99,6 +99,19 @@ void AppPeriod_Task_Init(uint8 task_id)
   Start_ADC_Scan();
   Motor_Control_Init();
   Wireless_Init();
+  
+}
+
+void power_control(void)
+{
+  static uint8_t timecount;
+  
+  timecount ++;
+  
+  if(timecount == 10)
+  {
+    HAL_GPIO_WritePin(POWER_HOLD_GPIO_Port, POWER_HOLD_Pin, GPIO_PIN_SET);
+  }
 }
 
 uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
@@ -133,22 +146,7 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & LED_FLASH )
     {
-      static uint8 dir = 1;
-
-      if ( dir )
-        {
-          dir = 0;
-          
-        }
-      else
-        {
-//          Dprintf("500ms second event! \r\n");
-          
-          dir = 1;
-        }
-
-      HAL_GPIO_WritePin(LED1_GPIO_Port, LED1_Pin, (GPIO_PinState) dir);
-      
+      power_control();
 //      Test_Motor_Driver();
       
       return task_event ^ LED_FLASH;
@@ -175,3 +173,4 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
 
   return 0;
 }
+

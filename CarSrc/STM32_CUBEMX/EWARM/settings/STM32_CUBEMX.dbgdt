@@ -787,7 +787,7 @@
             </BasePane-34092>
             <IarPane-34092>
                 <expressions>
-                    <item></item>
+                    <item />
                 </expressions>
                 <col-names>
                     <item>Expression</item>
