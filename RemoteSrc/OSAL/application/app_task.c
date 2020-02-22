@@ -25,7 +25,7 @@ void System_Startup(void);
 #define ADC_EVENT_PRIEOD     117
 #define LED_EVENT_PRIEOD     503
 #define COMMAND_EVENT_PRIEOD 36
-#define MOTOR_EVENT_PRIEOD   590
+#define MOTOR_EVENT_PRIEOD   60
 
 void System_Startup(void)
 {
@@ -143,8 +143,6 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & ADC_HANDLE )
     {
-      Start_ADC_Scan();
-      Check_ADC_State();
       PowerManager_Mainfunction();
       RockerManager_Manifunction();
       KeyManager_Mainfunction();
@@ -159,7 +157,8 @@ uint16 AppPeriod_Task_EventProcess(uint8 task_id, uint16 task_event)
     }
   if ( task_event & MOTOR_HANDLE )
     {
-      KeyManager_Mainfunction();
+      Start_ADC_Scan();
+      Check_ADC_State();
       
       return task_event ^ MOTOR_HANDLE;
     }
