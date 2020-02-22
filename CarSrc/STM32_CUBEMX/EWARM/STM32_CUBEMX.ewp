@@ -1206,6 +1206,9 @@
                 <name>$PROJ_DIR$\..\OSAL\application\CDD_motor.c</name>
             </file>
             <file>
+                <name>$PROJ_DIR$\..\OSAL\application\CDD_powercontrol.c</name>
+            </file>
+            <file>
                 <name>$PROJ_DIR$\..\OSAL\application\CDD_Uart.c</name>
             </file>
             <file>

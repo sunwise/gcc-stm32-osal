@@ -73,6 +73,8 @@ void Error_Handler(void);
 #define MN5_GPIO_Port GPIOA
 #define MN6_Pin GPIO_PIN_1
 #define MN6_GPIO_Port GPIOA
+#define POWER_HOLD_Pin GPIO_PIN_3
+#define POWER_HOLD_GPIO_Port GPIOA
 #define MN3_Pin GPIO_PIN_0
 #define MN3_GPIO_Port GPIOB
 #define MN4_Pin GPIO_PIN_1
@@ -81,10 +83,10 @@ void Error_Handler(void);
 #define MN1_GPIO_Port GPIOA
 #define MN2_Pin GPIO_PIN_12
 #define MN2_GPIO_Port GPIOA
-#define LED1_Pin GPIO_PIN_15
-#define LED1_GPIO_Port GPIOA
-#define FREE_PIN_Pin GPIO_PIN_3
-#define FREE_PIN_GPIO_Port GPIOB
+#define RF_CE_Pin GPIO_PIN_15
+#define RF_CE_GPIO_Port GPIOA
+#define RF_IRQ_Pin GPIO_PIN_3
+#define RF_IRQ_GPIO_Port GPIOB
 #define ZIGBEE_DEF_Pin GPIO_PIN_4
 #define ZIGBEE_DEF_GPIO_Port GPIOB
 #define ZIGBEE_RESET_Pin GPIO_PIN_5

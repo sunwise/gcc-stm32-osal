@@ -165,7 +165,7 @@ extern void Wireless_Init(void);
 /**********************WIRELESS CDD field end*************************************/
 
 /**********************Debug uart CDD field start*************************************/
-#define ENABLE_Debug    1
+#define ENABLE_Debug    0
 
 #if (ENABLE_Debug == 1)
   #define Dprintf(format, ...)   printf(format, ##__VA_ARGS__)
@@ -188,6 +188,17 @@ extern void Debug_Uart_IRQHandler(void);
 extern void Wireless_Uart_IRQHandler(void);
 
 /**********************Debug uart CDD field end*************************************/
+
+/**********************Debug power CDD field start*************************************/
+typedef enum{
+  CLOSE_POW = 0,
+  HOLD_POW ,
+}POWER_ACT_n;
+
+extern void hold_power(POWER_ACT_n act);
+extern void power_control(void);
+
+/**********************Debug power CDD field end*************************************/
 
 /*****************************************************************************/
 

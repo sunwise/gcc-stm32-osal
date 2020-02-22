@@ -6,7 +6,7 @@
  ***************************************************************************************/
 #include "application.h"
 
-#define WIRELESS_CDD_DEBUG    1
+#define WIRELESS_CDD_DEBUG    0
 Wirless_Data_t Wireless_data;
 
 #define C_MESSAGE_TYPE   2
@@ -37,8 +37,9 @@ uint8 Check_CommandData(void)
       return res;
     }
   }
+#if(WIRELESS_CDD_DEBUG)
   Dprintf("command error!\r\n");
-  
+#endif
   return res;
 }
 
