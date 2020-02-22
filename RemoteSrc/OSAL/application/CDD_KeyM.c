@@ -51,59 +51,60 @@ void RightSide_Key(void)
 {
   uint8_t rkeyadc;
   
-  rkeyadc = adc_value.adcdata[AD_KEY_R] / 1000;
+  rkeyadc = adc_value.adcdata[AD_KEY_R] / 100 ;
   
   rkeystate[1] = rkeystate[0];
   
-  switch(rkeyadc){
-    case 0:
-      rkeystate[0] = KEYBIT(C_DOWN);
-      break;
-    case 1:
-      rkeystate[0] = KEYBIT(C_UP);
-      break;
-    case 2:
-      rkeystate[0] = KEYBIT(UP_DOWN);
-      break;
-    case 3:
-      rkeystate[0] = KEYBIT(UP_UP);
-      break;
-    case 4:
-      rkeystate[0] = 0x00;
-      break;
-    default:
-      rkeystate[0] = 0x00;
-      break;
+  if(rkeyadc > 35)
+  {
+    rkeystate[0] = 0x00;
   }
+  else if(rkeyadc > 25)
+  {
+    rkeystate[0] = KEYBIT(UP_UP);
+  }
+  else if(rkeyadc > 15)
+  {
+    rkeystate[0] = KEYBIT(UP_DOWN);
+  }
+  else if(rkeyadc > 5)
+  {
+    rkeystate[0] = KEYBIT(C_UP);
+  }
+  else
+  {
+    rkeystate[0] = KEYBIT(C_DOWN);
+  }
+  
 }
 
 void LeftSide_Key(void)
 {
   uint8_t lkeyadc;
   
-  lkeyadc = adc_value.adcdata[AD_KEY_L] / 1000;
+  lkeyadc = adc_value.adcdata[AD_KEY_L] / 100;
   
   lkeystate[1] = lkeystate[0];
   
-  switch(lkeyadc){
-    case 0:
-      lkeystate[0] = KEYBIT(C_DOWN);
-      break;
-    case 1:
-      lkeystate[0] = KEYBIT(C_UP);
-      break;
-    case 2:
-      lkeystate[0] = KEYBIT(UP_UP);
-      break;
-    case 3:
-      lkeystate[0] = KEYBIT(UP_DOWN);
-      break;
-    case 4:
-      lkeystate[0] = 0x00;
-      break;
-    default:
-      lkeystate[0] = 0x00;
-      break;
+  if(lkeyadc > 35)
+  {
+    lkeystate[0] = 0x00;
+  }
+  else if(lkeyadc > 25)
+  {
+    lkeystate[0] = KEYBIT(UP_DOWN);
+  }
+  else if(lkeyadc > 15)
+  {
+    lkeystate[0] = KEYBIT(UP_UP);
+  }
+  else if(lkeyadc > 5)
+  {
+    lkeystate[0] = KEYBIT(C_UP);
+  }
+  else
+  {
+    lkeystate[0] = KEYBIT(C_DOWN);
   }
   
 }
