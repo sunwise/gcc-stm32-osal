@@ -52,7 +52,7 @@ void Start_Wireless_Uart(void)
   TxBufferIndication = 0;
   
   LL_USART_EnableIT_RXNE(USARTx_Wireless);
-  LL_USART_EnableIT_ERROR(USARTx_Wireless);
+//  LL_USART_EnableIT_ERROR(USARTx_Wireless);
   /****************disable TX interrupt**************/
 //  LL_USART_EnableIT_TXE(USARTx_Wireless);
 //  LL_USART_EnableIT_TC(USARTx_Wireless);
