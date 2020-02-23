@@ -118,7 +118,7 @@ uint8 Wireless_MainFunction()
   
   if(responseactive > 1666)
   {
-//    RequestShutdown();
+    RequestShutdown();
   }
   
   return 0;

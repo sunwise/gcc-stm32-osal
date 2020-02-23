@@ -140,7 +140,7 @@ extern ADC_Data_t adc_value;
 
 /**********************PowerM field start*************************************/
 #define BAT_VOL_MAX     7200
-#define BAT_VOL_MIN     4000
+#define BAT_VOL_MIN     3500
 #define BAT_VOL_LOW     5000
 
 typedef enum{
