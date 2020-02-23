@@ -97,7 +97,8 @@ extern Dir_Motor_t  DirMotor;
 
 extern void Motor_Control_Init(void);
 extern uint8_t Motor_Control_mainfunction(void);
-extern uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed);
+extern uint8_t Set_Driver_FM(MOTOR_DIR_n direction,uint8_t speed);
+extern uint8_t Set_Driver_RM(MOTOR_DIR_n direction,uint8_t speed);
 extern uint8_t Set_Dir_M(DMOTOR_DIR_n direction);
 extern void Test_Motor_Driver(void);
 /**********************MOTOR CDD field end*************************************/

@@ -49,13 +49,30 @@ void Handle_Rocker_Command(void)
   
   rockerdata_p = (command_rocker_t *)&Wireless_data.rxdata[3];
   
-  Set_Driver_M((MOTOR_DIR_n)rockerdata_p->L_rocker_Y_D,rockerdata_p->L_rocker_Y);
+  Set_Driver_RM((MOTOR_DIR_n)rockerdata_p->L_rocker_Y_D,rockerdata_p->L_rocker_Y);
   Set_Dir_M((DMOTOR_DIR_n)rockerdata_p->R_rocker_X_D);
+  
+  if(rockerdata_p->L_rocker_Y_D == STOP)
+  {
+    if(rockerdata_p->L_rocker_X > 80)
+    {
+      Set_Driver_FM(POSITIVE,rockerdata_p->L_rocker_X);
+    }
+    else
+    {
+      Set_Driver_FM(STOP,0);
+    }
+  }
+  else
+  {
+    Set_Driver_FM(STOP,0);
+  }
 }
 
 void StopMotor(void)
 {
-  Set_Driver_M(INIT,0);
+  Set_Driver_FM(INIT,0);
+  Set_Driver_RM(INIT,0);
   Set_Dir_M(CENTER);
 }
 

@@ -68,20 +68,29 @@ uint8_t Motor_Control_mainfunction(void)
   return 0;
 }
 
-uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed)
+uint8_t Set_Driver_FM(MOTOR_DIR_n direction,uint8_t speed)
 {
   FrontMotor.direction[NEW_D] = direction;
-  RearMotor.direction[NEW_D] = direction;
   
   if(speed)
   {
     FrontMotor.MSpeed = speed + F_MOTOR_DEAD;
-    RearMotor.MSpeed = speed + R_MOTOR_DEAD;
   }
   
   if(FrontMotor.MSpeed > PWM_DUTY_MAX)
   {
     FrontMotor.MSpeed = PWM_DUTY_MAX;
+  }
+  
+  return 0;
+}
+uint8_t Set_Driver_RM(MOTOR_DIR_n direction,uint8_t speed)
+{
+  RearMotor.direction[NEW_D] = direction;
+  
+  if(speed)
+  {
+    RearMotor.MSpeed = speed + R_MOTOR_DEAD;
   }
   
   if(RearMotor.MSpeed > PWM_DUTY_MAX)
