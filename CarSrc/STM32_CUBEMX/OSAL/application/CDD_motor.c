@@ -145,7 +145,7 @@ static uint8_t Dir_Motor_Control(void)
     }
     else
     {
-      Speed_t = RUN_P;
+      Speed_t = PWM_DUTY_MAX - 10;//RUN_P change dir motor PWM to MAX
     }
     SetDirM(DirMotor.direction[NEW_D],Speed_t);
   }
