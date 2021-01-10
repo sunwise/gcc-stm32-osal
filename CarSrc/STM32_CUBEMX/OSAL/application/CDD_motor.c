@@ -21,11 +21,13 @@ static void SetDirM(DMOTOR_DIR_n direction,uint8_t speed);
 #define OLD_D  0
 #define NEW_D  1
 
-#define F_MOTOR_DEAD     1
-#define R_MOTOR_DEAD     2
+#define F_MOTOR_DEAD     F_MOTOR_DEAD_D
+#define R_MOTOR_DEAD     R_MOTOR_DEAD_D
 
-#define PWM_DUTY_MAX     220  //1/2 full duty
+#define F_PWM_DUTY_MAX     F_MOTOR_MAX_DUTY
+#define R_PWM_DUTY_MAX     R_MOTOR_MAX_DUTY
 
+#define D_PWM_DUTY         D_MOTOR_DUTY
 
 void Motor_Control_Init(void)
 {
@@ -79,14 +81,14 @@ uint8_t Set_Driver_M(MOTOR_DIR_n direction,uint8_t speed)
     RearMotor.MSpeed = speed + R_MOTOR_DEAD;
   }
   
-  if(FrontMotor.MSpeed > PWM_DUTY_MAX)
+  if(FrontMotor.MSpeed > F_PWM_DUTY_MAX)
   {
-    FrontMotor.MSpeed = PWM_DUTY_MAX;
+    FrontMotor.MSpeed = F_PWM_DUTY_MAX;
   }
   
-  if(RearMotor.MSpeed > PWM_DUTY_MAX)
+  if(RearMotor.MSpeed > R_PWM_DUTY_MAX)
   {
-    RearMotor.MSpeed = PWM_DUTY_MAX;
+    RearMotor.MSpeed = R_PWM_DUTY_MAX;
   }
 
   return 0;
@@ -145,7 +147,7 @@ static uint8_t Dir_Motor_Control(void)
     }
     else
     {
-      Speed_t = PWM_DUTY_MAX - 10;//RUN_P change dir motor PWM to MAX
+      Speed_t = D_PWM_DUTY;//RUN_P change dir motor PWM to MAX
     }
     SetDirM(DirMotor.direction[NEW_D],Speed_t);
   }

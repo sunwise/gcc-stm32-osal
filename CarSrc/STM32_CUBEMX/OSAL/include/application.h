@@ -5,6 +5,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#include "Device_Cfg.h"
+
 #include "adc.h"
 #include "crc.h"
 #include "dma.h"
